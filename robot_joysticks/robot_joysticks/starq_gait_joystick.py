@@ -17,8 +17,8 @@ LANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
 
 STANDING_GAINS = [50.0, 0.15, 0.30]
 WALKING_GAINS = [50.0, 0.15, 0.30]
-JUMPING_GAINS = [75.0, 0.15, 0.30]
-SWIMMING_GAINS = [75.0, 0.15, 0.30]
+JUMPING_GAINS = [150.0, 0.05, 0.10]
+SWIMMING_GAINS = [150.0, 0.05, 0.10]
 LANDING_GAINS = [10.0, 0.10, 0.20]
 
 class STARQGaitJoystick(Node):
@@ -37,23 +37,23 @@ class STARQGaitJoystick(Node):
         
         self.declare_parameter('walk_trajectory_file', 'walk.txt')
         walk_file = self.get_parameter('walk_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('walk_frequency', 1.0)
+        self.declare_parameter('walk_frequency', 0.25)
         walk_freq = self.get_parameter('walk_frequency').get_parameter_value().double_value
         self.walk_trajectory = get_trajectory_from_file(walk_file, walk_freq, num_legs)
         
         self.declare_parameter('jump_trajectory_file', 'jump.txt')
         jump_file = self.get_parameter('jump_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('jump_frequency', 0.5)
+        self.declare_parameter('jump_frequency', 0.25)
         jump_freq = self.get_parameter('jump_frequency').get_parameter_value().double_value
         self.jump_trajectory = get_trajectory_from_file(jump_file, jump_freq, num_legs)
         
-        self.declare_parameter('swim_trajectory_file', 'swim.txt')
-        swim_file = self.get_parameter('swim_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('swim_frequency', 3.5)
-        swim_freq = self.get_parameter('swim_frequency').get_parameter_value().double_value
-        self.swim_trajectory = get_trajectory_from_file(swim_file, swim_freq, num_legs)
+        # self.declare_parameter('swim_trajectory_file', 'swim.txt')
+        # swim_file = self.get_parameter('swim_trajectory_file').get_parameter_value().string_value
+        # self.declare_parameter('swim_frequency', 6.0)
+        # swim_freq = self.get_parameter('swim_frequency').get_parameter_value().double_value
+        # self.swim_trajectory = get_trajectory_from_file(swim_file, swim_freq, num_legs)
         
-        # self.swim_trajectory = SwimTrajectory()
+        self.swim_trajectory = SwimTrajectory()
         
         self.declare_parameter('crawl_trajectory_file', 'crawl.txt')
         crawl_file = self.get_parameter('crawl_trajectory_file').get_parameter_value().string_value
@@ -195,9 +195,11 @@ class STARQGaitJoystick(Node):
             self.get_logger().info('Idled ODrives')
         elif msg.axes[4] >= 0.5 and self.last_msg.axes[4] < 0.5:
             # Cross left
+            self.swim_trajectory.phi += np.pi/16
             pass
         elif msg.axes[4] <= -0.5 and self.last_msg.axes[4] > -0.5:
             # Cross right
+            self.swim_trajectory.phi -= np.pi/16
             pass
         elif msg.axes[5] >= 0.5 and self.last_msg.axes[5] < 0.5:
             # Cross up
@@ -212,9 +214,9 @@ class STARQGaitJoystick(Node):
         if type(self.curr_traj) is SwimTrajectory:
             [roll, pitch, yaw] = quaternion_to_euler(msg.orientation)
             ## TODO: Feedback control here
-            self.curr_traj.phi = -3*np.pi/4 + (pitch)
+            # self.curr_traj.phi = -3*np.pi/4 + (pitch)
             # self.get_logger().info(f"roll: {roll}, pitch: {pitch}: yaw: {yaw}")
-            self.curr_traj.phi = min(max(self.curr_traj.phi, self.minphi), self.maxphi)
+            # self.curr_traj.phi = min(max(self.curr_traj.phi, self.minphi), self.maxphi)
 
 def main(args=None):
     rclpy.init(args=args)
