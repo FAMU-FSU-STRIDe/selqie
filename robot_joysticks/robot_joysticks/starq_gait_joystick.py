@@ -106,7 +106,7 @@ class STARQGaitJoystick(Node):
                 time.sleep(1.0 / self.curr_freq)
                 self.loop_idx += 1
             else:
-                self.set_trajectory(None, 0)
+                self.set_trajectory(None, 0, 0.0)
 
     def joy_callback(self, msg : Joy):
         if self.last_msg is None:
