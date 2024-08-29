@@ -105,15 +105,11 @@ public:
         _info_pub = this->create_publisher<MotorInfo>("info", qos_fast());
 
         double estimate_rate = 50.0;
-        this->declare_parameter("estimate_rate", estimate_rate);
-        this->get_parameter("estimate_rate", estimate_rate);
         _estimate_timer = this->create_wall_timer(
             std::chrono::milliseconds(static_cast<int>(1000.0 / estimate_rate)),
             std::bind(&ODriveNode::estimate, this));
 
         double info_rate = 20.0;
-        this->declare_parameter("info_rate", info_rate);
-        this->get_parameter("info_rate", info_rate);
         _info_timer = this->create_wall_timer(
             std::chrono::milliseconds(static_cast<int>(1000.0 / info_rate)),
             std::bind(&ODriveNode::info, this));

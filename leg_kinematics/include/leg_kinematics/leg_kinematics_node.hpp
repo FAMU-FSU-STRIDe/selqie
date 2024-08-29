@@ -27,6 +27,8 @@ static inline rclcpp::QoS qos_reliable()
 class LegKinematicsModel
 {
 public:
+    virtual std::size_t getNumMotors() const = 0;
+
     virtual Vector3f getForwardKinematics(const Vector3f &joint_angles) const = 0;
 
     virtual Vector3f getInverseKinematics(const Vector3f &foot_position) const = 0;
@@ -35,12 +37,13 @@ public:
 };
 
 // Leg Kinematics Node
-class LegKinematicsNode : public rclcpp::Node
+class LegKinematicsNode
 {
 private:
+    rclcpp::Node *_node;
+    LegKinematicsModel *_model;
+
     uint8_t _id = 0;
-    std::vector<uint8_t> _motor_ids;
-    std::shared_ptr<LegKinematicsModel> _model;
 
     std::vector<MotorEstimate> _latest_motor_positions;
 
@@ -55,7 +58,7 @@ private:
     Vector3f latestMotorPositions() const
     {
         Vector3f positions;
-        for (std::size_t i = 0; i < _motor_ids.size(); i++)
+        for (std::size_t i = 0; i < _model->getNumMotors(); i++)
         {
             positions(i) = _latest_motor_positions[i].pos_estimate;
         }
@@ -65,7 +68,7 @@ private:
     Vector3f latestMotorVelocities() const
     {
         Vector3f velocities;
-        for (std::size_t i = 0; i < _motor_ids.size(); i++)
+        for (std::size_t i = 0; i < _model->getNumMotors(); i++)
         {
             velocities(i) = _latest_motor_positions[i].vel_estimate;
         }
@@ -75,59 +78,65 @@ private:
     Vector3f latestMotorTorques() const
     {
         Vector3f torques;
-        for (std::size_t i = 0; i < _motor_ids.size(); i++)
+        for (std::size_t i = 0; i < _model->getNumMotors(); i++)
         {
             torques(i) = _latest_motor_positions[i].torq_estimate;
         }
         return torques;
     }
 
-public:
-    LegKinematicsNode(std::shared_ptr<LegKinematicsModel> model) : Node("leg_kinematics"), _model(model)
+    geometry_msgs::msg::Vector3 toVector3(const Vector3f &vec) const
     {
-        this->declare_parameter("id", _id);
-        this->get_parameter("id", _id);
+        geometry_msgs::msg::Vector3 msg;
+        msg.x = vec(0);
+        msg.y = vec(1);
+        msg.z = vec(2);
+        return msg;
+    }
 
-        int num_motors;
-        this->declare_parameter("num_motors", num_motors);
-        this->get_parameter("num_motors", num_motors);
+public:
+    LegKinematicsNode(rclcpp::Node *node, LegKinematicsModel *model) : _node(node), _model(model)
+    {
+        node->declare_parameter("id", _id);
+        node->get_parameter("id", _id);
 
+        const std::size_t num_motors = _model->getNumMotors();
         if (num_motors < 1 || num_motors > 3)
         {
-            RCLCPP_ERROR(this->get_logger(), "Invalid number of motors: %d (1-3 allowed)", num_motors);
+            RCLCPP_ERROR(_node->get_logger(), "Invalid number of motors: %lu (1-3 allowed)", num_motors);
             return;
         }
 
         _latest_motor_positions.resize(num_motors);
 
-        _leg_command_sub = this->create_subscription<LegCommand>(
+        _leg_command_sub = node->create_subscription<LegCommand>(
             "command", qos_fast(), std::bind(&LegKinematicsNode::legCommand, this, std::placeholders::_1));
-        _leg_estimate_pub = this->create_publisher<LegEstimate>("estimate", qos_fast());
+        _leg_estimate_pub = node->create_publisher<LegEstimate>("estimate", qos_fast());
 
-        for (const auto motor_id : _motor_ids)
+        for (std::size_t m = 0; m < num_motors; m++)
         {
-            const auto estimate_callback = [this, motor_id](const MotorEstimate::SharedPtr msg)
+            const auto estimate_callback = [this, m](const MotorEstimate::SharedPtr msg)
             {
-                _latest_motor_positions[motor_id] = *msg;
+                _latest_motor_positions[m] = *msg;
             };
 
             _motor_estimate_subs.push_back(
-                this->create_subscription<MotorEstimate>("motor" + std::to_string(motor_id) + "/estimate", qos_fast(), estimate_callback));
+                node->create_subscription<MotorEstimate>("motor" + std::to_string(m) + "/estimate", qos_fast(), estimate_callback));
             _motor_command_pubs.push_back(
-                this->create_publisher<MotorCommand>("motor" + std::to_string(motor_id) + "/command", qos_fast()));
+                node->create_publisher<MotorCommand>("motor" + std::to_string(m) + "/command", qos_fast()));
         }
 
         double estimate_rate = 50.0;
-        _motor_estimate_timer = this->create_wall_timer(
+        _motor_estimate_timer = node->create_wall_timer(
             std::chrono::milliseconds(static_cast<int>(1000.0 / estimate_rate)),
             std::bind(&LegKinematicsNode::legEstimate, this));
 
-        RCLCPP_INFO(this->get_logger(), "Leg Kinematics node initialized with ID %d", _id);
+        RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node initialized with ID %d", _id);
     }
 
     void legCommand(const LegCommand::SharedPtr msg)
     {
-        std::vector<MotorCommand> motor_cmds(_motor_ids.size());
+        std::vector<MotorCommand> motor_cmds(_model->getNumMotors());
 
         for (auto &motor_cmd : motor_cmds)
         {
@@ -142,14 +151,14 @@ public:
 
         if (jacobian.determinant() == 0)
         {
-            RCLCPP_ERROR(this->get_logger(), "Jacobian is singular");
+            RCLCPP_ERROR(_node->get_logger(), "Jacobian is singular");
             return;
         }
 
         const Vector3f motor_vels = jacobian.inverse() * vel_setpoint;
         const Vector3f motor_torqs = jacobian.transpose() * torq_setpoint;
 
-        for (std::size_t i = 0; i < _motor_ids.size(); i++)
+        for (std::size_t i = 0; i < _model->getNumMotors(); i++)
         {
             motor_cmds[i].pos_setpoint = pos_setpoint(i);
             motor_cmds[i].vel_setpoint = motor_vels(i);
@@ -168,14 +177,10 @@ public:
         const Vector3f foot_torque = jacobian.transpose() * latestMotorTorques();
 
         LegEstimate msg;
-        msg.pos_estimate.x = foot_position(0);
-        msg.pos_estimate.y = foot_position(1);
-        msg.pos_estimate.z = foot_position(2);
-        msg.vel_estimate.x = foot_velocity(0);
-        msg.vel_estimate.y = foot_velocity(1);
-        msg.vel_estimate.z = foot_velocity(2);
-        msg.torq_estimate.x = foot_torque(0);
-        msg.torq_estimate.y = foot_torque(1);
-        msg.torq_estimate.z = foot_torque(2);
+        msg.pos_estimate = toVector3(foot_position);
+        msg.vel_estimate = toVector3(foot_velocity);
+        msg.torq_estimate = toVector3(foot_torque);
+
+        _leg_estimate_pub->publish(msg);
     }
 };

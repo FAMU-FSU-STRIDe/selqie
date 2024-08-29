@@ -10,6 +10,10 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'interface': 'can0'
-            }]
+            }],
+            remappings=[
+                ('can/tx', 'can0/tx'),
+                ('can/rx', 'can0/rx')
+            ]
         )
     ])
