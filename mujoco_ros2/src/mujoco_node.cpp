@@ -30,6 +30,7 @@ using namespace robot_msgs::msg;
 class MuJoCoMotorNode
 {
 private:
+    rclcpp::Node *_node;
     uint8_t _id = 0;
 
     struct
@@ -58,7 +59,7 @@ private:
     rclcpp::TimerBase::SharedPtr _estimate_timer;
 
 public:
-    MuJoCoMotorNode(rclcpp::Node *node, const uint8_t id) : _id(id)
+    MuJoCoMotorNode(rclcpp::Node *node, const uint8_t id) : _node(node), _id(id)
     {
         _command_sub = node->create_subscription<MotorCommand>(
             "motor" + std::to_string(id) + "/command", qos_fast(), std::bind(&MuJoCoMotorNode::command, this, std::placeholders::_1));

@@ -5,12 +5,13 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='leg_kinematics',
-            executable='fivebar2d_node',
-            name='fivebar2d',
+            executable='unitree_a1_leg_node',
+            name='unitree_a1_leg',
             output='screen',
             parameters=[{
-                'L1': 0.065,
-                'L2': 0.2,
+                'D': 0.08505,
+                'Lt': 0.2,
+                'Lc': 0.2,
                 'flip_y': False # Left: False, Right: True
             }],
             remappings=[

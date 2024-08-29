@@ -22,9 +22,15 @@ add_executable(fivebar2d_node src/fivebar2d_node.cpp)
 ament_target_dependencies(fivebar2d_node rclcpp robot_msgs)
 target_link_libraries(fivebar2d_node Eigen3::Eigen)
 
+# add executable
+add_executable(unitree_a1_leg_node src/unitree_a1_leg_node.cpp)
+ament_target_dependencies(unitree_a1_leg_node rclcpp robot_msgs)
+target_link_libraries(unitree_a1_leg_node Eigen3::Eigen)
+
 # install targets
 install(TARGETS
-fivebar2d_node
+  fivebar2d_node
+  unitree_a1_leg_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

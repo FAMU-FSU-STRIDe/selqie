@@ -43,8 +43,6 @@ private:
     rclcpp::Node *_node;
     LegKinematicsModel *_model;
 
-    uint8_t _id = 0;
-
     std::vector<MotorEstimate> _latest_motor_positions;
 
     rclcpp::Subscription<LegCommand>::SharedPtr _leg_command_sub;
@@ -97,9 +95,6 @@ private:
 public:
     LegKinematicsNode(rclcpp::Node *node, LegKinematicsModel *model) : _node(node), _model(model)
     {
-        node->declare_parameter("id", _id);
-        node->get_parameter("id", _id);
-
         const std::size_t num_motors = _model->getNumMotors();
         if (num_motors < 1 || num_motors > 3)
         {
@@ -131,7 +126,7 @@ public:
             std::chrono::milliseconds(static_cast<int>(1000.0 / estimate_rate)),
             std::bind(&LegKinematicsNode::legEstimate, this));
 
-        RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node initialized with ID %d", _id);
+        RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node initialized");
     }
 
     void legCommand(const LegCommand::SharedPtr msg)
@@ -149,18 +144,13 @@ public:
 
         const Matrix3f jacobian = _model->getJacobian(latestMotorPositions());
 
-        if (jacobian.determinant() == 0)
-        {
-            RCLCPP_ERROR(_node->get_logger(), "Jacobian is singular");
-            return;
-        }
-
+        const Vector3f motor_pos = _model->getInverseKinematics(pos_setpoint);
         const Vector3f motor_vels = jacobian.inverse() * vel_setpoint;
         const Vector3f motor_torqs = jacobian.transpose() * torq_setpoint;
 
         for (std::size_t i = 0; i < _model->getNumMotors(); i++)
         {
-            motor_cmds[i].pos_setpoint = pos_setpoint(i);
+            motor_cmds[i].pos_setpoint = motor_pos(i);
             motor_cmds[i].vel_setpoint = motor_vels(i);
             motor_cmds[i].torq_setpoint = motor_torqs(i);
 
