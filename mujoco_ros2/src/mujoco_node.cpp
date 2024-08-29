@@ -1,0 +1,285 @@
+#include <thread>
+#include <mutex>
+
+#include <rclcpp/rclcpp.hpp>
+
+#include <nav_msgs/msg/odometry.hpp>
+#include <robot_msgs/msg/motor_command.hpp>
+#include <robot_msgs/msg/motor_config.hpp>
+#include <robot_msgs/msg/motor_estimate.hpp>
+#include <robot_msgs/msg/motor_info.hpp>
+
+#include "mujoco_ros2/mujoco.hpp"
+
+#define MUJOCO_Q_OFFSET 7
+#define MUJOCO_V_OFFSET 6
+
+static inline rclcpp::QoS qos_fast()
+{
+    return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
+}
+
+static inline rclcpp::QoS qos_reliable()
+{
+    return rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
+}
+
+using namespace robot_msgs::msg;
+
+// Motor Node
+class MuJoCoMotorNode
+{
+private:
+    uint8_t _id = 0;
+
+    struct
+    {
+        uint32_t state = MotorConfig::AXIS_STATE_IDLE;
+        uint32_t control_mode = MotorCommand::CONTROL_MODE_TORQUE;
+        uint32_t input_mode = MotorCommand::INPUT_MODE_PASSTHROUGH;
+        float pos_cmd = 0.f;
+        float vel_cmd = 0.f;
+        float torq_cmd = 0.f;
+        float kp = 50.0f;
+        float kd = 1.0f;
+        float ki = 0.3f;
+        float torq_integral = 0.f;
+        float pos_est = 0.0;
+        float vel_est = 0.0;
+        float torq_est = 0.0;
+    } _state;
+
+    float _gear_ratio = 1.0;
+
+    rclcpp::Subscription<MotorCommand>::SharedPtr _command_sub;
+    rclcpp::Subscription<MotorConfig>::SharedPtr _config_sub;
+    rclcpp::Publisher<MotorEstimate>::SharedPtr _estimate_pub;
+
+    rclcpp::TimerBase::SharedPtr _estimate_timer;
+
+public:
+    MuJoCoMotorNode(rclcpp::Node *node, const uint8_t id) : _id(id)
+    {
+        _command_sub = node->create_subscription<MotorCommand>(
+            "motor" + std::to_string(id) + "/command", qos_fast(), std::bind(&MuJoCoMotorNode::command, this, std::placeholders::_1));
+
+        _config_sub = node->create_subscription<MotorConfig>(
+            "motor" + std::to_string(id) + "/config", qos_reliable(), std::bind(&MuJoCoMotorNode::config, this, std::placeholders::_1));
+
+        _estimate_pub = node->create_publisher<MotorEstimate>("motor" + std::to_string(id) + "/estimate", qos_fast());
+
+        double estimate_rate = 50.0;
+        _estimate_timer = node->create_wall_timer(
+            std::chrono::milliseconds(static_cast<int>(1000.0 / estimate_rate)),
+            std::bind(&MuJoCoMotorNode::estimate, this));
+
+        MuJoCoData.control_functions.push_back(
+            std::bind(&MuJoCoMotorNode::controlMotor, this, std::placeholders::_1, std::placeholders::_2));
+    }
+
+    void command(const MotorCommand::SharedPtr msg)
+    {
+        std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
+
+        if (msg->control_mode != 0)
+        {
+            _state.control_mode = msg->control_mode;
+
+            if (msg->input_mode != 0)
+            {
+                _state.input_mode = msg->input_mode;
+            }
+        }
+
+        _state.pos_cmd = msg->pos_setpoint * _gear_ratio;
+        _state.vel_cmd = msg->vel_setpoint * _gear_ratio;
+        _state.torq_cmd = msg->torq_setpoint / _gear_ratio;
+    }
+
+    void config(const MotorConfig::SharedPtr msg)
+    {
+        std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
+
+        if (msg->axis_state != 0)
+        {
+            _state.state = msg->axis_state;
+        }
+
+        if (msg->gear_ratio != 0.0)
+        {
+            _gear_ratio = msg->gear_ratio;
+        }
+
+        if (msg->pos_gain != 0.0)
+        {
+            _state.kp = msg->pos_gain;
+        }
+
+        if (msg->vel_gain != 0.0)
+        {
+            _state.kd = msg->vel_gain;
+        }
+
+        if (msg->vel_int_gain != 0.0)
+        {
+            _state.ki = msg->vel_int_gain;
+        }
+    }
+
+    void estimate()
+    {
+        MotorEstimate estimate_msg;
+
+        {
+            std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
+            estimate_msg.pos_estimate = _state.pos_est;
+            estimate_msg.vel_estimate = _state.vel_est;
+            estimate_msg.torq_estimate = _state.torq_est;
+        }
+
+        _estimate_pub->publish(estimate_msg);
+    }
+
+    void controlMotor(const mjModel *, mjData *data)
+    {
+        std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
+
+        const mjtNum pos_est = data->qpos[_id + MUJOCO_Q_OFFSET];
+        const mjtNum vel_est = data->qvel[_id + MUJOCO_V_OFFSET];
+        const mjtNum torq_est = data->ctrl[_id];
+
+        switch (_state.control_mode)
+        {
+        case MotorCommand::CONTROL_MODE_POSITION:
+        {
+            const mjtNum pos_err = _state.pos_cmd - pos_est;
+            const mjtNum vel_err = _state.vel_cmd - vel_est;
+
+            const mjtNum kp = _state.kp;
+            const mjtNum kd = _state.kd;
+            const mjtNum ki = _state.ki;
+            _state.torq_integral += pos_err * ki;
+            const mjtNum torq_cmd = _state.torq_cmd + pos_err * kp + vel_err * kd + _state.torq_integral;
+            data->ctrl[_id] = torq_cmd;
+            break;
+        }
+        case MotorCommand::CONTROL_MODE_VELOCITY:
+        {
+            const mjtNum vel_err = _state.vel_cmd - vel_est;
+
+            const mjtNum kp = _state.kp;
+            const mjtNum torq_cmd = _state.torq_cmd + vel_err * kp;
+            data->ctrl[_id] = torq_cmd;
+            break;
+        }
+        case MotorCommand::CONTROL_MODE_TORQUE:
+        {
+            data->ctrl[_id] = _state.torq_cmd;
+            break;
+        }
+        }
+
+        _state.pos_est = pos_est;
+        _state.vel_est = vel_est;
+        _state.torq_est = torq_est;
+    }
+};
+
+// MuJoCo Node
+class MuJoCoNode : public rclcpp::Node
+{
+private:
+    std::string _model_path = "/home/ubuntu/ros2_ws/src/mujoco_ros2/models/robot.xml";
+    float _frame_rate = 60.0;
+    std::string _odom_frame_id = "odom";
+
+    std::vector<std::shared_ptr<MuJoCoMotorNode>> _motor_nodes;
+
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr _odom_pub;
+    rclcpp::TimerBase::SharedPtr _odom_timer;
+
+public:
+    MuJoCoNode() : Node("mujoco_node")
+    {
+        this->declare_parameter("model_path", _model_path);
+        this->get_parameter("model_path", _model_path);
+
+        this->declare_parameter("frame_rate", _frame_rate);
+        this->get_parameter("frame_rate", _frame_rate);
+
+        this->declare_parameter("odom_frame_id", _odom_frame_id);
+        this->get_parameter("odom_frame_id", _odom_frame_id);
+
+        std::thread([this]()
+                    { runMuJoCo(); })
+            .detach();
+
+        _odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", qos_fast());
+
+        double odom_rate = 50.0;
+        _odom_timer = this->create_wall_timer(
+            std::chrono::milliseconds(static_cast<int>(1000.0 / odom_rate)),
+            std::bind(&MuJoCoNode::odometry, this));
+
+        RCLCPP_INFO(this->get_logger(), "MuJoCo node initialized.");
+    }
+
+    void runMuJoCo()
+    {
+        initMuJoCo(_model_path);
+
+        const int num_motors = MuJoCoData.model->nu;
+        for (int i = 0; i < num_motors; i++)
+        {
+            _motor_nodes.push_back(std::make_shared<MuJoCoMotorNode>(this, i));
+        }
+
+        openMuJoCo(_frame_rate);
+
+        rclcpp::shutdown();
+    }
+
+    void odometry()
+    {
+        nav_msgs::msg::Odometry odom_msg;
+        odom_msg.header.frame_id = _odom_frame_id;
+
+        {
+            std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
+
+            if (!MuJoCoData.data)
+            {
+                return;
+            }
+
+            odom_msg.header.stamp = rclcpp::Time(MuJoCoData.data->time);
+
+            odom_msg.pose.pose.position.x = MuJoCoData.data->qpos[0];
+            odom_msg.pose.pose.position.y = MuJoCoData.data->qpos[1];
+            odom_msg.pose.pose.position.z = MuJoCoData.data->qpos[2];
+
+            odom_msg.pose.pose.orientation.w = MuJoCoData.data->qpos[3];
+            odom_msg.pose.pose.orientation.x = MuJoCoData.data->qpos[4];
+            odom_msg.pose.pose.orientation.y = MuJoCoData.data->qpos[5];
+            odom_msg.pose.pose.orientation.z = MuJoCoData.data->qpos[6];
+
+            odom_msg.twist.twist.linear.x = MuJoCoData.data->qvel[0];
+            odom_msg.twist.twist.linear.y = MuJoCoData.data->qvel[1];
+            odom_msg.twist.twist.linear.z = MuJoCoData.data->qvel[2];
+
+            odom_msg.twist.twist.angular.x = MuJoCoData.data->qvel[3];
+            odom_msg.twist.twist.angular.y = MuJoCoData.data->qvel[4];
+            odom_msg.twist.twist.angular.z = MuJoCoData.data->qvel[5];
+        }
+
+        _odom_pub->publish(odom_msg);
+    }
+};
+
+int main(int argc, char **argv)
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<MuJoCoNode>());
+    rclcpp::shutdown();
+    return 0;
+}
