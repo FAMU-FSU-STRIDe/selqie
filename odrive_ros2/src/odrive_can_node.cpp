@@ -78,8 +78,8 @@ private:
     {
         CanFrame frame;
         frame.id = arb_id;
-        frame.data.resize(len);
-        std::memcpy(frame.data.data(), data, len);
+        frame.size = len;
+        frame.data = std::vector<uint8_t>(data, data + len);
         return frame;
     }
 
@@ -207,7 +207,7 @@ public:
             else
             {
                 // input mode defaults to 1 (passthrough)
-                std::memset(data + 4, 1, 8);
+                std::memset(data + 4, uint32_t(1), 8);
             }
 
             _can_tx_pub->publish(createFrame(arb_id, data, sizeof(data)));

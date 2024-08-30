@@ -66,9 +66,9 @@ public:
 
     void send(const CanFrame::SharedPtr msg)
     {
-        if (msg->id > CAN_MAX_DLEN)
+        if (msg->size > CAN_MAX_DLC)
         {
-            RCLCPP_ERROR(this->get_logger(), "CAN ID is out of range (0x%03X)", msg->id);
+            RCLCPP_ERROR(this->get_logger(), "CAN message too large (Max: %d)", CAN_MAX_DLC);
             return;
         }
 
