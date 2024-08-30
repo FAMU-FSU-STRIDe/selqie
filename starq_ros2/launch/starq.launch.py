@@ -59,23 +59,6 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
         ]
     )
 
-def DefaultLegPositionNode(name : str):
-    return Node(
-        package='leg_gaits',
-        executable='static_position_node',
-        name=f'leg_stand_{name}',
-        output='screen',
-        namespace='starq',
-        parameters=[{
-            'position': default_leg_position,
-            'delay': 1.0
-        }],
-        remappings=[
-            ('command', f'leg{name}/command')
-        ]
-    )
-
-
 def generate_launch_description():
     return LaunchDescription([
         CanNode(0),
@@ -91,9 +74,5 @@ def generate_launch_description():
         FiveBar2DNode('FL', 0, 1, True),
         FiveBar2DNode('RL', 2, 3, True),
         FiveBar2DNode('RR', 4, 5, False),
-        FiveBar2DNode('FR', 6, 7, False),
-        DefaultLegPositionNode('FL'),
-        DefaultLegPositionNode('RL'),
-        DefaultLegPositionNode('RR'),
-        DefaultLegPositionNode('FR')
+        FiveBar2DNode('FR', 6, 7, False)
     ])

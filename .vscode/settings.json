@@ -79,7 +79,11 @@
         "variant": "cpp",
         "dense": "cpp",
         "complex": "cpp",
-        "forward_list": "cpp"
+        "forward_list": "cpp",
+        "strstream": "cpp",
+        "bitset": "cpp",
+        "fstream": "cpp",
+        "cfenv": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

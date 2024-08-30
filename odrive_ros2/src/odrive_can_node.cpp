@@ -268,11 +268,15 @@ public:
             std::memcpy(data, &msg->axis_state, sizeof(msg->axis_state));
 
             _can_tx_pub->publish(createFrame(arb_id, data, sizeof(data)));
+
+            RCLCPP_INFO(this->get_logger(), "Set AXIS_STATE to %d", int(msg->axis_state));
         }
 
         if (msg->gear_ratio != 0.0)
         {
             _gear_ratio = msg->gear_ratio;
+
+            RCLCPP_INFO(this->get_logger(), "Set GEAR_RATIO to %.3f", msg->gear_ratio);
         }
 
         if (msg->vel_limit != 0.0 && msg->curr_limit != 0.0)
@@ -323,6 +327,8 @@ public:
             std::memset(data, 0, 4);
 
             _can_tx_pub->publish(createFrame(arb_id, data, sizeof(data)));
+
+            RCLCPP_INFO(this->get_logger(), "Cleared errors");
         }
     }
 
