@@ -207,7 +207,7 @@ public:
             else
             {
                 // input mode defaults to 1 (passthrough)
-                std::memset(data + 4, uint32_t(1), 8);
+                std::memset(data + 4, uint32_t(1), sizeof(uint32_t));
             }
 
             _can_tx_pub->publish(createFrame(arb_id, data, sizeof(data)));
