@@ -6,7 +6,7 @@ from robot_msgs.msg import LegCommand
 def main(args=None):
     rclpy.init(args=args)
 
-    node = Node('static_leg_position_node')
+    node = Node('static_position_node')
 
     node.declare_parameter('position', [0.0, 0.0, 0.0])
     position = node.get_parameter('position').get_parameter_value().double_array_value
@@ -28,7 +28,7 @@ def main(args=None):
 
     publisher = node.create_publisher(LegCommand, 'command', 1)
     publisher.publish(msg)
-    node.get_logger().info('Published static leg position')
+    node.get_logger().info('Published static position')
 
     node.destroy_node()
     rclpy.shutdown()
