@@ -14,10 +14,10 @@ def generate_launch_description():
             remappings=[
                 ('can/tx', 'can0/tx'),
                 ('can/rx', 'can0/rx'),
-                ('motor/command', 'motor0/command'),
-                ('motor/config', 'motor0/config'),
-                ('motor/estimate', 'motor0/estimate'),
-                ('motor/info', 'motor0/info')
+                ('odrive/command', 'odrive0/command'),
+                ('odrive/config', 'odrive0/config'),
+                ('odrive/estimate', 'odrive0/estimate'),
+                ('odrive/info', 'odrive0/info')
             ]
         )
     ])

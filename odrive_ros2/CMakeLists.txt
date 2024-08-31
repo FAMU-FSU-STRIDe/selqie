@@ -14,9 +14,6 @@ find_package(robot_msgs REQUIRED)
 add_executable(odrive_can_node src/odrive_can_node.cpp)
 ament_target_dependencies(odrive_can_node rclcpp robot_msgs)
 
-add_executable(odrive_cmd_node src/odrive_cmd_node.cpp)
-ament_target_dependencies(odrive_cmd_node rclcpp robot_msgs)
-
 # install targets
 install(TARGETS
   odrive_can_node

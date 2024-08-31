@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>util_scripts</name>
+  <name>robot_utils</name>
   <version>1.0.0</version>
-  <description>Utility Scripts Package</description>
+  <description>Robot Utilities Package</description>
   <maintainer email="jtylerboylan@outlook.com">JTB</maintainer>
   <license>Apache-2.0</license>
 
