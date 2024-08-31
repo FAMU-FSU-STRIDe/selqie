@@ -221,6 +221,12 @@ public:
         {
         case MotorCommand::CONTROL_MODE_POSITION:
         {
+            if (!std::isfinite(pos_rev))
+            {
+                RCLCPP_ERROR(this->get_logger(), "Invalid position setpoint (%.3f)", msg->pos_setpoint);
+                return;
+            }
+
             const uint32_t arb_id = getArbitrationID(_id, CanCommandID::SET_POSITION);
 
             const int16_t vel_ff_int = (int16_t)(vel_rev * 1E3F);
@@ -236,6 +242,12 @@ public:
         }
         case MotorCommand::CONTROL_MODE_VELOCITY:
         {
+            if (!std::isfinite(vel_rev))
+            {
+                RCLCPP_ERROR(this->get_logger(), "Invalid velocity setpoint (%.3f)", msg->vel_setpoint);
+                return;
+            }
+
             const uint32_t arb_id = getArbitrationID(_id, CanCommandID::SET_VELOCITY);
 
             uint8_t data[8];
@@ -247,6 +259,12 @@ public:
         }
         case MotorCommand::CONTROL_MODE_TORQUE:
         {
+            if (!std::isfinite(torq_N))
+            {
+                RCLCPP_ERROR(this->get_logger(), "Invalid torque setpoint (%.3f)", msg->torq_setpoint);
+                return;
+            }
+
             const uint32_t arb_id = getArbitrationID(_id, CanCommandID::SET_TORQUE);
 
             uint8_t data[4];
@@ -269,14 +287,14 @@ public:
 
             _can_tx_pub->publish(createFrame(arb_id, data, sizeof(data)));
 
-            RCLCPP_INFO(this->get_logger(), "Set AXIS_STATE to %d", int(msg->axis_state));
+            RCLCPP_INFO(this->get_logger(), "Set axis state to %d", int(msg->axis_state));
         }
 
         if (msg->gear_ratio != 0.0)
         {
             _gear_ratio = msg->gear_ratio;
 
-            RCLCPP_INFO(this->get_logger(), "Set GEAR_RATIO to %.3f", msg->gear_ratio);
+            RCLCPP_INFO(this->get_logger(), "Set gear ratio to %.3f", msg->gear_ratio);
         }
 
         if (msg->vel_limit != 0.0 && msg->curr_limit != 0.0)

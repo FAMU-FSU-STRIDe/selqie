@@ -144,6 +144,11 @@ public:
 
         const Matrix3f jacobian = _model->getJacobian(latestMotorPositions());
 
+        if (jacobian.determinant() == 0.0)
+        {
+            RCLCPP_WARN_ONCE(_node->get_logger(), "Jacobian determinant is zero");
+        }
+
         const Vector3f motor_pos = _model->getInverseKinematics(pos_setpoint);
         const Vector3f motor_vels = jacobian.inverse() * vel_setpoint;
         const Vector3f motor_torqs = jacobian.transpose() * force_setpoint;

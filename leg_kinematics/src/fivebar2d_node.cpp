@@ -82,7 +82,7 @@ public:
         const float dXdC = 0.0;
         const float dYdA = 0.0;
         const float dYdB = 0.0;
-        const float dYdC = 0.0;
+        const float dYdC = 1.0;
         const float dZdA = t2 * c2 + t3 * s2 - t4 * c2;
         const float dZdB = t2 * c2 - t3 * s2 - t4 * c2;
         const float dZdC = 0.0;

@@ -30,6 +30,7 @@ setup(
             'clear_odrive_errors = robot_utils.clear_odrive_errors:main',
             'set_leg_position = robot_utils.set_leg_position:main',
             'run_leg_trajectory_file = robot_utils.run_leg_trajectory_file:main',
+            'stand = robot_utils.stand:main',
         ],
     },
 )
