@@ -1,0 +1,69 @@
+from launch import LaunchDescription
+from launch.actions import ExecuteProcess, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
+from launch_ros.actions import Node
+
+STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
+
+def RunLegTrajectoryFile(file : str, num_loops : int, frequency : float):
+    return Node(
+        package='robot_utils',
+        executable='run_leg_trajectory_file',
+        name='run_trajectory',
+        output='screen',
+        parameters=[
+            {'file': file},
+            {'num_loops': num_loops},
+            {'frequency': frequency},
+        ]
+    )
+
+def generate_launch_description():
+
+    stand = Node(
+        package='robot_utils',
+        executable='stand',
+        name='stand',
+        output='screen',
+        parameters=[
+            {'stand_position': STANDING_LEG_POSITION},
+            {'delay': 1.0},
+            {'duration': 5.0},
+        ]
+    )
+
+    walk = RunLegTrajectoryFile(
+        file='walk.txt',
+        num_loops=10,
+        frequency=1.0
+    )
+
+    return LaunchDescription([
+        ExecuteProcess(
+            cmd=['ros2', 'bag', 'record',
+                 '/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
+                 '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
+                 '/motor0/info', '/motor1/info', '/motor2/info', '/motor3/info',
+                 '/motor4/info', '/motor5/info', '/motor6/info', '/motor7/info',],
+            output='screen'
+        ),
+        stand,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=stand,
+                on_exit=[walk],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=walk,
+                on_exit=[
+                    ExecuteProcess(
+                        cmd=['bash', '-c', '\'kill -SIGINT $(pgrep -f "ros2 bag record")\''],
+                        shell=True,
+                        output='screen'
+                    )
+                ]
+            )
+        )
+    ])

@@ -11,8 +11,8 @@ def main(args=None):
     node.declare_parameter('leg_names', ['FL', 'FR', 'RL', 'RR'])
     leg_names = node.get_parameter('leg_names').get_parameter_value().string_array_value
 
-    node.declare_parameter('stand_position', [0.0, 0.0, -0.15])
-    position = node.get_parameter('position').get_parameter_value().double_array_value
+    node.declare_parameter('stand_position', [0.0, 0.0, -0.20])
+    position = node.get_parameter('stand_position').get_parameter_value().double_array_value
     
     node.declare_parameter('delay', 0.0)
     delay = node.get_parameter('delay').get_parameter_value().double_value
@@ -36,11 +36,16 @@ def main(args=None):
     msg.pos_setpoint.y = position[1]
     msg.pos_setpoint.z = position[2]
 
-    for i in range(len(leg_names)):
-        publishers[i].publish(msg)
     node.get_logger().info('Standing...')
 
-    time.sleep(duration)
+    rate = 20.0
+    cstart = time.time()
+    while time.time() - cstart < duration:
+        for i in range(len(leg_names)):
+            publishers[i].publish(msg)
+        time.sleep(1.0 / rate)
+
+    node.get_logger().info('Done standing')
 
     node.destroy_node()
     rclpy.shutdown()
