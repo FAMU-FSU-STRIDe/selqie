@@ -9,7 +9,6 @@ def CanNode(ifc : int):
         executable='can_bus_node',
         name=f'can{ifc}',
         output='screen',
-        namespace='starq',
         parameters=[{
             'interface': f'can{ifc}'
         }],
@@ -25,7 +24,6 @@ def ODriveNode(id : int, ifc : int):
         executable='odrive_can_node',
         name=f'odrive_can{id}',
         output='screen',
-        namespace='starq',
         parameters=[{
             'id': id
         }],
@@ -42,10 +40,9 @@ def ODriveNode(id : int, ifc : int):
 def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
     return Node(
         package='leg_kinematics',
-        executable='unitree_a1_leg_node',
-        name=f'unitree_a1_leg{name}',
+        executable='fivebar2d_node',
+        name=f'fivebar2d{name}',
         output='screen',
-        namespace='starq',
         parameters=[{
             'flip_y': flip_y # Left: False, Right: True
         }],
