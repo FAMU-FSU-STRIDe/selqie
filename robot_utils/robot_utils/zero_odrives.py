@@ -7,7 +7,7 @@ def main(args=None):
 
     node = Node('zero_odrives_node')
 
-    node.declare_parameter('num_motors', 1)
+    node.declare_parameter('num_motors', 8)
     num_motors = node.get_parameter('num_motors').get_parameter_value().integer_value
 
     msg = MotorCommand()

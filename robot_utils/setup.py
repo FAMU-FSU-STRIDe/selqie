@@ -25,6 +25,8 @@ setup(
             'ready_odrives = robot_utils.ready_odrives:main',
             'zero_odrives = robot_utils.zero_odrives:main',
             'clear_odrive_errors = robot_utils.clear_odrive_errors:main',
+            'set_leg_position = robot_utils.set_leg_position:main',
+            'run_leg_trajectory_file = robot_utils.run_leg_trajectory_file:main',
         ],
     },
 )

@@ -6,7 +6,7 @@ from robot_msgs.msg import LegCommand
 def main(args=None):
     rclpy.init(args=args)
 
-    node = Node('static_position_node')
+    node = Node('set_leg_position')
 
     node.declare_parameter('position', [0.0, 0.0, 0.0])
     position = node.get_parameter('position').get_parameter_value().double_array_value

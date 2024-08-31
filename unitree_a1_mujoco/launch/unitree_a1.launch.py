@@ -101,8 +101,8 @@ def generate_launch_description():
             ]
         ),
         Node(
-            package='leg_gaits',
-            executable='static_position_node',
+            package='robot_utils',
+            executable='set_leg_position',
             name='leg_stand_front_right',
             output='screen',
             namespace='unitree_a1',
@@ -115,8 +115,8 @@ def generate_launch_description():
             ]
         ),
         Node(
-            package='leg_gaits',
-            executable='static_position_node',
+            package='robot_utils',
+            executable='set_leg_position',
             name='leg_stand_front_left',
             output='screen',
             namespace='unitree_a1',
@@ -129,8 +129,8 @@ def generate_launch_description():
             ]
         ),
         Node(
-            package='leg_gaits',
-            executable='static_position_node',
+            package='robot_utils',
+            executable='set_leg_position',
             name='leg_stand_rear_right',
             output='screen',
             namespace='unitree_a1',
@@ -143,8 +143,8 @@ def generate_launch_description():
             ]
         ),
         Node(
-            package='leg_gaits',
-            executable='static_position_node',
+            package='robot_utils',
+            executable='set_leg_position',
             name='leg_stand_rear_left',
             output='screen',
             namespace='unitree_a1',

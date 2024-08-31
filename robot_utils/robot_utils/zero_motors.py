@@ -7,7 +7,7 @@ def main(args=None):
 
     node = Node('zero_motors_node')
 
-    node.declare_parameter('num_motors', 1)
+    node.declare_parameter('num_motors', 12)
     num_motors = node.get_parameter('num_motors').get_parameter_value().integer_value
 
     msg = MotorCommand()

@@ -17,7 +17,6 @@ ament_target_dependencies(odrive_can_node rclcpp robot_msgs)
 # install targets
 install(TARGETS
   odrive_can_node
-  odrive_cmd_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
