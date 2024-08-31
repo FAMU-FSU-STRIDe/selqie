@@ -2,4 +2,4 @@
 uint32 control_mode
 geometry_msgs/Vector3 pos_setpoint
 geometry_msgs/Vector3 vel_setpoint
-geometry_msgs/Vector3 torq_setpoint
+geometry_msgs/Vector3 force_setpoint

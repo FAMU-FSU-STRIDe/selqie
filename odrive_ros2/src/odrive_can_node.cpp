@@ -213,8 +213,8 @@ public:
             _can_tx_pub->publish(createFrame(arb_id, data, sizeof(data)));
         }
 
-        const float pos_rev = _gear_ratio * msg->pos_setpoint / (2.0f * M_PI);
-        const float vel_rev = _gear_ratio * msg->vel_setpoint / (2.0f * M_PI);
+        const float pos_rev = msg->pos_setpoint * _gear_ratio / (2.0f * M_PI);
+        const float vel_rev = msg->vel_setpoint * _gear_ratio / (2.0f * M_PI);
         const float torq_N = msg->torq_setpoint / _gear_ratio;
 
         switch (msg->control_mode)

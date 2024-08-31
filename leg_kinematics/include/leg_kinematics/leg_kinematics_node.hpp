@@ -140,13 +140,13 @@ public:
 
         const Vector3f pos_setpoint(msg->pos_setpoint.x, msg->pos_setpoint.y, msg->pos_setpoint.z);
         const Vector3f vel_setpoint(msg->vel_setpoint.x, msg->vel_setpoint.y, msg->vel_setpoint.z);
-        const Vector3f torq_setpoint(msg->torq_setpoint.x, msg->torq_setpoint.y, msg->torq_setpoint.z);
+        const Vector3f force_setpoint(msg->force_setpoint.x, msg->force_setpoint.y, msg->force_setpoint.z);
 
         const Matrix3f jacobian = _model->getJacobian(latestMotorPositions());
 
         const Vector3f motor_pos = _model->getInverseKinematics(pos_setpoint);
         const Vector3f motor_vels = jacobian.inverse() * vel_setpoint;
-        const Vector3f motor_torqs = jacobian.transpose() * torq_setpoint;
+        const Vector3f motor_torqs = jacobian.transpose() * force_setpoint;
 
         for (std::size_t i = 0; i < _model->getNumMotors(); i++)
         {
@@ -169,7 +169,7 @@ public:
         LegEstimate msg;
         msg.pos_estimate = toVector3(foot_position);
         msg.vel_estimate = toVector3(foot_velocity);
-        msg.torq_estimate = toVector3(foot_torque);
+        msg.force_estimate = toVector3(foot_torque);
 
         _leg_estimate_pub->publish(msg);
     }

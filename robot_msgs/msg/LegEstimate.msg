@@ -1,4 +1,4 @@
 # Variables
 geometry_msgs/Vector3 pos_estimate
 geometry_msgs/Vector3 vel_estimate
-geometry_msgs/Vector3 torq_estimate
+geometry_msgs/Vector3 force_estimate
