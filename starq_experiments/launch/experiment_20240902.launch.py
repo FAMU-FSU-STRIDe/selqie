@@ -43,8 +43,8 @@ def generate_launch_description():
             cmd=['ros2', 'bag', 'record',
                  '/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
                  '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
-                 '/motor0/info', '/motor1/info', '/motor2/info', '/motor3/info',
-                 '/motor4/info', '/motor5/info', '/motor6/info', '/motor7/info',],
+                 '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
+                 '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',],
             output='screen'
         ),
         stand,

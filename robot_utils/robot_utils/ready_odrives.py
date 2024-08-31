@@ -1,3 +1,4 @@
+import time
 import rclpy
 from rclpy.node import Node
 from robot_msgs.msg import MotorConfig
@@ -14,7 +15,11 @@ def main(args=None):
     msg.axis_state = MotorConfig.AXIS_STATE_CLOSED_LOOP_CONTROL
 
     for i in range(num_motors):
-        publisher = node.create_publisher(MotorConfig, f'odrive{i}/config', 1)
+        publisher = node.create_publisher(MotorConfig, f'odrive{i}/config', 10)
+        
+        while publisher.get_subscription_count() == 0:
+            time.sleep(0.1)
+            
         publisher.publish(msg)
         node.get_logger().info(f'Readied ODrive {i}')
 

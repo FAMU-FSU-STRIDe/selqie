@@ -49,10 +49,10 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
         remappings=[
             ('leg/command', f'leg{name}/command'),
             ('leg/estimate', f'leg{name}/estimate'),
-            ('odrive0/command', f'odrive{id0}/command'),
-            ('odrive0/estimate', f'odrive{id0}/estimate'),
-            ('odrive1/command', f'odrive{id1}/command'),
-            ('odrive1/estimate', f'odrive{id1}/estimate')
+            ('motor0/command', f'odrive{id0}/command'),
+            ('motor0/estimate', f'odrive{id0}/estimate'),
+            ('motor1/command', f'odrive{id1}/command'),
+            ('motor1/estimate', f'odrive{id1}/estimate')
         ]
     )
 

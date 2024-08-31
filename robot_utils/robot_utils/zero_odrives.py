@@ -1,3 +1,4 @@
+import time
 import rclpy
 from rclpy.node import Node
 from robot_msgs.msg import MotorCommand
@@ -16,6 +17,10 @@ def main(args=None):
 
     for i in range(num_motors):
         publisher = node.create_publisher(MotorCommand, f'odrive{i}/command', 1)
+        
+        while publisher.get_subscription_count() == 0:
+            time.sleep(0.1)
+        
         publisher.publish(msg)
         node.get_logger().info(f'Zeroed ODrive {i}')
 
