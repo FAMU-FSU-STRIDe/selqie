@@ -105,8 +105,8 @@ public:
         _latest_motor_positions.resize(num_motors);
 
         _leg_command_sub = node->create_subscription<LegCommand>(
-            "command", qos_fast(), std::bind(&LegKinematicsNode::legCommand, this, std::placeholders::_1));
-        _leg_estimate_pub = node->create_publisher<LegEstimate>("estimate", qos_fast());
+            "leg/command", qos_fast(), std::bind(&LegKinematicsNode::legCommand, this, std::placeholders::_1));
+        _leg_estimate_pub = node->create_publisher<LegEstimate>("leg/estimate", qos_fast());
 
         for (std::size_t m = 0; m < num_motors; m++)
         {

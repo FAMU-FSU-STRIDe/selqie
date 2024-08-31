@@ -14,8 +14,8 @@ def generate_launch_description():
                 'flip_y': False # Left: False, Right: True
             }],
             remappings=[
-                ('command', 'leg0/command'),
-                ('estimate', 'leg0/estimate'),
+                ('leg/command', 'leg/0/command'),
+                ('leg/estimate', 'leg/0/estimate'),
                 ('motor0/command', 'motor0/command'),
                 ('motor0/estimate', 'motor0/estimate'),
                 ('motor1/command', 'motor1/command'),

@@ -12,8 +12,8 @@ def generate_launch_description():
                 'interface': 'can0'
             }],
             remappings=[
-                ('can/tx', 'can0/tx'),
-                ('can/rx', 'can0/rx')
+                ('can/tx', 'can/0/tx'),
+                ('can/rx', 'can/0/rx')
             ]
         )
     ])

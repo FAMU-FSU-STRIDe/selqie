@@ -30,8 +30,8 @@ def generate_launch_description():
                 'flip_y': True # Left: False, Right: True
             }],
             remappings=[
-                ('command', 'legFR/command'),
-                ('estimate', 'legFR/estimate'),
+                ('leg/command', 'legFR/command'),
+                ('leg/estimate', 'legFR/estimate'),
                 ('motor0/command', 'motor0/command'),
                 ('motor0/estimate', 'motor0/estimate'),
                 ('motor1/command', 'motor1/command'),
@@ -50,8 +50,8 @@ def generate_launch_description():
                 'flip_y': False # Left: False, Right: True
             }],
             remappings=[
-                ('command', 'legFL/command'),
-                ('estimate', 'legFL/estimate'),
+                ('leg/command', 'legFL/command'),
+                ('leg/estimate', 'legFL/estimate'),
                 ('motor0/command', 'motor3/command'),
                 ('motor0/estimate', 'motor3/estimate'),
                 ('motor1/command', 'motor4/command'),
@@ -70,8 +70,8 @@ def generate_launch_description():
                 'flip_y': True # Left: False, Right: True
             }],
             remappings=[
-                ('command', 'legRR/command'),
-                ('estimate', 'legRR/estimate'),
+                ('leg/command', 'legRR/command'),
+                ('leg/estimate', 'legRR/estimate'),
                 ('motor0/command', 'motor6/command'),
                 ('motor0/estimate', 'motor6/estimate'),
                 ('motor1/command', 'motor7/command'),
@@ -90,8 +90,8 @@ def generate_launch_description():
                 'flip_y': False # Left: False, Right: True
             }],
             remappings=[
-                ('command', 'legRL/command'),
-                ('estimate', 'legRL/estimate'),
+                ('leg/command', 'legRL/command'),
+                ('leg/estimate', 'legRL/estimate'),
                 ('motor0/command', 'motor9/command'),
                 ('motor0/estimate', 'motor9/estimate'),
                 ('motor1/command', 'motor10/command'),
@@ -111,7 +111,7 @@ def generate_launch_description():
                 'delay': 1.0
             }],
             remappings=[
-                ('command', 'legFR/command')
+                ('leg/command', 'legFR/command')
             ]
         ),
         Node(
@@ -125,7 +125,7 @@ def generate_launch_description():
                 'delay': 1.0
             }],
             remappings=[
-                ('command', 'legFL/command')
+                ('leg/command', 'legFL/command')
             ]
         ),
         Node(
@@ -139,7 +139,7 @@ def generate_launch_description():
                 'delay': 1.0
             }],
             remappings=[
-                ('command', 'legRR/command')
+                ('leg/command', 'legRR/command')
             ]
         ),
         Node(
@@ -153,7 +153,7 @@ def generate_launch_description():
                 'delay': 1.0
             }],
             remappings=[
-                ('command', 'legRL/command')
+                ('leg/command', 'legRL/command')
             ]
         ),
     ])

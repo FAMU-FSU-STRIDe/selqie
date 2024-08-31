@@ -1,11 +1,15 @@
 {
     "python.autoComplete.extraPaths": [
-        "/home/ubuntu/ros2_ws/install/robot_msgs/local/lib/python3.10/dist-packages",
+        "/home/jtyler/Documents/Robot-ROS2/build/leg_gaits",
+        "/home/jtyler/Documents/Robot-ROS2/install/leg_gaits/lib/python3.10/site-packages",
+        "/home/jtyler/Documents/Robot-ROS2/install/robot_msgs/local/lib/python3.10/dist-packages",
         "/opt/ros/humble/lib/python3.10/site-packages",
         "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ],
     "python.analysis.extraPaths": [
-        "/home/ubuntu/ros2_ws/install/robot_msgs/local/lib/python3.10/dist-packages",
+        "/home/jtyler/Documents/Robot-ROS2/build/leg_gaits",
+        "/home/jtyler/Documents/Robot-ROS2/install/leg_gaits/lib/python3.10/site-packages",
+        "/home/jtyler/Documents/Robot-ROS2/install/robot_msgs/local/lib/python3.10/dist-packages",
         "/opt/ros/humble/lib/python3.10/site-packages",
         "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ],

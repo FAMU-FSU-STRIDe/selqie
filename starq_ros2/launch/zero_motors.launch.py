@@ -12,7 +12,7 @@ def ZeroMotorNode(id : int):
             'cmd': 'zero'
         }],
         remappings=[
-            ('command', f'motor{id}/command')
+            ('motor/command', f'motor{id}/command')
         ]
     )
 

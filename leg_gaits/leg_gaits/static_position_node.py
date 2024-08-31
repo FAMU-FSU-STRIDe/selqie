@@ -26,7 +26,7 @@ def main(args=None):
     msg.pos_setpoint.y = position[1]
     msg.pos_setpoint.z = position[2]
 
-    publisher = node.create_publisher(LegCommand, 'command', 1)
+    publisher = node.create_publisher(LegCommand, 'leg/command', 1)
     publisher.publish(msg)
     node.get_logger().info('Published static position')
 

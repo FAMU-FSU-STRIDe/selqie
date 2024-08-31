@@ -8,16 +8,35 @@ using namespace robot_msgs::msg;
 class ODriveCommandNode
 {
 private:
-    rclcpp::Node *_node;
+    rclcpp::Node::SharedPtr _node;
     std::string _cmd = "";
     std::string _args = "";
     rclcpp::Publisher<MotorConfig>::SharedPtr _config_pub;
     rclcpp::Publisher<MotorCommand>::SharedPtr _command_pub;
 
+    void wait_for_config_subscriber()
+    {
+        while (_config_pub->get_subscription_count() == 0 && rclcpp::ok())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    void wait_for_command_subscriber()
+    {
+        while (_command_pub->get_subscription_count() == 0 && rclcpp::ok())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
     void idle()
     {
         MotorConfig cfg;
         cfg.axis_state = MotorConfig::AXIS_STATE_IDLE;
+        wait_for_config_subscriber();
         _config_pub->publish(cfg);
         RCLCPP_INFO(_node->get_logger(), "Motor state set to IDLE");
     }
@@ -26,6 +45,7 @@ private:
     {
         MotorConfig cfg;
         cfg.axis_state = MotorConfig::AXIS_STATE_CLOSED_LOOP_CONTROL;
+        wait_for_config_subscriber();
         _config_pub->publish(cfg);
         RCLCPP_INFO(_node->get_logger(), "Motor state set to CLOSED_LOOP_CONTROL");
     }
@@ -35,6 +55,7 @@ private:
         MotorCommand cmd;
         cmd.control_mode = MotorCommand::CONTROL_MODE_POSITION;
         cmd.pos_setpoint = 0.0;
+        wait_for_command_subscriber();
         _command_pub->publish(cmd);
         RCLCPP_INFO(_node->get_logger(), "Motor position set to 0.0");
     }
@@ -43,12 +64,13 @@ private:
     {
         MotorConfig cfg;
         cfg.clear_errors = true;
+        wait_for_config_subscriber();
         _config_pub->publish(cfg);
         RCLCPP_INFO(_node->get_logger(), "Motor error CLEARED");
     }
 
 public:
-    ODriveCommandNode(rclcpp::Node *node)
+    ODriveCommandNode(rclcpp::Node::SharedPtr node)
         : _node(node)
     {
         node->declare_parameter("cmd", _cmd);
@@ -57,8 +79,10 @@ public:
         node->declare_parameter("args", _args);
         node->get_parameter("args", _args);
 
-        _config_pub = _node->create_publisher<MotorConfig>("config", 10);
-        _command_pub = _node->create_publisher<MotorCommand>("command", 10);
+        _config_pub = _node->create_publisher<MotorConfig>("motor/config", 10);
+        _command_pub = _node->create_publisher<MotorCommand>("motor/command", 10);
+
+        parse();
     }
 
     void parse()
@@ -90,11 +114,7 @@ int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<rclcpp::Node>("odrive_cmd_node");
-    ODriveCommandNode odrive_cmd(node.get());
-    rclcpp::spin_some(node);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    odrive_cmd.parse();
-    rclcpp::spin_some(node);
+    ODriveCommandNode odrive_cmd(node);
     rclcpp::shutdown();
     return 0;
 }

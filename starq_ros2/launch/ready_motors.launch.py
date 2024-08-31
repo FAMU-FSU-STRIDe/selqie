@@ -12,7 +12,7 @@ def ReadyMotorNode(id : int):
             'cmd': 'ready'
         }],
         remappings=[
-            ('config', f'motor{id}/config')
+            ('motor/config', f'motor{id}/config')
         ]
     )
 

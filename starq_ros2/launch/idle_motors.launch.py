@@ -12,7 +12,7 @@ def IdleMotorNode(id : int):
             'cmd': 'idle'
         }],
         remappings=[
-            ('config', f'motor{id}/config')
+            ('motor/config', f'motor{id}/config')
         ]
     )
 

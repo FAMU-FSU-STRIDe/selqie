@@ -32,10 +32,10 @@ def ODriveNode(id : int, ifc : int):
         remappings=[
             ('can/tx', f'can{ifc}/tx'),
             ('can/rx', f'can{ifc}/rx'),
-            ('command', f'motor{id}/command'),
-            ('config', f'motor{id}/config'),
-            ('estimate', f'motor{id}/estimate'),
-            ('info', f'motor{id}/info')
+            ('motor/command', f'motor{id}/command'),
+            ('motor/config', f'motor{id}/config'),
+            ('motor/estimate', f'motor{id}/estimate'),
+            ('motor/info', f'motor{id}/info')
         ]
     )
 
@@ -50,8 +50,8 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
             'flip_y': flip_y # Left: False, Right: True
         }],
         remappings=[
-            ('command', f'leg{name}/command'),
-            ('estimate', f'leg{name}/estimate'),
+            ('leg/command', f'leg{name}/command'),
+            ('leg/estimate', f'leg{name}/estimate'),
             ('motor0/command', f'motor{id0}/command'),
             ('motor0/estimate', f'motor{id0}/estimate'),
             ('motor1/command', f'motor{id1}/command'),

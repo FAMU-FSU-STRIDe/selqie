@@ -95,14 +95,14 @@ public:
         _can_tx_pub = this->create_publisher<CanFrame>("can/tx", qos_fast());
 
         _command_sub = this->create_subscription<MotorCommand>(
-            "command", qos_fast(), std::bind(&ODriveNode::command, this, std::placeholders::_1));
+            "motor/command", qos_fast(), std::bind(&ODriveNode::command, this, std::placeholders::_1));
 
         _config_sub = this->create_subscription<MotorConfig>(
-            "config", qos_reliable(), std::bind(&ODriveNode::config, this, std::placeholders::_1));
+            "motor/config", qos_reliable(), std::bind(&ODriveNode::config, this, std::placeholders::_1));
 
-        _estimate_pub = this->create_publisher<MotorEstimate>("estimate", qos_fast());
+        _estimate_pub = this->create_publisher<MotorEstimate>("motor/estimate", qos_fast());
 
-        _info_pub = this->create_publisher<MotorInfo>("info", qos_fast());
+        _info_pub = this->create_publisher<MotorInfo>("motor/info", qos_fast());
 
         double estimate_rate = 50.0;
         _estimate_timer = this->create_wall_timer(
