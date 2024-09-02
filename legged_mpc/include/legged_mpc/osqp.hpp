@@ -12,7 +12,7 @@ using namespace std::chrono;
 
 struct QPProblem
 {
-    std::size_t Nx, Nu, n, m;
+    std::size_t n, m;
     SparseMatrix<OSQPFloat> H, Ac;
     VectorX<OSQPFloat> g, lc, uc;
 };
@@ -31,7 +31,6 @@ static OSQPCscMatrix convertEigenSparseToCSC(const Eigen::SparseMatrix<OSQPFloat
     M.n = matrix.cols();
     M.nz = -1;
     M.nzmax = matrix.nonZeros();
-
     M.x = new OSQPFloat[M.nzmax];
     M.i = new OSQPInt[M.nzmax];
     M.p = new OSQPInt[M.n + 1];
@@ -48,7 +47,7 @@ static OSQPCscMatrix convertEigenSparseToCSC(const Eigen::SparseMatrix<OSQPFloat
         }
         M.p[j + 1] = k;
     }
-
+    
     return M;
 }
 
@@ -66,29 +65,19 @@ static QPSolution solveOSQP(const QPProblem &qp, OSQPSettings *settings)
 
     OSQPSolver *solver;
     QPSolution solution;
-    solution.exit_flag = osqp_setup(&solver,
-                                    &P, qp.g.data(), &A, qp.lc.data(), qp.uc.data(),
-                                    qp.m, qp.n, settings);
-
+    solution.exit_flag = osqp_setup(&solver, &P, qp.g.data(), &A, qp.lc.data(), qp.uc.data(), qp.m, qp.n, settings);
     if (solution.exit_flag != 0)
     {
         return solution;
     }
 
     solution.exit_flag = osqp_solve(solver);
-
-    if (solution.exit_flag == 0)
-    {
-        solution.xstar = VectorX<OSQPFloat>(Map<VectorX<OSQPFloat>>(solver->solution->x, qp.Nx));
-        solution.ustar = VectorX<OSQPFloat>(Map<VectorX<OSQPFloat>>(solver->solution->x + qp.Nx, qp.Nu));
-    }
-
+    solution.xstar = VectorX<OSQPFloat>(Map<VectorX<OSQPFloat>>(solver->solution->x, qp.n));
     solution.run_time = microseconds(static_cast<time_t>(solver->info->run_time * 1e6));
     solution.setup_time = microseconds(static_cast<time_t>(solver->info->setup_time * 1e6));
     solution.solve_time = microseconds(static_cast<time_t>(solver->info->solve_time * 1e6));
 
     osqp_cleanup(solver);
-
     cleanupCSC(P);
     cleanupCSC(A);
 
