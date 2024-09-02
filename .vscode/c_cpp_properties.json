@@ -9,6 +9,7 @@
         "/home/jtyler/Documents/Robot-ROS2/install/robot_msgs/include/**",
         "/opt/ros/humble/include/**",
         "/home/jtyler/Documents/Robot-ROS2/src/leg_kinematics/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/legged_mpc/include/**",
         "/home/jtyler/Documents/Robot-ROS2/src/mujoco_ros2/include/**",
         "/usr/include/**"
       ],

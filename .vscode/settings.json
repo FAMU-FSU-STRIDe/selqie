@@ -87,7 +87,8 @@
         "strstream": "cpp",
         "bitset": "cpp",
         "fstream": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "sparse": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }
