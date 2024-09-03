@@ -24,9 +24,16 @@ def main(args=None):
     node.declare_parameter('leg_names', ['FL', 'FR', 'RL', 'RR'])
     leg_names = node.get_parameter('leg_names').get_parameter_value().string_array_value
 
+    node.get_logger().info("Connecting to Legs...")
+
     publishers = []
     for i in range(4):
         publishers.append(node.create_publisher(LegCommand, f'leg{leg_names[i]}/command', 10))
+        
+        # while publishers[i].get_subscription_count() == 0:
+        #    time.sleep(0.1)
+            
+    node.get_logger().info("Connected to Legs")
 
     delay_time = []
     leg_ids = []
@@ -61,7 +68,9 @@ def main(args=None):
         *sorted(zip(delay_time, leg_ids, control_modes, input_modes, positions, velocities, forces))
     )
 
+    node.get_logger().info(f"Running Trajectory from file {file}")
     for i in range(num_loops):
+        node.get_logger().info(f"Loop {i+1}/{num_loops}")
         cstart = time.time()
         for i in range(len(delay_time)):
 

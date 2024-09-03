@@ -105,11 +105,11 @@ private:
 public:
     FiveBar2DNode() : Node("fivebar2d_node")
     {
-        float L1 = 0.065;
+        float L1 = 0.066;
         this->declare_parameter("L1", L1);
         this->get_parameter("L1", L1);
 
-        float L2 = 0.2;
+        float L2 = 0.15;
         this->declare_parameter("L2", L2);
         this->get_parameter("L2", L2);
 

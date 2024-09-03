@@ -15,8 +15,8 @@ find_package(osqp REQUIRED)
 include_directories(include)
 
 add_executable(legged_mpc_node src/legged_mpc_node.cpp)
-ament_target_dependencies(legged_mpc rclcpp robot_msgs)
-target_link_libraries(legged_mpc osqp::osqp)
+ament_target_dependencies(legged_mpc_node rclcpp robot_msgs)
+target_link_libraries(legged_mpc_node osqp::osqp)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

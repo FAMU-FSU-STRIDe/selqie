@@ -1,6 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+gear_ratio = 6.0
 default_leg_position = [0.0, 0.0, -0.18914]
 
 def CanNode(ifc : int):
@@ -25,7 +26,8 @@ def ODriveNode(id : int, ifc : int):
         name=f'odrive_can{id}',
         output='screen',
         parameters=[{
-            'id': id
+            'id': id,
+            'gear_ratio': gear_ratio
         }],
         remappings=[
             ('can/tx', f'can{ifc}/tx'),

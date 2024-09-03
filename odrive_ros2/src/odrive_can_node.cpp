@@ -89,6 +89,9 @@ public:
         this->declare_parameter("id", _id);
         this->get_parameter("id", _id);
 
+        this->declare_parameter("gear_ratio", _gear_ratio);
+        this->get_parameter("gear_ratio", _gear_ratio);
+
         _can_rx_sub = this->create_subscription<CanFrame>(
             "can/rx", qos_fast(), std::bind(&ODriveNode::receive, this, std::placeholders::_1));
 

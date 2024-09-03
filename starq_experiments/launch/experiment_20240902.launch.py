@@ -3,7 +3,7 @@ from launch.actions import ExecuteProcess, RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 
-STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
+STANDING_LEG_POSITION = [0.0, 0.0, -0.164]
 
 def RunLegTrajectoryFile(file : str, num_loops : int, frequency : float):
     return Node(
@@ -37,6 +37,18 @@ def generate_launch_description():
         num_loops=10,
         frequency=1.0
     )
+    
+    jump = RunLegTrajectoryFile(
+        file='jump.txt',
+        num_loops=1,
+        frequency=3.0
+    )
+    
+    crawl = RunLegTrajectoryFile(
+        file='crawl.txt',
+        num_loops=5,
+        frequency=1.0
+    )
 
     return LaunchDescription([
         ExecuteProcess(
@@ -57,6 +69,18 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=walk,
+                on_exit=[jump],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=jump,
+                on_exit=[crawl],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=crawl,
                 on_exit=[
                     ExecuteProcess(
                         cmd=['bash', '-c', '\'kill -SIGINT $(pgrep -f "ros2 bag record")\''],

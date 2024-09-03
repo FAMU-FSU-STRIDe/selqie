@@ -77,7 +77,7 @@ public:
         frame.can_dlc = msg->size;
         std::memcpy(frame.data, msg->data.data(), msg->size);
 
-        if (write(_socket, &frame, sizeof(frame)) < 0)
+        if (write(_socket, &frame, sizeof(frame)) <= 0)
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to send CAN frame");
         }
