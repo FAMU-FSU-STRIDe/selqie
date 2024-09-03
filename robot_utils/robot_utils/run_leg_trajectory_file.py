@@ -30,8 +30,8 @@ def main(args=None):
     for i in range(4):
         publishers.append(node.create_publisher(LegCommand, f'leg{leg_names[i]}/command', 10))
         
-        # while publishers[i].get_subscription_count() == 0:
-        #    time.sleep(0.1)
+        while publishers[i].get_subscription_count() == 0:
+           time.sleep(0.1)
             
     node.get_logger().info("Connected to Legs")
 
