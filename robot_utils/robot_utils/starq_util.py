@@ -4,6 +4,7 @@ from cmd import Cmd
 import os
 import time
 import threading
+import subprocess
 
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from ament_index_python.packages import get_package_share_directory
@@ -92,6 +93,12 @@ class STARQTerminal(Cmd):
         print("Exiting...")
         rclpy.shutdown()
         return True
+    
+    def do_shutdown(self, line):
+        """
+        Soft shutdown the robot
+        """
+        subprocess.run(["sudo", "shutdown", "-h", "now"])
 
     def do_ready(self, line):
         """
