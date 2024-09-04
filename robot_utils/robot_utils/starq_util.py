@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from cmd import Cmd
 import os
+import time
 import threading
 
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
@@ -26,14 +27,21 @@ def qos_reliable():
         reliability=QoSReliabilityPolicy.RELIABLE,
         depth=10
     )
+    
+def wait_for_sub(pub):
+    while pub.get_subscription_count() == 0:
+        time.sleep(0.05)
 
 class STARQRobotNode(Node):
     def __init__(self):
         super().__init__('robot_terminal_node')
         
+        print("Connecting...")
+        
         self.leg_command_publishers = []
         for i in range(len(LEG_NAMES)):
             self.leg_command_publishers.append(self.create_publisher(LegCommand, f'leg{LEG_NAMES[i]}/command', qos_fast()))
+            wait_for_sub(self.leg_command_publishers[i])
 
         self.leg_estimates = [LegEstimate() for _ in range(len(LEG_NAMES))]
         self.leg_estimate_subscribers = []
@@ -44,6 +52,7 @@ class STARQRobotNode(Node):
         self.motor_command_publishers = []
         for i in range(NUM_MOTORS):
             self.motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', qos_fast()))
+            wait_for_sub(self.motor_command_publishers[i])
 
         self.motor_estimates = [MotorEstimate() for _ in range(NUM_MOTORS)]
         self.motor_estimate_subscribers = []
@@ -54,6 +63,7 @@ class STARQRobotNode(Node):
         self.motor_config_publishers = []
         for i in range(NUM_MOTORS):
             self.motor_config_publishers.append(self.create_publisher(MotorConfig, f'odrive{i}/config', qos_reliable()))
+            wait_for_sub(self.motor_config_publishers[i])
 
         self.motor_infos = [MotorInfo() for _ in range(NUM_MOTORS)]
         self.motor_info_subscribers = []
