@@ -9,13 +9,18 @@ import subprocess
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import LegCommand, LegEstimate, MotorCommand, MotorEstimate, MotorConfig, MotorInfo
-from robot_utils.robot_util_functions import set_leg_states, run_leg_trajectory_file, print_motor_info, print_leg_info, get_error_name
-from robot_utils.odrive_util_functions import set_odrive_states, clear_odrive_errors, set_odrive_positions
+from robot_utils.robot_util_functions import set_leg_states, run_leg_trajectory_file, \
+                                             print_motor_info, print_leg_info, get_error_name
+from robot_utils.odrive_util_functions import set_odrive_states, clear_odrive_errors, set_odrive_positions, set_odrive_gains
 
 NUM_MOTORS = 8
 LEG_NAMES = ['FL', 'FR', 'RL', 'RR']
 STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
 TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), 'trajectories')
+ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
+                        '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
+                        '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
+                        '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',]
 
 def qos_fast():
     return QoSProfile(
@@ -29,9 +34,13 @@ def qos_reliable():
         depth=10
     )
     
-def wait_for_sub(pub):
-    while pub.get_subscription_count() == 0:
+def wait_for_subs(pubs, timeout=5):
+    cstart = time.time()
+    while not all(pub.get_subscription_count() != 0 for pub in pubs):
+        if time.time() - cstart > timeout:
+            return False
         time.sleep(0.05)
+    return True
 
 class STARQRobotNode(Node):
     def __init__(self):
@@ -42,7 +51,6 @@ class STARQRobotNode(Node):
         self.leg_command_publishers = []
         for i in range(len(LEG_NAMES)):
             self.leg_command_publishers.append(self.create_publisher(LegCommand, f'leg{LEG_NAMES[i]}/command', qos_fast()))
-            wait_for_sub(self.leg_command_publishers[i])
 
         self.leg_estimates = [LegEstimate() for _ in range(len(LEG_NAMES))]
         self.leg_estimate_subscribers = []
@@ -53,7 +61,6 @@ class STARQRobotNode(Node):
         self.motor_command_publishers = []
         for i in range(NUM_MOTORS):
             self.motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', qos_fast()))
-            wait_for_sub(self.motor_command_publishers[i])
 
         self.motor_estimates = [MotorEstimate() for _ in range(NUM_MOTORS)]
         self.motor_estimate_subscribers = []
@@ -64,7 +71,6 @@ class STARQRobotNode(Node):
         self.motor_config_publishers = []
         for i in range(NUM_MOTORS):
             self.motor_config_publishers.append(self.create_publisher(MotorConfig, f'odrive{i}/config', qos_reliable()))
-            wait_for_sub(self.motor_config_publishers[i])
 
         self.motor_infos = [MotorInfo() for _ in range(NUM_MOTORS)]
         self.motor_info_subscribers = []
@@ -72,6 +78,13 @@ class STARQRobotNode(Node):
             motor_info_callback = lambda msg, i=i: self.motor_infos.__setitem__(i, msg)
             self.motor_info_subscribers.append(self.create_subscription(MotorInfo, f'odrive{i}/info', motor_info_callback, qos_fast()))
 
+        if not wait_for_subs(self.leg_command_publishers):
+            print("Failed to connect to Leg command")
+        if not wait_for_subs(self.motor_command_publishers):
+            print("Failed to connect to Motor command")
+        if not wait_for_subs(self.motor_config_publishers):
+            print("Failed to connect to Motor config")
+        
     def motor_callback(self, msg):
         self.motor_status = msg.data
 
@@ -93,12 +106,6 @@ class STARQTerminal(Cmd):
         print("Exiting...")
         rclpy.shutdown()
         return True
-    
-    def do_shutdown(self, line):
-        """
-        Soft shutdown the robot
-        """
-        subprocess.run(["sudo", "shutdown", "-h", "now"])
 
     def do_ready(self, line):
         """
@@ -123,6 +130,24 @@ class STARQTerminal(Cmd):
         Zero the ODrive motors
         """
         set_odrive_positions(self.robot.motor_command_publishers, 0.0)
+
+    def do_set_gains(self, line):
+        """
+        Set the gains for the ODrive motors
+        Usage: set_gains <p_gain> <v_gain> <vi_gain>
+        """
+        args = line.split()
+        if len(args) != 3:
+            print("Invalid number of arguments")
+            return
+
+        try:
+            gains = [float(args[0]), float(args[1]), float(args[2])]
+        except ValueError:
+            print("Invalid gain values")
+            return
+        
+        set_odrive_gains(self.robot.motor_config_publishers, gains)
 
     def do_stand(self, line):
         """
@@ -215,6 +240,23 @@ class STARQTerminal(Cmd):
                 print(f"Error on Motor {i}: " + get_error_name(self.robot.motor_infos[i]))
         if not iserr:
             print("No errors on all motors")
+
+    def do_start_recording(self, line):
+        """
+        Start rosbag recording of specific topics
+        Usage: start_recording <file_name (default: latest)>
+        """
+        file_name = "rosbag2_latest"
+        if len(line.split()) > 0:
+            file_name = line.split()[0]
+        
+        subprocess.Popen(['ros2', 'bag', 'record', '-o', file_name] + ROSBAG_RECORD_TOPICS, stdin=subprocess.DEVNULL)
+
+    def do_stop_recording(self, line):
+        """
+        Stop rosbag recording
+        """
+        subprocess.Popen(['kill -2 $(pgrep -f "ros2 bag record")'], shell=True)
 
 def main():
     rclpy.init()

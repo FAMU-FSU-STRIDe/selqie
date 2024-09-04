@@ -19,7 +19,7 @@ docker run -it \
     --name ${PROJECT_NAME} \
     -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
-    -v "/${SCRIPT_DIR}:${PROJECT_DIR}" \
+    -v "/${SCRIPT_DIR}/../:${PROJECT_DIR}" \
     -w "${PROJECT_DIR}/../" \
     ${PROJECT_NAME}:latest \
     bash

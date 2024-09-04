@@ -18,3 +18,11 @@ def set_odrive_positions(cmd_publishers, pos):
     msg.pos_setpoint = pos
     for pub in cmd_publishers:
         pub.publish(msg)
+
+def set_odrive_gains(cfg_publishers, gains):
+    msg = MotorConfig()
+    msg.pos_gain = gains[0]
+    msg.vel_gain = gains[1]
+    msg.vel_int_gain = gains[2]
+    for cfg_pub in cfg_publishers:
+        cfg_pub.publish(msg)
