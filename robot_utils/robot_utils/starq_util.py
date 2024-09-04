@@ -9,9 +9,10 @@ import subprocess
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import LegCommand, LegEstimate, MotorCommand, MotorEstimate, MotorConfig, MotorInfo
-from robot_utils.robot_util_functions import set_leg_states, run_leg_trajectory_file, \
+from robot_utils.utils.robot_util_functions import set_leg_states, run_leg_trajectory_file, \
                                              print_motor_info, print_leg_info, get_error_name
-from robot_utils.odrive_util_functions import set_odrive_states, clear_odrive_errors, set_odrive_positions, set_odrive_gains
+from robot_utils.utils.odrive_util_functions import set_odrive_states, clear_odrive_errors, \
+                                             set_odrive_positions, set_odrive_gains
 
 NUM_MOTORS = 8
 LEG_NAMES = ['FL', 'FR', 'RL', 'RR']

@@ -23,7 +23,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'run_leg_trajectory_file = robot_utils.run_leg_trajectory_file:main',
             'starq_util = robot_utils.starq_util:main',
         ],
     },
