@@ -7,7 +7,7 @@ import threading
 import subprocess
 
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from robot_msgs.msg import LegCommand, LegEstimate, MotorCommand, MotorEstimate, MotorConfig, MotorInfo
 from robot_utils.utils.robot_util_functions import set_leg_states, run_leg_trajectory_file, \
                                              print_motor_info, print_leg_info, get_error_name
@@ -22,6 +22,7 @@ ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/
                         '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
                         '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
                         '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',]
+JOYSTICK_PACKAGE = 'robot_joysticks'
 
 def qos_fast():
     return QoSProfile(
@@ -99,6 +100,8 @@ class STARQTerminal(Cmd):
     def __init__(self, robot_instance : STARQRobotNode):
         super().__init__()
         self.robot = robot_instance
+        self.rosbag_process = None
+        self.joystick_process = None
 
     def do_exit(self, line):
         """
@@ -250,15 +253,46 @@ class STARQTerminal(Cmd):
         output_folder = "rosbag2_latest"
         if len(line.split()) > 0:
             output_folder = line.split()[0]
+            
+        if self.rosbag_process is not None:
+            print("Rosbag recording is already running")
+            return
         
-        subprocess.Popen(['ros2', 'bag', 'record', '-o', output_folder] + ROSBAG_RECORD_TOPICS, 
-                         stdin=subprocess.DEVNULL)
+        self.rosbag_process = subprocess.Popen(['ros2', 'bag', 'record', '-o', output_folder] + ROSBAG_RECORD_TOPICS, 
+                              stdin=subprocess.DEVNULL)
 
     def do_stop_recording(self, line):
         """
         Stop rosbag recording
         """
-        subprocess.Popen(['kill -2 $(pgrep -f "ros2 bag record")'], shell=True)
+        if self.rosbag_process is None:
+            print("Rosbag recording is not running")
+            return
+        
+        self.rosbag_process.terminate()
+        self.rosbag_process.wait()
+        self.rosbag_process = None
+        
+    def do_joystick(self, line):
+        """
+        Run a joystick node
+        """
+        args = line.split()
+        if len(args) != 1:
+            print("Invalid number of arguments")
+            return
+        
+        if self.joystick_process is not None:
+            print("Joystick node is already running")
+            return
+        
+        self.joystick_process = subprocess.Popen(['ros2', 'run', 'robot_joysticks', args[0]], 
+                                stdin=subprocess.DEVNULL)
+        
+    def complete_joystick(self, text, line, begidx, endidx):
+        prefix = get_package_prefix(JOYSTICK_PACKAGE)
+        files = os.listdir(os.path.join(prefix, 'lib', JOYSTICK_PACKAGE))
+        return [f for f in files if f.startswith(text)]
 
 def main():
     rclpy.init()

@@ -1,5 +1,7 @@
 import time
 import numpy as np
+import threading
+from threading import Lock
 import rclpy
 from rclpy.node import Node
 
@@ -32,17 +34,31 @@ class SwimTuningJoystick(Node):
         self.dxamp = 0.005
         self.yamp = 0.005
         self.dyamp = 0.001
-        self.maxr = 0.2
-        self.minr = 0.1
+        self.maxr = 0.216
+        self.minr = 0.084
 
         self.last_time = 0
-        self.last_msg = Joy()
+        self.last_msg = None
 
         self.leg_command_pubs = []
         for l in self.leg_names:
             self.leg_command_pubs.append(self.create_publisher(LegCommand, f'leg{l}/command', 10))
 
         self.joy_sub = self.create_subscription(Joy, 'joy', self.joy_callback, 10)
+        
+        while rclpy.ok():
+            if self.running:
+                self.update()
+                self.n = (self.n + 1) % self.N
+            elif not self.running:
+                self.set_default()
+                self.n = 0
+                
+            dt = 1.0 / (self.f * self.N)
+            time.sleep(dt)
+            
+            if self.n % (self.N / 10) == 0:
+                rclpy.spin_once(self, timeout_sec=dt)
 
     def set_default(self):
         x0 = self.L0 * np.cos(self.phi)
@@ -50,9 +66,8 @@ class SwimTuningJoystick(Node):
 
         cmd = LegCommand()
         cmd.control_mode = 0x3
-        cmd.pos_setpoint = [x0, y0, 0.0]
-        cmd.vel_setpoint = [0.0, 0.0, 0.0]
-        cmd.force_setpoint = [0.0, 0.0, 0.0]
+        cmd.pos_setpoint.x = x0
+        cmd.pos_setpoint.z = y0
         for p in self.leg_command_pubs:
             p.publish(cmd)
 
@@ -69,22 +84,24 @@ class SwimTuningJoystick(Node):
         
         p = p0 + np.matmul(R, pr)
 
-        if (np.abs(p) > self.maxr).any():
+        pnorm = np.linalg.norm(p)
+        if pnorm > self.maxr:
             self.get_logger().warn('Exceeding max radius')
-        elif (np.abs(p) < self.minr).any():
+        elif pnorm < self.minr:
             self.get_logger().warn('Exceeding min radius')
 
         cmd = LegCommand()
         cmd.control_mode = 0x3
-        cmd.pos_setpoint = [p[0], 0.0, p[1]]
-        cmd.vel_setpoint = [0.0, 0.0, 0.0]
-        cmd.force_setpoint = [0.0, 0.0, 0.0]
+        cmd.pos_setpoint.x = p[0]
+        cmd.pos_setpoint.z = p[1]
         for p in self.leg_command_pubs:
             p.publish(cmd)
 
     def joy_callback(self, msg : Joy):
-        cmd = LegCommand()
-
+        if self.last_msg is None:
+            self.last_msg = msg
+            return
+        
         if msg.buttons[0] == 1 and self.last_msg.buttons[0] == 0:
             # 1
             self.running = not self.running
@@ -124,21 +141,10 @@ class SwimTuningJoystick(Node):
             self.xamp -= self.dxamp
             self.xamp = max(self.xamp, 0)
             self.get_logger().info(f'X Amplitude: {self.xamp}')
-
-        dt = 1 / (self.f * self.N)
-        if self.running and time.time() - self.last_time > dt:
-            self.update()
-            self.n = (self.n + 1) % self.N
-            self.last_time = time.time()
-        elif not self.running:
-            self.set_default()
-            self.n = 0
-            self.last_time = time.time()
-
-
-
+            
+        self.last_msg = msg
 
 def main(args=None):
     rclpy.init(args=args)
-
+    swim_tuning_joystick = SwimTuningJoystick()
     rclpy.shutdown()
