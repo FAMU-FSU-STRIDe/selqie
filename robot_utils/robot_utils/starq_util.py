@@ -186,33 +186,34 @@ class STARQTerminal(Cmd):
             return
         
         set_leg_states(cmd_publishers, MotorCommand.CONTROL_MODE_POSITION, pos)
-
+    
     def do_run_trajectory(self, line):
         """
-        Run a trajectory file
-        Usage: run_trajectory <file> <num_loops> <frequency>
+        Run a trajectory file or sequence of files
+        Usage: run_trajectory <file1> <num_loops1> <frequency1> <file2> <num_loops2> <frequency2> ...
         """
         args = line.split()
-        if len(args) != 3:
+        if len(args) % 3 != 0:
             print("Invalid number of arguments")
             return
         
-        file = os.path.join(TRAJECTORIES_FOLDER, args[0])
-        if not os.path.exists(file):
-            print('File ' + file + ' does not exist')
-            return
-    
-        try:
-            num_loops = int(args[1])
-            frequency = float(args[2])
-        except ValueError:
-            print("Invalid number of loops or frequency")
-            return
-
-        run_leg_trajectory_file(self.robot.leg_command_publishers, file, num_loops, frequency)
+        for i in range(0, len(args), 3):
+            file = os.path.join(TRAJECTORIES_FOLDER, args[i])
+            if not os.path.exists(file):
+                print('File ' + file + ' does not exist')
+                return
         
+            try:
+                num_loops = int(args[i+1])
+                frequency = float(args[i+2])
+            except ValueError:
+                print("Invalid number of loops or frequency")
+                return
+
+            run_leg_trajectory_file(self.robot.leg_command_publishers, file, num_loops, frequency)
+            
     def complete_run_trajectory(self, text, line, begidx, endidx):
-        if len(line.split()) <= 2:
+        if len(line.split()) % 3 == 1 or len(line.split()) % 3 == 2:
             files = os.listdir(TRAJECTORIES_FOLDER)
             return [f for f in files if f.startswith(text)]
         return []
@@ -276,6 +277,8 @@ class STARQTerminal(Cmd):
     def do_joystick(self, line):
         """
         Run a joystick node
+        Usage: joystick <joystick_node>
+        Note: Currently there is no way to stop a joystick node without restarting the terminal (Ctrl+C)
         """
         args = line.split()
         if len(args) != 1:
