@@ -8,15 +8,27 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(robot_msgs REQUIRED)
 
+# Eigen3
+find_package(Eigen3 REQUIRED)
+
+# OSQP
 find_package(osqp REQUIRED)
 
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include_directories(include)
 
 add_executable(legged_mpc_node src/legged_mpc_node.cpp)
-ament_target_dependencies(legged_mpc_node rclcpp robot_msgs)
-target_link_libraries(legged_mpc_node osqp::osqp)
+ament_target_dependencies(legged_mpc_node rclcpp nav_msgs robot_msgs)
+target_link_libraries(legged_mpc_node Eigen3::Eigen osqp::osqp)
+
+# install targets
+install(TARGETS
+  legged_mpc_node
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

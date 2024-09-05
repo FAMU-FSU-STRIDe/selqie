@@ -245,13 +245,14 @@ class STARQTerminal(Cmd):
     def do_start_recording(self, line):
         """
         Start rosbag recording of specific topics
-        Usage: start_recording <file_name (default: latest)>
+        Usage: start_recording <output_folder (default: rosbag2_latest)>
         """
-        file_name = "rosbag2_latest"
+        output_folder = "rosbag2_latest"
         if len(line.split()) > 0:
-            file_name = line.split()[0]
+            output_folder = line.split()[0]
         
-        subprocess.Popen(['ros2', 'bag', 'record', '-o', file_name] + ROSBAG_RECORD_TOPICS, stdin=subprocess.DEVNULL)
+        subprocess.Popen(['ros2', 'bag', 'record', '-o', output_folder] + ROSBAG_RECORD_TOPICS, 
+                         stdin=subprocess.DEVNULL)
 
     def do_stop_recording(self, line):
         """

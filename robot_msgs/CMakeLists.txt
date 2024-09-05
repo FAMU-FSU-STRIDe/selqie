@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MotorInfo.msg"
   "msg/LegCommand.msg"
   "msg/LegEstimate.msg"
+  "msg/StancePattern.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

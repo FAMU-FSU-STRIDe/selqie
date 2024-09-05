@@ -1,6 +1,7 @@
 #pragma once
 
 #include <numeric>
+#include <eigen3/Eigen/Dense>
 
 #include "legged_mpc/osqp.hpp"
 
@@ -12,11 +13,11 @@ struct MPCProblem
 };
 
 void addNonZeroTriplets(std::vector<Triplet<OSQPFloat>> &triplets, const MatrixX<OSQPFloat> &matrix,
-                        const std::size_t &roff, const std::size_t &coff)
+                        const Index &roff, const Index &coff)
 {
-    for (std::size_t i = 0; i < matrix.rows(); ++i)
+    for (Index i = 0; i < matrix.rows(); ++i)
     {
-        for (std::size_t j = 0; j < matrix.cols(); ++j)
+        for (Index j = 0; j < matrix.cols(); ++j)
         {
             const OSQPFloat val = matrix(i, j);
             if (val != 0.0)
@@ -68,34 +69,34 @@ QPProblem getQPProblem(const MPCProblem &mpc)
         const std::size_t num_constraints = mpc.C[i].rows();
 
         // Hessian
-        assert(mpc.Q[i].rows() == num_states && mpc.Q[i].cols() == num_states);
+        assert(std::size_t(mpc.Q[i].rows()) == num_states && std::size_t(mpc.Q[i].cols()) == num_states);
         addNonZeroTriplets(H_triplets, mpc.Q[i], nx_offset, nx_offset);
 
         // Gradient
-        assert(mpc.xref[i].rows() == num_states);
+        assert(std::size_t(mpc.xref[i].rows()) == num_states);
         qp.g.segment(nx_offset, num_states) = -mpc.Q[i] * mpc.xref[i];
 
         if (i < mpc.window_size - 1)
         {
             // Hessian
-            assert(mpc.R[i].rows() == num_controls && mpc.R[i].cols() == num_controls);
+            assert(std::size_t(mpc.R[i].rows()) == num_controls && std::size_t(mpc.R[i].cols()) == num_controls);
             addNonZeroTriplets(H_triplets, mpc.R[i], Nx + nu_offset, Nx + nu_offset);
 
             // Linear Constraints
-            assert(mpc.A[i].rows() == num_states && mpc.A[i].cols() == num_states);
+            assert(std::size_t(mpc.A[i].rows()) == num_states && std::size_t(mpc.A[i].cols()) == num_states);
             addNonZeroTriplets(Ac_triplets, mpc.A[i], nx_offset + num_states, nx_offset);
 
-            assert(mpc.B[i].rows() == num_states);
+            assert(std::size_t(mpc.B[i].rows()) == num_states);
             addNonZeroTriplets(Ac_triplets, mpc.B[i], Nx + nx_offset + num_states, Nx + nu_offset);
 
-            assert(mpc.C[i].cols() == num_controls);
+            assert(std::size_t(mpc.C[i].cols()) == num_controls);
             addNonZeroTriplets(Ac_triplets, mpc.C[i], Nx + 2 * nu_offset, Nx + nu_offset);
 
             // Control bounds
-            assert(mpc.lb[i].rows() == num_constraints);
+            assert(std::size_t(mpc.lb[i].rows()) == num_constraints);
             qp.lc.segment(Nx + nc_offset, mpc.C[i].rows()) = mpc.lb[i];
 
-            assert(mpc.ub[i].rows() == num_constraints);
+            assert(std::size_t(mpc.ub[i].rows()) == num_constraints);
             qp.uc.segment(Nx + nc_offset, mpc.C[i].rows()) = mpc.ub[i];
 
             nu_offset += num_controls;
