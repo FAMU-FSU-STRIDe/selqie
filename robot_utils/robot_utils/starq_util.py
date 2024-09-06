@@ -273,29 +273,6 @@ class STARQTerminal(Cmd):
         self.rosbag_process.terminate()
         self.rosbag_process.wait()
         self.rosbag_process = None
-        
-    def do_joystick(self, line):
-        """
-        Run a joystick node
-        Usage: joystick <joystick_node>
-        Note: Currently there is no way to stop a joystick node without restarting the terminal (Ctrl+C)
-        """
-        args = line.split()
-        if len(args) != 1:
-            print("Invalid number of arguments")
-            return
-        
-        if self.joystick_process is not None:
-            print("Joystick node is already running")
-            return
-        
-        self.joystick_process = subprocess.Popen(['ros2', 'run', 'robot_joysticks', args[0]], 
-                                stdin=subprocess.DEVNULL)
-        
-    def complete_joystick(self, text, line, begidx, endidx):
-        prefix = get_package_prefix(JOYSTICK_PACKAGE)
-        files = os.listdir(os.path.join(prefix, 'lib', JOYSTICK_PACKAGE))
-        return [f for f in files if f.startswith(text)]
 
 def main():
     rclpy.init()
