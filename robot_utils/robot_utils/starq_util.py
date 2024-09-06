@@ -2,11 +2,9 @@ import rclpy
 from rclpy.node import Node
 from cmd import Cmd
 import os
-import time
 import threading
 import subprocess
 
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import *
 from robot_utils.utils.robot_util_functions import *
@@ -20,26 +18,6 @@ ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/
                         '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
                         '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',]
 JOYSTICK_PACKAGE = 'robot_joysticks'
-
-def qos_fast():
-    return QoSProfile(
-        reliability=QoSReliabilityPolicy.BEST_EFFORT,
-        depth=10
-    )
-
-def qos_reliable():
-    return QoSProfile(
-        reliability=QoSReliabilityPolicy.RELIABLE,
-        depth=10
-    )
-    
-def wait_for_subs(pubs, timeout=5):
-    cstart = time.time()
-    while not all(pub.get_subscription_count() != 0 for pub in pubs):
-        if time.time() - cstart > timeout:
-            return False
-        time.sleep(0.05)
-    return True
 
 class STARQRobotNode(Node):
     def __init__(self):

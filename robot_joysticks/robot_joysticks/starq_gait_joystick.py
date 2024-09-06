@@ -2,23 +2,11 @@ import time
 import rclpy
 from rclpy.node import Node
 
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from sensor_msgs.msg import Joy
+from sensor_msgs.msg import Joy, Imu
 from robot_msgs.msg import *
 
 from robot_utils.utils.robot_util_functions import *
-
-def qos_fast():
-    return QoSProfile(
-        reliability=QoSReliabilityPolicy.BEST_EFFORT,
-        depth=10
-    )
-
-def qos_reliable():
-    return QoSProfile(
-        reliability=QoSReliabilityPolicy.RELIABLE,
-        depth=10
-    )
+from robot_utils.utils.starq_util_functions import *
 
 INF_LOOP = -1
 NUM_MOTORS = 8
@@ -59,6 +47,8 @@ class STARQGaitJoystick(Node):
         self.declare_parameter('crawl_frequency', 1.0)
         crawl_freq = self.get_parameter('crawl_frequency').get_parameter_value().double_value
         self.crawl_trajectory = get_trajectory_from_file(crawl_file, crawl_freq, num_legs)
+
+        self.swim_trajectory = SwimTrajectory()
         
         self.odrive_command_pubs = []
         for i in range(self.num_motors):
@@ -72,24 +62,27 @@ class STARQGaitJoystick(Node):
         for l in self.leg_names:
             self.leg_command_pubs.append(self.create_publisher(LegCommand, f'leg{l}/command', qos_fast()))
 
+        self.imu_sub = self.create_subscription(Imu, 'imu/data', self.imu_callback, 10)
+
         self.last_msg = None
         self.joy_sub = self.create_subscription(Joy, 'joy', self.joy_callback, 10)
         
-        self.cstart = time.time()
-        self.curr_traj : Trajectory = None
-        self.next_traj : Trajectory = None
+        self.curr_traj : Trajectory | SwimTrajectory = None
+        self.next_traj : Trajectory | SwimTrajectory = None
         self.curr_loops = -1
         self.next_loops = -1
         self.traj_idx = 0
         self.loop_idx = 0
         self.joy_dt = JOY_DT
+
+        self.maxphi = -np.pi / 12.0
+        self.minphi = -11.0 * np.pi / 12.0
         
         self.get_logger().info('STARQ Gait Joystick Node Initialized')
         
         self.run()
         
-    def set_trajectory(self, traj : Trajectory, loops : int):
-        self.cstart = time.time()
+    def set_trajectory(self, traj : Trajectory | SwimTrajectory, loops : int):
         self.curr_traj = traj
         self.curr_loops = loops
         self.traj_idx = 0
@@ -99,26 +92,38 @@ class STARQGaitJoystick(Node):
         else:
             self.joy_dt = JOY_DT
         
-    def set_next_trajectory(self, traj : Trajectory, loops : int):
+    def set_next_trajectory(self, traj : Trajectory | SwimTrajectory, loops : int):
         self.next_traj = traj
         self.next_loops = loops
         
     def run(self):
         while rclpy.ok():
-            if self.curr_traj is not None:
-                cnow = time.time()
-                while cnow - self.cstart < self.curr_traj.delay_time[self.traj_idx]:
-                    cnow = time.time()
-                set_leg_states([self.leg_command_pubs[self.curr_traj.leg_ids[self.traj_idx]]], 
-                               self.curr_traj.control_modes[self.traj_idx], 
-                               self.curr_traj.positions[self.traj_idx], self.curr_traj.velocities[self.traj_idx], self.curr_traj.forces[self.traj_idx])
-                self.traj_idx += 1
-                if self.traj_idx >= self.curr_traj.size:
-                    self.traj_idx = 0
-                    self.loop_idx += 1
-                    self.cstart = time.time()
-                    if self.loop_idx == self.curr_loops:
-                        self.set_trajectory(self.next_traj, self.next_loops)
+            if self.curr_traj is None:
+                rclpy.spin_once(self, timeout_sec=JOY_DT)
+                continue
+            elif type(self.curr_traj) is Trajectory:
+                cmd_pubs = [self.leg_command_pubs[self.curr_traj.leg_ids[self.traj_idx]]]
+                ctrl_mode = self.curr_traj.control_modes[self.traj_idx]
+                pos = self.curr_traj.positions[self.traj_idx]
+                vel = self.curr_traj.velocities[self.traj_idx]
+                force = self.curr_traj.forces[self.traj_idx]
+            elif type(self.curr_traj) is SwimTrajectory:
+                cmd_pubs = self.leg_command_pubs
+                ctrl_mode = MotorCommand.CONTROL_MODE_POSITION
+                pos = get_swimming_leg_position(self.curr_traj, self.traj_idx)
+                vel = [0.0, 0.0, 0.0]
+                force = [0.0, 0.0, 0.0]
+
+            set_leg_states(cmd_pubs, ctrl_mode, pos, vel, force)
+
+            self.traj_idx += 1
+            if self.traj_idx >= self.curr_traj.size:
+                self.traj_idx = 0
+                self.loop_idx += 1
+                if self.loop_idx == self.curr_loops:
+                    self.set_trajectory(self.next_traj, self.next_loops)
+                    self.set_next_trajectory(None, -1)
+
             rclpy.spin_once(self, timeout_sec=self.joy_dt)
 
     def joy_callback(self, msg : Joy):
@@ -134,7 +139,8 @@ class STARQGaitJoystick(Node):
             self.get_logger().info('Jumping...')
         elif msg.buttons[2] == 1 and self.last_msg.buttons[2] == 0:
             # 3 : Swim (TODO)
-            pass
+            self.set_trajectory(self.swim_trajectory, INF_LOOP)
+            self.get_logger().info('Swimming...')
         elif msg.buttons[3] == 1 and self.last_msg.buttons[3] == 0:
             # 4 : Crawl
             self.set_trajectory(self.crawl_trajectory, INF_LOOP)
@@ -184,6 +190,12 @@ class STARQGaitJoystick(Node):
             pass
             
         self.last_msg = msg
+
+    def imu_callback(self, msg : Imu):
+        if type(self.curr_traj) is SwimTrajectory:
+            [roll, pitch, yaw] = quaternion_to_euler(msg.orientation)
+            ## TODO: Feedback control here
+            self.curr_traj.phi = min(max(self.curr_traj.phi, self.minphi), self.maxphi)
 
 def main(args=None):
     rclpy.init(args=args)
