@@ -68,7 +68,7 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
     )
     
 def MicroStrainIMULaunch():
-    IncludeLaunchDescription(
+    return IncludeLaunchDescription(
         PythonLaunchDescriptionSource(MICROSTRAIN_LAUNCH_FILE),
         launch_arguments={
             'configure': 'true',
