@@ -1,4 +1,5 @@
 from launch import LaunchDescription
+from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
@@ -30,19 +31,13 @@ def UnitreeA1LegNode(name : str, id0 : int, id1 : int, id2 : int, flip_y : bool)
         ]
     )
 
-def SetLegPositionNode(name : str, position):
-    return Node(
-        package='robot_utils',
-        executable='set_leg_position',
-        name=f'leg_stand{name}',
-        output='screen',
-        parameters=[{
-            'position': position,
-            'delay': stand_delay
-        }],
-        remappings=[
-            ('leg/command', f'leg{name}/command')
-        ]
+def SetLegPositionNode(name: str, position):
+    return ExecuteProcess(
+        cmd=[
+            'ros2', 'topic', 'pub', '--once', f'/leg{name}/command', 'robot_msgs/LegCommand',
+            '{control_mode: 3, pos_setpoint: {x: ' + str(position[0]) + ', y: ' + str(position[1]) + ', z: ' + str(position[2]) + '}}'
+        ],
+        output='screen'
     )
 
 def generate_launch_description():
