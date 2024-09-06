@@ -1,15 +1,19 @@
 {
     "python.autoComplete.extraPaths": [
-        "/home/jtyler/Documents/Robot-ROS2/build/leg_gaits",
-        "/home/jtyler/Documents/Robot-ROS2/install/leg_gaits/lib/python3.10/site-packages",
-        "/home/jtyler/Documents/Robot-ROS2/install/robot_msgs/local/lib/python3.10/dist-packages",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/build/robot_utils",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/install/robot_utils/lib/python3.10/site-packages",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/build/robot_joysticks",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/install/robot_joysticks/lib/python3.10/site-packages",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/install/robot_msgs/local/lib/python3.10/dist-packages",
         "/opt/ros/humble/lib/python3.10/site-packages",
         "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ],
     "python.analysis.extraPaths": [
-        "/home/jtyler/Documents/Robot-ROS2/build/leg_gaits",
-        "/home/jtyler/Documents/Robot-ROS2/install/leg_gaits/lib/python3.10/site-packages",
-        "/home/jtyler/Documents/Robot-ROS2/install/robot_msgs/local/lib/python3.10/dist-packages",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/build/robot_utils",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/install/robot_utils/lib/python3.10/site-packages",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/build/robot_joysticks",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/install/robot_joysticks/lib/python3.10/site-packages",
+        "/home/orl/JonathanBoylan/robot-ros2_ws/install/robot_msgs/local/lib/python3.10/dist-packages",
         "/opt/ros/humble/lib/python3.10/site-packages",
         "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ],

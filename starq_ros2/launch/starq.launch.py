@@ -1,7 +1,17 @@
+import os
+import ament_index_python
 from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 GEAR_RATIO = 6.0
+
+MICROSTRAIN_LAUNCH_FILE = os.path.join(ament_index_python.packages.get_package_share_directory('microstrain_inertial_driver'), 
+                                       'launch', 'microstrain_launch.py')
+
+IMU_CONFIG_FILE = os.path.join(ament_index_python.packages.get_package_share_directory('starq_ros2'),
+                               'config', 'imu_cv7.yml')
 
 def CanNode(ifc : int):
     return Node(
@@ -56,6 +66,17 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
             ('motor1/estimate', f'odrive{id1}/estimate')
         ]
     )
+    
+def MicroStrainIMULaunch():
+    IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(MICROSTRAIN_LAUNCH_FILE),
+        launch_arguments={
+            'configure': 'true',
+            'activate': 'true',
+            'params_file': IMU_CONFIG_FILE,
+            'namespace': '/',
+        }.items()
+    )
 
 def generate_launch_description():
     return LaunchDescription([
@@ -72,5 +93,6 @@ def generate_launch_description():
         FiveBar2DNode('FL', 0, 1, True),
         FiveBar2DNode('RL', 2, 3, True),
         FiveBar2DNode('RR', 4, 5, False),
-        FiveBar2DNode('FR', 6, 7, False)
+        FiveBar2DNode('FR', 6, 7, False),
+        MicroStrainIMULaunch()
     ])

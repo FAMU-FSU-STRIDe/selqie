@@ -7,12 +7,9 @@ import threading
 import subprocess
 
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from ament_index_python.packages import get_package_share_directory, get_package_prefix
-from robot_msgs.msg import LegCommand, LegEstimate, MotorCommand, MotorEstimate, MotorConfig, MotorInfo
-from robot_utils.utils.robot_util_functions import set_leg_states, run_leg_trajectory_file, \
-                                             print_motor_info, print_leg_info, get_error_name
-from robot_utils.utils.odrive_util_functions import set_odrive_states, clear_odrive_errors, \
-                                             set_odrive_positions, set_odrive_gains
+from ament_index_python.packages import get_package_share_directory
+from robot_msgs.msg import *
+from robot_utils.utils.robot_util_functions import *
 
 NUM_MOTORS = 8
 LEG_NAMES = ['FL', 'FR', 'RL', 'RR']
@@ -86,12 +83,6 @@ class STARQRobotNode(Node):
             print("Failed to connect to Motor command")
         if not wait_for_subs(self.motor_config_publishers):
             print("Failed to connect to Motor config")
-        
-    def motor_callback(self, msg):
-        self.motor_status = msg.data
-
-    def get_status(self):
-        return f"Motor Status: {self.motor_status}, Leg Status: {self.leg_status}"
 
 class STARQTerminal(Cmd):
     intro = 'Welcome to the STARQ terminal. Type help or ? to list commands.\n'
@@ -115,25 +106,25 @@ class STARQTerminal(Cmd):
         """
         Ready the ODrive motors
         """
-        set_odrive_states(self.robot.motor_config_publishers, MotorConfig.AXIS_STATE_CLOSED_LOOP_CONTROL)
+        set_motor_states(self.robot.motor_config_publishers, MotorConfig.AXIS_STATE_CLOSED_LOOP_CONTROL)
 
     def do_idle(self, line):
         """
         Idle the ODrive motors
         """
-        set_odrive_states(self.robot.motor_config_publishers, MotorConfig.AXIS_STATE_IDLE)
+        set_motor_states(self.robot.motor_config_publishers, MotorConfig.AXIS_STATE_IDLE)
 
     def do_clear_errors(self, line):
         """
         Clear errors on the ODrive motors
         """
-        clear_odrive_errors(self.robot.motor_config_publishers)
+        clear_motor_errors(self.robot.motor_config_publishers)
 
     def do_zero(self, line):
         """
         Zero the ODrive motors
         """
-        set_odrive_positions(self.robot.motor_command_publishers, 0.0)
+        set_motor_positions(self.robot.motor_command_publishers, 0.0)
 
     def do_set_gains(self, line):
         """
@@ -151,7 +142,7 @@ class STARQTerminal(Cmd):
             print("Invalid gain values")
             return
         
-        set_odrive_gains(self.robot.motor_config_publishers, gains)
+        set_motor_gains(self.robot.motor_config_publishers, gains)
 
     def do_stand(self, line):
         """
@@ -198,11 +189,7 @@ class STARQTerminal(Cmd):
             return
         
         for i in range(0, len(args), 3):
-            file = os.path.join(TRAJECTORIES_FOLDER, args[i])
-            if not os.path.exists(file):
-                print('File ' + file + ' does not exist')
-                return
-        
+            file = args[0]
             try:
                 num_loops = int(args[i+1])
                 frequency = float(args[i+2])

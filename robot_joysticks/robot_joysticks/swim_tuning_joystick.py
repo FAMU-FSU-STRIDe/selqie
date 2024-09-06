@@ -1,7 +1,4 @@
-import time
 import numpy as np
-import threading
-from threading import Lock
 import rclpy
 from rclpy.node import Node
 
@@ -53,12 +50,8 @@ class SwimTuningJoystick(Node):
             elif not self.running:
                 self.set_default()
                 self.n = 0
-                
             dt = 1.0 / (self.f * self.N)
-            time.sleep(dt)
-            
-            if self.n % (self.N / 10) == 0:
-                rclpy.spin_once(self, timeout_sec=dt)
+            rclpy.spin_once(self, timeout_sec=dt)
 
     def set_default(self):
         x0 = self.L0 * np.cos(self.phi)
@@ -146,5 +139,5 @@ class SwimTuningJoystick(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    swim_tuning_joystick = SwimTuningJoystick()
+    SwimTuningJoystick()
     rclpy.shutdown()
