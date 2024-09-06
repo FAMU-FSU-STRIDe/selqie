@@ -43,6 +43,8 @@ class SwimTuningJoystick(Node):
 
         self.joy_sub = self.create_subscription(Joy, 'joy', self.joy_callback, 10)
         
+        self.get_logger().info('Swim Tuning Joystick Node Initialized')
+        
         while rclpy.ok():
             if self.running:
                 self.update()

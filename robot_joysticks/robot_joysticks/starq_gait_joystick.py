@@ -50,7 +50,7 @@ class STARQGaitJoystick(Node):
         
         self.declare_parameter('jump_trajectory_file', 'jump.txt')
         jump_file = self.get_parameter('jump_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('jump_frequency', 1.0)
+        self.declare_parameter('jump_frequency', 3.0)
         jump_freq = self.get_parameter('jump_frequency').get_parameter_value().double_value
         self.jump_trajectory = get_trajectory_from_file(jump_file, jump_freq, num_legs)
         
@@ -84,6 +84,8 @@ class STARQGaitJoystick(Node):
         self.loop_idx = 0
         self.joy_dt = JOY_DT
         
+        self.get_logger().info('STARQ Gait Joystick Node Initialized')
+        
         self.run()
         
     def set_trajectory(self, traj : Trajectory, loops : int):
@@ -114,7 +116,6 @@ class STARQGaitJoystick(Node):
                 if self.traj_idx >= self.curr_traj.size:
                     self.traj_idx = 0
                     self.loop_idx += 1
-                    self.get_logger().info(f'Loop {self.loop_idx}/{self.curr_loops}')
                     self.cstart = time.time()
                     if self.loop_idx == self.curr_loops:
                         self.set_trajectory(self.next_traj, self.next_loops)
