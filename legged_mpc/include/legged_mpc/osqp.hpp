@@ -21,7 +21,7 @@ struct QPSolution
 {
     OSQPInt exit_flag;
     microseconds run_time, setup_time, solve_time;
-    VectorX<OSQPFloat> xstar, ustar;
+    VectorX<OSQPFloat> xstar;
 };
 
 static OSQPCscMatrix convertEigenSparseToCSC(const Eigen::SparseMatrix<OSQPFloat> &matrix)

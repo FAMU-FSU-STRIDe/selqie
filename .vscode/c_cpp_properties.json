@@ -6,11 +6,11 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "/home/orl/JonathanBoylan/robot-ros2_ws/install/robot_msgs/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/install/robot_msgs/include/**",
         "/opt/ros/humble/include/**",
-        "/home/orl/JonathanBoylan/robot-ros2_ws/src/leg_kinematics/include/**",
-        "/home/orl/JonathanBoylan/robot-ros2_ws/src/legged_mpc/include/**",
-        "/home/orl/JonathanBoylan/robot-ros2_ws/src/mujoco_ros2/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/leg_kinematics/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/legged_mpc/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/mujoco_ros2/include/**",
         "/usr/include/**"
       ],
       "name": "ROS",

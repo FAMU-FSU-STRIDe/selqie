@@ -4,75 +4,51 @@
 
 #include <robot_msgs/msg/leg_command.hpp>
 #include <robot_msgs/msg/leg_estimate.hpp>
-#include <robot_msgs/msg/stance_pattern.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <geometry_msgs/msg/twist.hpp>
+#include <robot_msgs/msg/body_trajectory.hpp>
+#include <robot_msgs/msg/foothold_trajectory.hpp>
 
 using namespace robot_msgs::msg;
 
-static inline SequencePattern getSequencePattern(const std::size_t num_legs, const StancePattern &pattern)
+static Vector3d quat2eul(const double w, const double x, const double y, const double z)
 {
-  SequencePattern sequence_pattern;
-  sequence_pattern.duration = milliseconds(time_t(1E3 / pattern.frequency));
-  for (std::size_t i = 0; i < pattern.timing.size(); i++)
-  {
-    const milliseconds time(time_t(pattern.timing[i] / StancePattern::GAIT_RESOLUTION * (1E3 / pattern.frequency)));
-    const uint32_t bitset = pattern.stance[i];
-    sequence_pattern.stance_timing[time] = std::vector<bool>(num_legs);
-    for (std::size_t j = 0; j < num_legs; j++)
-    {
-      if (sequence_pattern.stance_timing[time][j] = (bitset & (1 << j)) != 0)
-      {
-        sequence_pattern.num_stance++;
-      }
-    }
-  }
-  return sequence_pattern;
+  const double roll = std::atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+  const double pitch = std::asin(2 * (w * y - z * x));
+  const double yaw = std::atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+  return Vector3d(roll, pitch, yaw);
 }
 
 class LeggedMPCNode : public rclcpp::Node
 {
 private:
   LeggedMPCConfig _config;
+  std::unique_ptr<OSQPSettings> _osqp_settings;
 
-  std::vector<robot_msgs::msg::LegEstimate> _leg_estimates;
-
-  std::vector<rclcpp::Subscription<robot_msgs::msg::LegEstimate>::SharedPtr> _leg_estimate_subs;
-  std::vector<rclcpp::Publisher<robot_msgs::msg::LegCommand>::SharedPtr> _leg_command_pubs;
-
-  rclcpp::Subscription<robot_msgs::msg::StancePattern>::SharedPtr _stance_pattern_sub;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_sub;
-  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr _twist_sub;
-
+  std::vector<rclcpp::Publisher<LegCommand>::SharedPtr> _leg_command_pubs;
+  rclcpp::Subscription<BodyTrajectory>::SharedPtr _body_traj_sub;
+  rclcpp::Subscription<FootholdTrajectory>::SharedPtr _foothold_traj_sub;
   rclcpp::TimerBase::SharedPtr _mpc_timer;
-
-  bool sync()
-  {
-    const auto next_pattern = _config.stance_sequence.next_pattern;
-    if (next_pattern.duration.count() == 0)
-    {
-      return false;
-    }
-
-    const auto current_time = duration_cast<milliseconds>(nanoseconds(this->get_clock()->now().nanoseconds()));
-
-    auto &start_time = _config.stance_sequence.start_time;
-    auto &current_pattern = _config.stance_sequence.current_pattern;
-    if (current_time >= start_time + current_pattern.duration)
-    {
-      start_time = current_time;
-      current_pattern = next_pattern;
-    }
-  }
 
   void solve()
   {
-    /// TODO: Solve
+    const MPCProblem mpc = getMPCProblem(_config);
+    const QPProblem qp = getQPProblem(mpc);
+    const QPSolution sol = solveOSQP(qp, _osqp_settings.get());
+
+    if (sol.exit_flag != OSQP_SOLVED)
+    {
+      RCLCPP_ERROR(this->get_logger(), "OSQP failed to solve the problem.");
+      return;
+    }
+
+    /// TODO: Parse solution and publish leg commands
   }
 
 public:
   LeggedMPCNode() : Node("legged_mpc_node")
   {
+    _osqp_settings = std::make_unique<OSQPSettings>();
+    osqp_set_default_settings(_osqp_settings.get());
+
     int window_size = 10;
     this->declare_parameter("window_size", window_size);
     this->get_parameter("window_size", window_size);
@@ -102,10 +78,6 @@ public:
     this->get_parameter("body_inertia", body_inertia);
     _config.body_inertia = Matrix3d(Map<Matrix3d>(body_inertia.data()));
 
-    /// TODO: Hip positions and default leg positions
-    _config.hip_positions.resize(_config.num_legs);
-    _config.default_leg_positions.resize(_config.num_legs);
-
     _config.friction_coefficient_x = 0.5;
     this->declare_parameter("friction_coefficient_x", _config.friction_coefficient_x);
     this->get_parameter("friction_coefficient_x", _config.friction_coefficient_x);
@@ -122,6 +94,16 @@ public:
     this->declare_parameter("force_z_max", _config.force_z_max);
     this->get_parameter("force_z_max", _config.force_z_max);
 
+    std::vector<double> position_weights = {1.0, 1.0, 1.0};
+    this->declare_parameter("position_weights", position_weights);
+    this->get_parameter("position_weights", position_weights);
+    _config.position_weights = Vector3d(Map<Vector3d>(position_weights.data()));
+
+    std::vector<double> orientation_weights = {1.0, 1.0, 1.0};
+    this->declare_parameter("orientation_weights", orientation_weights);
+    this->get_parameter("orientation_weights", orientation_weights);
+    _config.orientation_weights = Vector3d(Map<Vector3d>(orientation_weights.data()));
+
     std::vector<double> linear_velocity_weights = {1.0, 1.0, 1.0};
     this->declare_parameter("linear_velocity_weights", linear_velocity_weights);
     this->get_parameter("linear_velocity_weights", linear_velocity_weights);
@@ -137,46 +119,60 @@ public:
     this->get_parameter("force_weights", force_weights);
     _config.force_weights = Vector3d(Map<Vector3d>(force_weights.data()));
 
-    _config.current_linear_velocity = Vector3d::Zero();
-    _config.current_angular_velocity = Vector3d::Zero();
-    _config.desired_linear_velocity = Vector3d::Zero();
-    _config.desired_angular_velocity = Vector3d::Zero();
+    _config.position.resize(_config.window_size);
+    _config.orientation.resize(_config.window_size);
+    _config.linear_velocity.resize(_config.window_size);
+    _config.angular_velocity.resize(_config.window_size);
 
-    _leg_estimate_subs.resize(_config.num_legs);
     _leg_command_pubs.resize(_config.num_legs);
     for (std::size_t i = 0; i < _config.num_legs; i++)
     {
-      _leg_estimate_subs[i] = this->create_subscription<robot_msgs::msg::LegEstimate>(
-          "leg" + leg_names[i] + "/estimate", 10,
-          [this, i](const LegEstimate &msg)
-          {
-            _leg_estimates[i] = msg;
-          });
-
-      _leg_command_pubs[i] = this->create_publisher<robot_msgs::msg::LegCommand>("leg" + leg_names[i] + "/command", 10);
+      _leg_command_pubs[i] = this->create_publisher<LegCommand>("leg" + leg_names[i] + "/command", 10);
     }
 
-    _stance_pattern_sub = this->create_subscription<StancePattern>(
-        "stance_pattern", 10,
-        [this](const robot_msgs::msg::StancePattern &msg)
+    _body_traj_sub = this->create_subscription<BodyTrajectory>(
+        "body/trajectory", 10,
+        [this](const BodyTrajectory &msg)
         {
-          _config.stance_sequence.next_pattern = getSequencePattern(_config.num_legs, msg);
+          if (msg.body_states.size() != _config.window_size)
+          {
+            RCLCPP_ERROR(this->get_logger(), "Invalid trajectory size.");
+            return;
+          }
+
+          for (std::size_t k = 0; k < _config.window_size; k++)
+          {
+            const auto &pose = msg.body_states[k].pose.pose;
+            const auto &twist = msg.body_states[k].twist.twist;
+            _config.position[k] = Vector3d(pose.position.x, pose.position.y, pose.position.z);
+            _config.orientation[k] = quat2eul(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
+            _config.linear_velocity[k] = Vector3d(twist.linear.x, twist.linear.y, twist.linear.z);
+            _config.angular_velocity[k] = Vector3d(twist.angular.x, twist.angular.y, twist.angular.z);
+          }
         });
 
-    _odometry_sub = this->create_subscription<nav_msgs::msg::Odometry>(
-        "odom", 10,
-        [this](const nav_msgs::msg::Odometry &msg)
-        {
-          _config.current_linear_velocity = Vector3d(msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z);
-          _config.current_angular_velocity = Vector3d(msg.twist.twist.angular.x, msg.twist.twist.angular.y, msg.twist.twist.angular.z);
-        });
-
-    _twist_sub = this->create_subscription<geometry_msgs::msg::Twist>(
+    _foothold_traj_sub = this->create_subscription<FootholdTrajectory>(
         "twist", 10,
-        [this](const geometry_msgs::msg::Twist &msg)
+        [this](const FootholdTrajectory &msg)
         {
-          _config.desired_linear_velocity = Vector3d(msg.linear.x, msg.linear.y, msg.linear.z);
-          _config.desired_angular_velocity = Vector3d(msg.angular.x, msg.angular.y, msg.angular.z);
+          if (msg.foothold_states.size() != _config.window_size)
+          {
+            RCLCPP_ERROR(this->get_logger(), "Invalid trajectory size.");
+            return;
+          }
+
+          for (std::size_t k = 0; k < _config.window_size; k++)
+          {
+            const std::size_t num_stance = msg.foothold_states[k].num_in_stance;
+            _config.num_stance[k] = num_stance;
+            for (std::size_t i = 0; i < _config.num_legs; i++)
+            {
+              const auto &in_stance = msg.foothold_states[k].stance[i];
+              const auto &foothold = msg.foothold_states[k].footholds[i];
+              _config.in_stance[k][i] = in_stance;
+              _config.foothold_positions[k][i] = Vector3d(foothold.x, foothold.y, foothold.z);
+            }
+          }
         });
 
     double mpc_rate = 1000.0;
