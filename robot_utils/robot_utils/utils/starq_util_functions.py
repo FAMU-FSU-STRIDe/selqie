@@ -6,10 +6,10 @@ from robot_msgs.msg import *
 @dataclass
 class SwimTrajectory:
     size = 100
-    frequency = 1.0
-    L0 = 0.18
+    frequency = 1.5
+    L0 = 0.21
     phi = -3*np.pi/4
-    xamp = 0.02
+    xamp = 0.04
     yamp = 0.005
     
 def get_swimming_leg_position(traj : SwimTrajectory, n : int) -> list[float]:
@@ -21,7 +21,7 @@ def get_swimming_leg_position(traj : SwimTrajectory, n : int) -> list[float]:
                     [np.sin(theta), np.cos(theta)]])
     
     pr = np.array([traj.xamp * np.cos(2 * np.pi * n / traj.size), 
-                    traj.yamp * np.sin(2 * np.pi * n / traj.size)])
+                   traj.yamp * np.sin(2 * np.pi * n / traj.size)])
     
     p = p0 + np.matmul(rot, pr)
 

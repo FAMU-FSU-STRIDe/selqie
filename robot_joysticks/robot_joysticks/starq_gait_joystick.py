@@ -38,7 +38,7 @@ class STARQGaitJoystick(Node):
         
         self.declare_parameter('jump_trajectory_file', 'jump.txt')
         jump_file = self.get_parameter('jump_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('jump_frequency', 3.0)
+        self.declare_parameter('jump_frequency', 7.5)
         jump_freq = self.get_parameter('jump_frequency').get_parameter_value().double_value
         self.jump_trajectory = get_trajectory_from_file(jump_file, jump_freq, num_legs)
         
@@ -159,6 +159,7 @@ class STARQGaitJoystick(Node):
             self.get_logger().info('Landing...')
         elif msg.buttons[6] == 1 and self.last_msg.buttons[6] == 0:
             # LT
+            self.curr_traj = None
             set_motor_positions(self.odrive_command_pubs, 0.0)
             self.get_logger().info('Zeroed ODrives')
         elif msg.buttons[7] == 1 and self.last_msg.buttons[7] == 0:
@@ -195,6 +196,8 @@ class STARQGaitJoystick(Node):
         if type(self.curr_traj) is SwimTrajectory:
             [roll, pitch, yaw] = quaternion_to_euler(msg.orientation)
             ## TODO: Feedback control here
+            self.curr_traj.phi = -3*np.pi/4 + (pitch)
+            # self.get_logger().info(f"roll: {roll}, pitch: {pitch}: yaw: {yaw}")
             self.curr_traj.phi = min(max(self.curr_traj.phi, self.minphi), self.maxphi)
 
 def main(args=None):
