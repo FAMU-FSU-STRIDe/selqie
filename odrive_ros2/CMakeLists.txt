@@ -8,16 +8,28 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(robot_msgs REQUIRED)
 
 # add executable
-add_executable(odrive_can_node src/odrive_can_node.cpp)
-ament_target_dependencies(odrive_can_node rclcpp robot_msgs)
+add_library(odrive_ros2_component SHARED src/odrive_can_node.cpp)
+ament_target_dependencies(odrive_ros2_component rclcpp rclcpp_components robot_msgs)
+
+# declare component
+rclcpp_components_register_node(
+  odrive_ros2_component 
+  PLUGIN "odrive_ros2::ODriveCanNode"
+  EXECUTABLE odrive_can_node
+)
 
 # install targets
-install(TARGETS
-  odrive_can_node
-  DESTINATION lib/${PROJECT_NAME}
+ament_export_targets(export_odrive_ros2_component)
+install(
+  TARGETS odrive_ros2_component
+  EXPORT export_odrive_ros2_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # install launch files

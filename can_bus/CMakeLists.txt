@@ -9,16 +9,28 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(robot_msgs REQUIRED)
 
-# add executable
-add_executable(can_bus_node src/can_bus_node.cpp)
-ament_target_dependencies(can_bus_node rclcpp robot_msgs)
+# add library
+add_library(can_bus_component SHARED src/can_bus_node.cpp)
+ament_target_dependencies(can_bus_component rclcpp rclcpp_components robot_msgs)
+
+# declare component
+rclcpp_components_register_node(
+  can_bus_component 
+  PLUGIN "can_bus::CanBusNode"
+  EXECUTABLE can_bus_node
+)
 
 # install targets
-install(TARGETS
-  can_bus_node
-  DESTINATION lib/${PROJECT_NAME}
+ament_export_targets(export_can_bus_component)
+install(
+  TARGETS can_bus_component
+  EXPORT export_can_bus_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # install launch files

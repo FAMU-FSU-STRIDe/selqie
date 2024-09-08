@@ -108,41 +108,42 @@ public:
     }
 };
 
-class UnitreeA1LegNode : public rclcpp::Node
+namespace leg_kinematics
 {
-private:
-    std::unique_ptr<LegKinematicsModel> _model;
-    std::unique_ptr<LegKinematicsNode> _leg_kinematics_node;
 
-public:
-    UnitreeA1LegNode() : Node("unitree_a1_leg_node")
+    class UnitreeA1LegNode : public rclcpp::Node
     {
-        float D = 0.08505;
-        this->declare_parameter("D", D);
-        this->get_parameter("D", D);
+    private:
+        std::unique_ptr<LegKinematicsModel> _model;
+        std::unique_ptr<LegKinematicsNode> _leg_kinematics_node;
 
-        float Lt = 0.2;
-        this->declare_parameter("Lt", Lt);
-        this->get_parameter("Lt", Lt);
+    public:
+        UnitreeA1LegNode(const rclcpp::NodeOptions &options)
+            : Node("unitree_a1_leg_node", options)
+        {
+            float D = 0.08505;
+            this->declare_parameter("D", D);
+            this->get_parameter("D", D);
 
-        float Lc = 0.2;
-        this->declare_parameter("Lc", Lc);
-        this->get_parameter("Lc", Lc);
+            float Lt = 0.2;
+            this->declare_parameter("Lt", Lt);
+            this->get_parameter("Lt", Lt);
 
-        bool flip_y = false;
-        this->declare_parameter("flip_y", flip_y);
-        this->get_parameter("flip_y", flip_y);
-        const float YA = flip_y ? -1.0 : 1.0;
+            float Lc = 0.2;
+            this->declare_parameter("Lc", Lc);
+            this->get_parameter("Lc", Lc);
 
-        _model = std::make_unique<UnitreeA1LegModel>(D, Lt, Lc, YA);
-        _leg_kinematics_node = std::make_unique<LegKinematicsNode>(this, _model.get());
-    }
-};
+            bool flip_y = false;
+            this->declare_parameter("flip_y", flip_y);
+            this->get_parameter("flip_y", flip_y);
+            const float YA = flip_y ? -1.0 : 1.0;
 
-int main(int argc, char *argv[])
-{
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<UnitreeA1LegNode>());
-    rclcpp::shutdown();
-    return 0;
+            _model = std::make_unique<UnitreeA1LegModel>(D, Lt, Lc, YA);
+            _leg_kinematics_node = std::make_unique<LegKinematicsNode>(this, _model.get());
+        }
+    };
+
 }
+
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(leg_kinematics::UnitreeA1LegNode)

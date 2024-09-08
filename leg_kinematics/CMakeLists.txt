@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(robot_msgs REQUIRED)
 
 # Eigen3
@@ -18,20 +19,34 @@ include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include_directories(include)
 
 # add executable
-add_executable(fivebar2d_node src/fivebar2d_node.cpp)
-ament_target_dependencies(fivebar2d_node rclcpp robot_msgs)
-target_link_libraries(fivebar2d_node Eigen3::Eigen)
+add_library(leg_kinematics_component SHARED 
+  src/fivebar2d_node.cpp 
+  src/unitree_a1_leg_node.cpp
+)
+ament_target_dependencies(leg_kinematics_component rclcpp rclcpp_components robot_msgs)
+target_link_libraries(leg_kinematics_component Eigen3::Eigen)
 
-# add executable
-add_executable(unitree_a1_leg_node src/unitree_a1_leg_node.cpp)
-ament_target_dependencies(unitree_a1_leg_node rclcpp robot_msgs)
-target_link_libraries(unitree_a1_leg_node Eigen3::Eigen)
+# declare component
+rclcpp_components_register_node(
+  leg_kinematics_component 
+  PLUGIN "leg_kinematics::FiveBar2DNode"
+  EXECUTABLE fivebar2d_node
+)
+
+rclcpp_components_register_node(
+  leg_kinematics_component 
+  PLUGIN "leg_kinematics::UnitreeA1LegNode"
+  EXECUTABLE unitree_a1_leg_node
+)
 
 # install targets
-install(TARGETS
-  fivebar2d_node
-  unitree_a1_leg_node
-  DESTINATION lib/${PROJECT_NAME}
+ament_export_targets(export_leg_kinematics_component)
+install(
+  TARGETS leg_kinematics_component
+  EXPORT export_leg_kinematics_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # install launch and models files
