@@ -11,10 +11,15 @@ from robot_utils.utils.starq_util_functions import *
 INF_LOOP = -1
 NUM_MOTORS = 8
 JOY_DT = 1.0 / 1000.0
+
 STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
-STANDING_GAINS = [10.0, 0.1, 0.2]
 LANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
-LANDING_GAINS = [5.0, 0.05, 0.10]
+
+STANDING_GAINS = [50.0, 0.15, 0.30]
+WALKING_GAINS = [50.0, 0.15, 0.30]
+JUMPING_GAINS = [75.0, 0.15, 0.30]
+SWIMMING_GAINS = [75.0, 0.15, 0.30]
+LANDING_GAINS = [10.0, 0.10, 0.20]
 
 class STARQGaitJoystick(Node):
     def __init__(self):
@@ -38,17 +43,23 @@ class STARQGaitJoystick(Node):
         
         self.declare_parameter('jump_trajectory_file', 'jump.txt')
         jump_file = self.get_parameter('jump_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('jump_frequency', 0.5)
+        self.declare_parameter('jump_frequency', 0.75)
         jump_freq = self.get_parameter('jump_frequency').get_parameter_value().double_value
         self.jump_trajectory = get_trajectory_from_file(jump_file, jump_freq, num_legs)
         
+        self.declare_parameter('swim_trajectory_file', 'swim.txt')
+        swim_file = self.get_parameter('swim_trajectory_file').get_parameter_value().string_value
+        self.declare_parameter('swim_frequency', 0.75)
+        swim_freq = self.get_parameter('swim_frequency').get_parameter_value().double_value
+        self.swim_trajectory = get_trajectory_from_file(swim_file, swim_freq, num_legs)
+        
+        # self.swim_trajectory = SwimTrajectory()
+        
         self.declare_parameter('crawl_trajectory_file', 'crawl.txt')
         crawl_file = self.get_parameter('crawl_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('crawl_frequency', 1.5)
+        self.declare_parameter('crawl_frequency', 0.25)
         crawl_freq = self.get_parameter('crawl_frequency').get_parameter_value().double_value
         self.crawl_trajectory = get_trajectory_from_file(crawl_file, crawl_freq, num_legs)
-
-        self.swim_trajectory = SwimTrajectory()
         
         self.odrive_command_pubs = []
         for i in range(self.num_motors):
@@ -131,18 +142,22 @@ class STARQGaitJoystick(Node):
             pass
         elif msg.buttons[0] == 1 and self.last_msg.buttons[0] == 0:
             # 1 : Walk
+            set_motor_gains(self.odrive_config_pubs, WALKING_GAINS)
             self.set_trajectory(self.walk_trajectory, INF_LOOP)
             self.get_logger().info('Walking...')
         elif msg.buttons[1] == 1 and self.last_msg.buttons[1] == 0:
             # 2 : Jump
+            set_motor_gains(self.odrive_config_pubs, JUMPING_GAINS)
             self.set_trajectory(self.jump_trajectory, 1)
             self.get_logger().info('Jumping...')
         elif msg.buttons[2] == 1 and self.last_msg.buttons[2] == 0:
-            # 3 : Swim (TODO)
+            # 3 : Swim
+            set_motor_gains(self.odrive_config_pubs, SWIMMING_GAINS)
             self.set_trajectory(self.swim_trajectory, INF_LOOP)
             self.get_logger().info('Swimming...')
         elif msg.buttons[3] == 1 and self.last_msg.buttons[3] == 0:
             # 4 : Crawl
+            set_motor_gains(self.odrive_config_pubs, WALKING_GAINS)
             self.set_trajectory(self.crawl_trajectory, INF_LOOP)
             self.get_logger().info('Crawling...')
         elif msg.buttons[4] == 1 and self.last_msg.buttons[4] == 0:
@@ -159,6 +174,7 @@ class STARQGaitJoystick(Node):
             self.get_logger().info('Landing...')
         elif msg.buttons[6] == 1 and self.last_msg.buttons[6] == 0:
             # LT
+            set_motor_gains(self.odrive_config_pubs, STANDING_GAINS)
             self.curr_traj = None
             set_motor_positions(self.odrive_command_pubs, 0.0)
             self.get_logger().info('Zeroed ODrives')

@@ -3,9 +3,9 @@ clear
 close all
 %%
 
-input_file = "ONRTrudge60PerFootSpace.csv";
-output_file = "trudge_test_1.txt";
-offsets = [0 0.5 0 0.5];
+input_file = "Walk3DPFootSpace.csv";
+output_file = "crawl.txt";
+offsets = [0 0.75 0.25 0.5];
 
 traj_dat = readmatrix(input_file, "Delimiter", ',');
 sz = size(traj_dat(:,1), 1);
@@ -33,4 +33,4 @@ for i = 1:length(offsets)
 
 end
 
-writematrix(output, strcat('../starq/trajectories/', output_file), 'Delimiter', ' ');
+writematrix(output, output_file, 'Delimiter', ' ');
