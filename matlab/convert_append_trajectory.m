@@ -22,10 +22,10 @@ for i = 1:length(file_idx)
     output(r, 3) = 3; % control mode
     output(r, 4) = 1; % input mode
     output(r, 5) = traj_dat(:, 2) * 1E-3; % x
-    % skip y = 0
+    output(r, 6) = 0; % y
     output(r, 7) = traj_dat(:, 3) * 1E-3; % z
-    % skip vx, vy, vz = 0
-    % skip fx, fy, fz = 0
+    output(r, 8:10) = zeros(numel(r), 3); % v
+    output(r, 11:13) = zeros(numel(r), 3); % f
 
 end
 
