@@ -6,16 +6,16 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "/home/nvidia/starq_ws/install/starq/include/**",
-        "/home/nvidia/boylan_ws/install/robot_msgs/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/install/robot_msgs/include/**",
         "/opt/ros/humble/include/**",
-        "/home/nvidia/boylan_ws/src/leg_kinematics/include/**",
-        "/home/nvidia/boylan_ws/src/legged_mpc/include/**",
-        "/home/nvidia/boylan_ws/src/mujoco_ros2/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/leg_kinematics/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/legged_mpc/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/mujoco_ros2/include/**",
+        "/home/jtyler/Documents/Robot-ROS2/src/odrive_ros2/include/**",
         "/usr/include/**"
       ],
       "name": "ROS",
-      "intelliSenseMode": "gcc-arm64",
+      "intelliSenseMode": "gcc-x64",
       "compilerPath": "/usr/bin/gcc",
       "cStandard": "gnu11",
       "cppStandard": "c++14"

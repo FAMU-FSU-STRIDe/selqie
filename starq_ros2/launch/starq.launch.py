@@ -2,7 +2,8 @@ import os
 import ament_index_python
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
-from launch_ros.actions import Node
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 GEAR_RATIO = 6.0
@@ -13,58 +14,59 @@ MICROSTRAIN_LAUNCH_FILE = os.path.join(ament_index_python.packages.get_package_s
 IMU_CONFIG_FILE = os.path.join(ament_index_python.packages.get_package_share_directory('starq_ros2'),
                                'config', 'imu_cv7.yml')
 
-def CanNode(ifc : int):
-    return Node(
+def CanBusNode(ifc : str):
+    return ComposableNode(
         package='can_bus',
-        executable='can_bus_node',
-        name=f'can{ifc}',
-        output='screen',
+        plugin='can_bus::CanBusNode',
+        name=ifc,
         parameters=[{
-            'interface': f'can{ifc}'
+            'interface': ifc
         }],
         remappings=[
-            ('can/tx', f'can{ifc}/tx'),
-            ('can/rx', f'can{ifc}/rx')
-        ]
+            ('can/tx', ifc + '/tx'),
+            ('can/rx', ifc + '/rx')
+        ],
+        extra_arguments=[{'use_intra_process_comms': True}]
     )
 
-def ODriveNode(id : int, ifc : int):
-    return Node(
+def ODriveCanNode(id : int, ifc : str):
+    return ComposableNode(
         package='odrive_ros2',
-        executable='odrive_can_node',
+        plugin='odrive_ros2::ODriveCanNode',
         name=f'odrive_can{id}',
-        output='screen',
         parameters=[{
             'id': id,
-            'gear_ratio': GEAR_RATIO
+            'gear_ratio': 1.0
         }],
         remappings=[
-            ('can/tx', f'can{ifc}/tx'),
-            ('can/rx', f'can{ifc}/rx'),
+            ('can/tx', ifc + '/tx'),
+            ('can/rx', ifc + '/rx'),
             ('odrive/command', f'odrive{id}/command'),
             ('odrive/config', f'odrive{id}/config'),
             ('odrive/estimate', f'odrive{id}/estimate'),
             ('odrive/info', f'odrive{id}/info')
-        ]
+        ],
+        extra_arguments=[{'use_intra_process_comms': True}]
     )
 
 def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
-    return Node(
+    return ComposableNode(
         package='leg_kinematics',
-        executable='fivebar2d_node',
+        plugin='leg_kinematics::FiveBar2DNode',
         name=f'fivebar2d{name}',
-        output='screen',
         parameters=[{
             'flip_y': flip_y # Left: False, Right: True
         }],
         remappings=[
             ('leg/command', f'leg{name}/command'),
             ('leg/estimate', f'leg{name}/estimate'),
+            ('leg/trajectory', f'leg{name}/trajectory'),
             ('motor0/command', f'odrive{id0}/command'),
             ('motor0/estimate', f'odrive{id0}/estimate'),
             ('motor1/command', f'odrive{id1}/command'),
             ('motor1/estimate', f'odrive{id1}/estimate')
-        ]
+        ],
+        extra_arguments=[{'use_intra_process_comms': True}]
     )
     
 def MicroStrainIMULaunch():
@@ -80,19 +82,27 @@ def MicroStrainIMULaunch():
 
 def generate_launch_description():
     return LaunchDescription([
-        CanNode(0),
-        CanNode(1),
-        ODriveNode(0, 0),
-        ODriveNode(1, 0),
-        ODriveNode(2, 0),
-        ODriveNode(3, 0),
-        ODriveNode(4, 1),
-        ODriveNode(5, 1),
-        ODriveNode(6, 1),
-        ODriveNode(7, 1),
-        FiveBar2DNode('FL', 0, 1, True),
-        FiveBar2DNode('RL', 2, 3, True),
-        FiveBar2DNode('RR', 4, 5, False),
-        FiveBar2DNode('FR', 6, 7, False),
+        ComposableNodeContainer(
+            name='starq_actuation_container',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+                CanBusNode("can0"),
+                CanBusNode("can1"),
+                ODriveCanNode(0, "can0"),
+                ODriveCanNode(1, "can0"),
+                ODriveCanNode(2, "can0"),
+                ODriveCanNode(3, "can0"),
+                ODriveCanNode(4, "can1"),
+                ODriveCanNode(5, "can1"),
+                ODriveCanNode(6, "can1"),
+                ODriveCanNode(7, "can1"),
+                FiveBar2DNode('FL', 0, 1, True),
+                FiveBar2DNode('RL', 2, 3, True),
+                FiveBar2DNode('RR', 4, 5, False),
+                FiveBar2DNode('FR', 6, 7, False),
+            ],
+        ),
         MicroStrainIMULaunch()
     ])

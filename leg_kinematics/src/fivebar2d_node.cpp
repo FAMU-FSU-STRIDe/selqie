@@ -96,37 +96,38 @@ public:
     }
 };
 
-class FiveBar2DNode : public rclcpp::Node
+namespace leg_kinematics
 {
-private:
-    std::unique_ptr<LegKinematicsModel> _model;
-    std::unique_ptr<LegKinematicsNode> _leg_kinematics_node;
 
-public:
-    FiveBar2DNode() : Node("fivebar2d_node")
+    class FiveBar2DNode : public rclcpp::Node
     {
-        float L1 = 0.066;
-        this->declare_parameter("L1", L1);
-        this->get_parameter("L1", L1);
+    private:
+        std::unique_ptr<LegKinematicsModel> _model;
+        std::unique_ptr<LegKinematicsNode> _leg_kinematics_node;
 
-        float L2 = 0.15;
-        this->declare_parameter("L2", L2);
-        this->get_parameter("L2", L2);
+    public:
+        FiveBar2DNode(const rclcpp::NodeOptions &options)
+            : Node("fivebar2d_node", options)
+        {
+            float L1 = 0.066;
+            this->declare_parameter("L1", L1);
+            this->get_parameter("L1", L1);
 
-        bool flip_y = false;
-        this->declare_parameter("flip_y", flip_y);
-        this->get_parameter("flip_y", flip_y);
-        const float YA = flip_y ? -1.0 : 1.0;
+            float L2 = 0.15;
+            this->declare_parameter("L2", L2);
+            this->get_parameter("L2", L2);
 
-        _model = std::make_unique<FiveBar2DModel>(L1, L2, YA);
-        _leg_kinematics_node = std::make_unique<LegKinematicsNode>(this, _model.get());
-    }
-};
+            bool flip_y = false;
+            this->declare_parameter("flip_y", flip_y);
+            this->get_parameter("flip_y", flip_y);
+            const float YA = flip_y ? -1.0 : 1.0;
 
-int main(int argc, char *argv[])
-{
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<FiveBar2DNode>());
-    rclcpp::shutdown();
-    return 0;
+            _model = std::make_unique<FiveBar2DModel>(L1, L2, YA);
+            _leg_kinematics_node = std::make_unique<LegKinematicsNode>(this, _model.get());
+        }
+    };
+
 }
+
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(leg_kinematics::FiveBar2DNode)
