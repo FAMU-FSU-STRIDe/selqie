@@ -7,7 +7,7 @@ from robot_msgs.msg import *
 class SwimTrajectory:
     size = 100
     frequency = 1.5
-    L0 = 0.21
+    L0 = 0.18
     phi = -3*np.pi/4
     xamp = 0.04
     yamp = 0.005
