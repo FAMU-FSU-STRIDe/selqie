@@ -163,4 +163,5 @@ def run_leg_trajectory(traj_publishers : list, trajectory : Trajectory, num_loop
         print(f"  Loop {i+1}/{num_loops}")
         for i in range(len(traj_publishers)):
             traj_publishers[i].publish(traj_msgs[i])
+        time.sleep(1.0 / frequency)
     print("Finished trajectory")
