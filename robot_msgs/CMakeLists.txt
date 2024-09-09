@@ -21,6 +21,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MotorInfo.msg"
   "msg/LegCommand.msg"
   "msg/LegEstimate.msg"
+  "msg/LegTrajectory.msg"
   "msg/BodyTrajectory.msg"
   "msg/FootholdTrajectory.msg"
   "msg/FootholdState.msg"

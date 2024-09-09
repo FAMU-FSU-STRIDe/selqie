@@ -97,7 +97,7 @@ def get_error_name(motor_info : MotorInfo):
                 return attr_name
     return "UNKNOWN_ERROR"
 
-def set_leg_states(cmd_publishers, mode, pos, vel = [0.0, 0.0, 0.0], force = [0.0, 0.0, 0.0]):
+def to_leg_command(mode, pos, vel, force):
     msg = LegCommand()
     msg.control_mode = mode
     msg.pos_setpoint.x = pos[0]
@@ -109,6 +109,10 @@ def set_leg_states(cmd_publishers, mode, pos, vel = [0.0, 0.0, 0.0], force = [0.
     msg.force_setpoint.x = force[0]
     msg.force_setpoint.y = force[1]
     msg.force_setpoint.z = force[2]
+    return msg
+
+def set_leg_states(cmd_publishers, mode, pos, vel = [0.0, 0.0, 0.0], force = [0.0, 0.0, 0.0]):
+    msg = to_leg_command(mode, pos, vel, force)
     for cmd_pub in cmd_publishers:
         cmd_pub.publish(msg)
 
@@ -145,17 +149,18 @@ def get_trajectory_from_file(rel_file : str, frequency : float, num_legs : int =
                         trajectory.positions, trajectory.velocities, trajectory.forces)))
     return trajectory
 
-def run_leg_trajectory_file(cmd_publishers : list, file : str, num_loops : int, frequency : float):
-    trajectory = get_trajectory_from_file(file, frequency)
+def run_leg_trajectory(traj_publishers : list, trajectory : Trajectory, num_loops : int, frequency : float):
+    traj_msgs = [LegTrajectory() for _ in range(len(traj_publishers))]
+    for j in range(trajectory.size):
+        leg_id : int = trajectory.leg_ids[j]
+        traj_msgs[leg_id].timing.append(trajectory.delay_time[j])
+        traj_msgs[leg_id].commands.append(to_leg_command(trajectory.control_modes[j], 
+                                                            trajectory.positions[j], 
+                                                            trajectory.velocities[j], 
+                                                            trajectory.forces[j]))
     print(f"Running trajectory for {num_loops} loops at {frequency} Hz")
     for i in range(num_loops):
         print(f"  Loop {i+1}/{num_loops}")
-        cstart = time.time()
-        for i in range(trajectory.size):
-            cnow = time.time()
-            while cnow - cstart < trajectory.delay_time[i]:
-                cnow = time.time()
-            set_leg_states([cmd_publishers[trajectory.leg_ids[i]]], trajectory.control_modes[i], 
-                           trajectory.positions[i], trajectory.velocities[i], trajectory.forces[i])
+        for i in range(len(traj_publishers)):
+            traj_publishers[i].publish(traj_msgs[i])
     print("Finished trajectory")
-

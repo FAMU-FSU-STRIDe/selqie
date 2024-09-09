@@ -9,18 +9,19 @@
 #include <robot_msgs/msg/motor_estimate.hpp>
 #include <robot_msgs/msg/leg_command.hpp>
 #include <robot_msgs/msg/leg_estimate.hpp>
+#include <robot_msgs/msg/leg_trajectory.hpp>
 
 using namespace Eigen;
 using namespace robot_msgs::msg;
 
-static inline rclcpp::QoS qos_fast()
+static inline rclcpp::QoS qos_fast(const int depth = 10)
 {
-    return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
+    return rclcpp::QoS(rclcpp::KeepLast(depth)).best_effort();
 }
 
-static inline rclcpp::QoS qos_reliable()
+static inline rclcpp::QoS qos_reliable(const int depth = 10)
 {
-    return rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
+    return rclcpp::QoS(rclcpp::KeepLast(depth)).reliable();
 }
 
 // Abstract class for leg kinematics model
@@ -47,6 +48,7 @@ private:
 
     rclcpp::Subscription<LegCommand>::SharedPtr _leg_command_sub;
     rclcpp::Publisher<LegEstimate>::SharedPtr _leg_estimate_pub;
+    rclcpp::Subscription<LegTrajectory>::SharedPtr _leg_trajectory_sub;
 
     std::vector<rclcpp::Subscription<MotorEstimate>::SharedPtr> _motor_estimate_subs;
     std::vector<rclcpp::Publisher<MotorCommand>::SharedPtr> _motor_command_pubs;
@@ -107,6 +109,8 @@ public:
         _leg_command_sub = node->create_subscription<LegCommand>(
             "leg/command", qos_fast(), std::bind(&LegKinematicsNode::legCommand, this, std::placeholders::_1));
         _leg_estimate_pub = node->create_publisher<LegEstimate>("leg/estimate", qos_fast());
+        _leg_trajectory_sub = node->create_subscription<LegTrajectory>(
+            "leg/trajectory", qos_reliable(1), std::bind(&LegKinematicsNode::legTrajectory, this, std::placeholders::_1));
 
         for (std::size_t m = 0; m < num_motors; m++)
         {
@@ -129,18 +133,18 @@ public:
         RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node initialized");
     }
 
-    void legCommand(const LegCommand::SharedPtr msg)
+    void legCommand(const LegCommand &msg)
     {
         std::vector<MotorCommand> motor_cmds(_model->getNumMotors());
 
         for (auto &motor_cmd : motor_cmds)
         {
-            motor_cmd.control_mode = msg->control_mode;
+            motor_cmd.control_mode = msg.control_mode;
         }
 
-        const Vector3f pos_setpoint(msg->pos_setpoint.x, msg->pos_setpoint.y, msg->pos_setpoint.z);
-        const Vector3f vel_setpoint(msg->vel_setpoint.x, msg->vel_setpoint.y, msg->vel_setpoint.z);
-        const Vector3f force_setpoint(msg->force_setpoint.x, msg->force_setpoint.y, msg->force_setpoint.z);
+        const Vector3f pos_setpoint(msg.pos_setpoint.x, msg.pos_setpoint.y, msg.pos_setpoint.z);
+        const Vector3f vel_setpoint(msg.vel_setpoint.x, msg.vel_setpoint.y, msg.vel_setpoint.z);
+        const Vector3f force_setpoint(msg.force_setpoint.x, msg.force_setpoint.y, msg.force_setpoint.z);
 
         const Matrix3f jacobian = _model->getJacobian(latestMotorPositions());
 
@@ -177,5 +181,32 @@ public:
         msg.force_estimate = toVector3(foot_torque);
 
         _leg_estimate_pub->publish(msg);
+    }
+
+    void legTrajectory(const LegTrajectory &msg)
+    {
+        if (msg.timing.size() != msg.commands.size())
+        {
+            RCLCPP_ERROR(_node->get_logger(), "Trajectory size mismatch: %lu timing, %lu commands",
+                         msg.timing.size(), msg.commands.size());
+            return;
+        }
+
+        assert(std::is_sorted(msg.timing.begin(), msg.timing.end()));
+
+        const auto cstart = _node->now();
+        for (std::size_t i = 0; i < msg.commands.size(); i++)
+        {
+            const auto cnow = _node->now();
+            const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
+            const auto delay = std::chrono::nanoseconds(time_t(msg.timing[i] * 1e9));
+
+            if (delay > cdiff)
+            {
+                rclcpp::sleep_for(delay - cdiff);
+            }
+
+            legCommand(msg.commands[i]);
+        }
     }
 };

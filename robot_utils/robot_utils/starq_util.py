@@ -35,6 +35,10 @@ class STARQRobotNode(Node):
             leg_estimate_callback = lambda msg, i=i: self.leg_estimates.__setitem__(i, msg)
             self.leg_estimate_subscribers.append(self.create_subscription(LegEstimate, f'leg{LEG_NAMES[i]}/estimate', leg_estimate_callback, qos_fast()))
 
+        self.leg_trajectory_publishers = []
+        for i in range(len(LEG_NAMES)):
+            self.leg_trajectory_publishers.append(self.create_publisher(LegTrajectory, f'leg{LEG_NAMES[i]}/trajectory', qos_reliable()))
+
         self.motor_command_publishers = []
         for i in range(NUM_MOTORS):
             self.motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', qos_fast()))
@@ -175,7 +179,8 @@ class STARQTerminal(Cmd):
                 print("Invalid number of loops or frequency")
                 return
 
-            run_leg_trajectory_file(self.robot.leg_command_publishers, file, num_loops, frequency)
+            trajectory = get_trajectory_from_file(file, frequency)
+            run_leg_trajectory(self.robot.leg_trajectory_publishers, trajectory, num_loops, frequency)
             
     def complete_run_trajectory(self, text, line, begidx, endidx):
         if len(line.split()) % 3 == 1 or len(line.split()) % 3 == 2:
