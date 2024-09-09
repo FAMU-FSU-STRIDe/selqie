@@ -5,16 +5,17 @@ close all
 
 % Params
 nominal_x = 0;
-nominal_z = -0.15;
+nominal_z = -0.18914;
 
 loading_z = -0.10;
 launching_z = -0.20;
 
 z_load = linspace(nominal_z, loading_z, 200);
 z_launch = linspace(loading_z, launching_z, 5);
-z_return = linspace(launching_z, nominal_z, 20);
+z_hold = linspace(launching_z, launching_z, 100);
+z_return = linspace(launching_z, nominal_z, 25);
 
-z = [z_load, z_launch, z_return];
+z = [z_load, z_launch, z_hold, z_return];
 x = nominal_x * ones(size(z));
 y = zeros(size(z));
 t = linspace(0, 1.0, size(z, 2));
