@@ -1,4 +1,6 @@
 build
 install
 log
+rosbags
+matlab/custom
 **/__pycache__
