@@ -10,7 +10,7 @@ from robot_msgs.msg import *
 from robot_utils.utils.robot_util_functions import *
 
 NUM_MOTORS = 8
-LEG_NAMES = ['FL', 'FR', 'RL', 'RR']
+LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
 STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
 TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), 'trajectories')
 ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
