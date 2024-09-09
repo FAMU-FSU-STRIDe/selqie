@@ -38,13 +38,13 @@ class STARQGaitJoystick(Node):
         
         self.declare_parameter('jump_trajectory_file', 'jump.txt')
         jump_file = self.get_parameter('jump_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('jump_frequency', 7.5)
+        self.declare_parameter('jump_frequency', 0.5)
         jump_freq = self.get_parameter('jump_frequency').get_parameter_value().double_value
         self.jump_trajectory = get_trajectory_from_file(jump_file, jump_freq, num_legs)
         
         self.declare_parameter('crawl_trajectory_file', 'crawl.txt')
         crawl_file = self.get_parameter('crawl_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('crawl_frequency', 1.0)
+        self.declare_parameter('crawl_frequency', 1.5)
         crawl_freq = self.get_parameter('crawl_frequency').get_parameter_value().double_value
         self.crawl_trajectory = get_trajectory_from_file(crawl_file, crawl_freq, num_legs)
 

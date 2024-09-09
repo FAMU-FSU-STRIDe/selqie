@@ -16,7 +16,8 @@ TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), '
 ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
                         '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
                         '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
-                        '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',]
+                        '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',
+                        'imu/data']
 JOYSTICK_PACKAGE = 'robot_joysticks'
 
 class STARQRobotNode(Node):
