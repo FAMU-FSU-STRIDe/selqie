@@ -68,7 +68,7 @@ namespace can_bus
             RCLCPP_INFO(this->get_logger(), "CAN bus node initialized on interface %s", _interface.c_str());
         }
 
-        void send(const CanFrame::SharedPtr msg)
+        void send(const CanFrame::UniquePtr msg)
         {
             if (msg->size > CAN_MAX_DLC)
             {
@@ -83,7 +83,8 @@ namespace can_bus
 
             if (write(_socket, &frame, sizeof(frame)) < ssize_t(sizeof(frame)))
             {
-                RCLCPP_ERROR(this->get_logger(), "CAN buffer full, failed to send frame");
+                RCLCPP_WARN_THROTTLE(this->get_logger(), *get_clock(), 1000,
+                                      "CAN buffer full, failed to send frame");
             }
         }
 
@@ -97,15 +98,15 @@ namespace can_bus
                 return;
             }
 
-            auto msg = CanFrame();
-            msg.id = frame.can_id;
-            msg.size = frame.can_dlc;
-            std::copy(std::begin(frame.data), std::end(frame.data), std::begin(msg.data));
+            auto msg = std::make_unique<CanFrame>();
+            msg->id = frame.can_id;
+            msg->size = frame.can_dlc;
+            std::copy(std::begin(frame.data), std::end(frame.data), std::begin(msg->data));
 
-            _can_rx_pub->publish(msg);
+            _can_rx_pub->publish(std::move(msg));
         }
     };
-} 
+}
 
 #include <rclcpp_components/register_node_macro.hpp>
 RCLCPP_COMPONENTS_REGISTER_NODE(can_bus::CanBusNode)

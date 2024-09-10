@@ -77,12 +77,12 @@ namespace odrive_ros2
             return static_cast<uint8_t>(arb_id & 0b11111);
         }
 
-        inline CanFrame createFrame(const uint32_t arb_id, const uint8_t *data, const size_t len) const
+        inline CanFrame::UniquePtr createFrame(const uint32_t arb_id, const uint8_t *data, const size_t len) const
         {
-            CanFrame frame;
-            frame.id = arb_id;
-            frame.size = len;
-            std::copy(data, data + len, frame.data.begin());
+            auto frame = std::make_unique<CanFrame>();
+            frame->id = arb_id;
+            frame->size = len;
+            std::copy(data, data + len, frame->data.begin());
             return frame;
         }
 
@@ -124,7 +124,7 @@ namespace odrive_ros2
             RCLCPP_INFO(this->get_logger(), "ODrive node initialized with ID %d", _id);
         }
 
-        void receive(const CanFrame::SharedPtr msg)
+        void receive(const CanFrame::UniquePtr msg)
         {
             const uint8_t can_id = getCanID(msg->id);
             const uint8_t cmd_id = getCommandID(msg->id);
@@ -198,7 +198,7 @@ namespace odrive_ros2
             }
         }
 
-        void command(const MotorCommand::SharedPtr msg)
+        void command(const MotorCommand::UniquePtr msg)
         {
             if (msg->control_mode != 0)
             {
@@ -283,7 +283,7 @@ namespace odrive_ros2
             }
         }
 
-        void config(const MotorConfig::SharedPtr msg)
+        void config(const MotorConfig::UniquePtr msg)
         {
             if (msg->axis_state != 0)
             {
@@ -359,7 +359,7 @@ namespace odrive_ros2
 
         void estimate()
         {
-            _estimate_pub->publish(_estimate_msg);
+            _estimate_pub->publish(std::make_unique<MotorEstimate>(_estimate_msg));
         }
 
         void info()

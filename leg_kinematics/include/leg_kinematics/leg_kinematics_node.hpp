@@ -133,18 +133,20 @@ public:
         RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node initialized");
     }
 
-    void legCommand(const LegCommand &msg)
+    void legCommand(const LegCommand::UniquePtr msg)
     {
-        std::vector<MotorCommand> motor_cmds(_model->getNumMotors());
+        std::vector<MotorCommand::UniquePtr> motor_cmds(_model->getNumMotors());
+        std::generate(motor_cmds.begin(), motor_cmds.end(), []()
+                      { return std::make_unique<MotorCommand>(); });
 
         for (auto &motor_cmd : motor_cmds)
         {
-            motor_cmd.control_mode = msg.control_mode;
+            motor_cmd->control_mode = msg->control_mode;
         }
 
-        const Vector3f pos_setpoint(msg.pos_setpoint.x, msg.pos_setpoint.y, msg.pos_setpoint.z);
-        const Vector3f vel_setpoint(msg.vel_setpoint.x, msg.vel_setpoint.y, msg.vel_setpoint.z);
-        const Vector3f force_setpoint(msg.force_setpoint.x, msg.force_setpoint.y, msg.force_setpoint.z);
+        const Vector3f pos_setpoint(msg->pos_setpoint.x, msg->pos_setpoint.y, msg->pos_setpoint.z);
+        const Vector3f vel_setpoint(msg->vel_setpoint.x, msg->vel_setpoint.y, msg->vel_setpoint.z);
+        const Vector3f force_setpoint(msg->force_setpoint.x, msg->force_setpoint.y, msg->force_setpoint.z);
 
         const Matrix3f jacobian = _model->getJacobian(latestMotorPositions());
 
@@ -159,11 +161,11 @@ public:
 
         for (std::size_t i = 0; i < _model->getNumMotors(); i++)
         {
-            motor_cmds[i].pos_setpoint = motor_pos(i);
-            motor_cmds[i].vel_setpoint = motor_vels(i);
-            motor_cmds[i].torq_setpoint = motor_torqs(i);
+            motor_cmds[i]->pos_setpoint = motor_pos(i);
+            motor_cmds[i]->vel_setpoint = motor_vels(i);
+            motor_cmds[i]->torq_setpoint = motor_torqs(i);
 
-            _motor_command_pubs[i]->publish(motor_cmds[i]);
+            _motor_command_pubs[i]->publish(std::move(motor_cmds[i]));
         }
     }
 
@@ -175,38 +177,38 @@ public:
         const Vector3f foot_velocity = jacobian * latestMotorVelocities();
         const Vector3f foot_torque = jacobian.transpose() * latestMotorTorques();
 
-        LegEstimate msg;
-        msg.pos_estimate = toVector3(foot_position);
-        msg.vel_estimate = toVector3(foot_velocity);
-        msg.force_estimate = toVector3(foot_torque);
+        auto msg = std::make_unique<LegEstimate>();
+        msg->pos_estimate = toVector3(foot_position);
+        msg->vel_estimate = toVector3(foot_velocity);
+        msg->force_estimate = toVector3(foot_torque);
 
-        _leg_estimate_pub->publish(msg);
+        _leg_estimate_pub->publish(std::move(msg));
     }
 
-    void legTrajectory(const LegTrajectory &msg)
+    void legTrajectory(const LegTrajectory::UniquePtr msg)
     {
-        if (msg.timing.size() != msg.commands.size())
+        if (msg->timing.size() != msg->commands.size())
         {
             RCLCPP_ERROR(_node->get_logger(), "Trajectory size mismatch: %lu timing, %lu commands",
-                         msg.timing.size(), msg.commands.size());
+                         msg->timing.size(), msg->commands.size());
             return;
         }
 
-        assert(std::is_sorted(msg.timing.begin(), msg.timing.end()));
+        assert(std::is_sorted(msg->timing.begin(), msg->timing.end()));
 
         const auto cstart = _node->now();
-        for (std::size_t i = 0; i < msg.commands.size(); i++)
+        for (std::size_t i = 0; i < msg->commands.size(); i++)
         {
             const auto cnow = _node->now();
             const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
-            const auto delay = std::chrono::nanoseconds(time_t(msg.timing[i] * 1e9));
+            const auto delay = std::chrono::nanoseconds(time_t(msg->timing[i] * 1e9));
 
             if (delay > cdiff)
             {
                 rclcpp::sleep_for(delay - cdiff);
             }
 
-            legCommand(msg.commands[i]);
+            legCommand(std::make_unique<LegCommand>(msg->commands[i]));
         }
     }
 };
