@@ -36,7 +36,7 @@ def ODriveCanNode(id : int, ifc : str):
         name=f'odrive_can{id}',
         parameters=[{
             'id': id,
-            'gear_ratio': 1.0
+            'gear_ratio': GEAR_RATIO
         }],
         remappings=[
             ('can/tx', ifc + '/tx'),

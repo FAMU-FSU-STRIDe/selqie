@@ -13,6 +13,11 @@ static inline rclcpp::QoS qos_fast()
     return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
 }
 
+static inline rclcpp::QoS qos_reliable()
+{
+    return rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
+}
+
 namespace can_bus
 {
 
@@ -83,8 +88,7 @@ namespace can_bus
 
             if (write(_socket, &frame, sizeof(frame)) < ssize_t(sizeof(frame)))
             {
-                RCLCPP_WARN_THROTTLE(this->get_logger(), *get_clock(), 1000,
-                                      "CAN buffer full, failed to send frame");
+                RCLCPP_ERROR(this->get_logger(), "CAN buffer full, failed to send frame");
             }
         }
 

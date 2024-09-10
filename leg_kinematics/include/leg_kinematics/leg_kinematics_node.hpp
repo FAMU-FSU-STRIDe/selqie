@@ -11,6 +11,8 @@
 #include <robot_msgs/msg/leg_estimate.hpp>
 #include <robot_msgs/msg/leg_trajectory.hpp>
 
+#define MAX_COMMAND_FREQUENCY 500.0
+
 using namespace Eigen;
 using namespace robot_msgs::msg;
 
@@ -196,12 +198,20 @@ public:
 
         assert(std::is_sorted(msg->timing.begin(), msg->timing.end()));
 
+        const static std::chrono::nanoseconds limit_dt(time_t(1E9 / MAX_COMMAND_FREQUENCY));
+
         const auto cstart = _node->now();
+        auto climit = cstart + limit_dt;
         for (std::size_t i = 0; i < msg->commands.size(); i++)
         {
             const auto cnow = _node->now();
             const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
-            const auto delay = std::chrono::nanoseconds(time_t(msg->timing[i] * 1e9));
+            const auto delay = std::chrono::nanoseconds(time_t(msg->timing[i] * 1E9));
+
+            if (cnow + delay < climit)
+            {
+                continue;
+            }
 
             if (delay > cdiff)
             {
@@ -209,6 +219,7 @@ public:
             }
 
             legCommand(std::make_unique<LegCommand>(msg->commands[i]));
+            climit += limit_dt;
         }
     }
 };

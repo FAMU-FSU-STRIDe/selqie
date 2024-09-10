@@ -61,6 +61,7 @@ namespace odrive_ros2
 
         MotorEstimate _estimate_msg;
         MotorInfo _info_msg;
+        MotorCommand _command_msg;
 
         inline uint32_t getArbitrationID(const uint8_t can_id, const uint8_t cmd_id) const
         {
@@ -200,7 +201,7 @@ namespace odrive_ros2
 
         void command(const MotorCommand::UniquePtr msg)
         {
-            if (msg->control_mode != 0)
+            if (msg->control_mode != _command_msg.control_mode)
             {
                 const uint32_t arb_id = getArbitrationID(_id, CanCommandID::SET_CONTROL_MODE);
 
@@ -281,6 +282,8 @@ namespace odrive_ros2
                 break;
             }
             }
+
+            _command_msg = *msg;
         }
 
         void config(const MotorConfig::UniquePtr msg)
