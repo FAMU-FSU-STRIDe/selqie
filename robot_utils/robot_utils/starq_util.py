@@ -10,7 +10,7 @@ from robot_msgs.msg import *
 from robot_utils.utils.robot_util_functions import *
 
 NUM_MOTORS = 8
-LEG_NAMES = ['FL', 'FR', 'RL', 'RR']
+LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
 STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
 TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), 'trajectories')
 ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
@@ -179,8 +179,8 @@ class STARQTerminal(Cmd):
                 print("Invalid number of loops or frequency")
                 return
 
-            trajectory = get_trajectory_from_file(file, frequency)
-            run_leg_trajectory(self.robot.leg_trajectory_publishers, trajectory, num_loops, frequency)
+            trajectories = get_trajectories_from_file(file, frequency)
+            run_leg_trajectory(self.robot.leg_trajectory_publishers, trajectories, num_loops, frequency)
             
     def complete_run_trajectory(self, text, line, begidx, endidx):
         if len(line.split()) % 3 == 1 or len(line.split()) % 3 == 2:

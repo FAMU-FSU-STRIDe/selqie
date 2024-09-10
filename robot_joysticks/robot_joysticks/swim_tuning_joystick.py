@@ -16,7 +16,7 @@ class SwimTuningJoystick(Node):
         self.declare_parameter('num_motors', self.num_motors)
         self.num_motors = self.get_parameter('num_motors').get_parameter_value().integer_value
 
-        self.leg_names = ['FL', 'FR', 'RL', 'RR']
+        self.leg_names = ['FL', 'RL', 'RR', 'FR']
         self.declare_parameter('leg_names', self.leg_names)
         self.leg_names = self.get_parameter('leg_names').get_parameter_value().string_array_value
 
