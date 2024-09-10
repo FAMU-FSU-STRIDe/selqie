@@ -28,7 +28,7 @@ class STARQGaitJoystick(Node):
         self.declare_parameter('num_motors', NUM_MOTORS)
         self.num_motors = self.get_parameter('num_motors').get_parameter_value().integer_value
         
-        self.declare_parameter('leg_names', ['FL', 'FR', 'RL', 'RR'])
+        self.declare_parameter('leg_names', ['FL', 'RL', 'RR', 'FR'])
         self.leg_names = self.get_parameter('leg_names').get_parameter_value().string_array_value
         num_legs = len(self.leg_names)
         
