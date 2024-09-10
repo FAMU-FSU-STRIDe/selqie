@@ -28,7 +28,7 @@ class STARQGaitJoystick(Node):
         self.declare_parameter('num_motors', NUM_MOTORS)
         self.num_motors = self.get_parameter('num_motors').get_parameter_value().integer_value
         
-        self.declare_parameter('leg_names', ['FL', 'FR', 'RL', 'RR'])
+        self.declare_parameter('leg_names', ['FL', 'RL', 'RR', 'FR'])
         self.leg_names = self.get_parameter('leg_names').get_parameter_value().string_array_value
         num_legs = len(self.leg_names)
         
@@ -43,13 +43,13 @@ class STARQGaitJoystick(Node):
         
         self.declare_parameter('jump_trajectory_file', 'jump.txt')
         jump_file = self.get_parameter('jump_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('jump_frequency', 0.75)
+        self.declare_parameter('jump_frequency', 0.5)
         jump_freq = self.get_parameter('jump_frequency').get_parameter_value().double_value
         self.jump_trajectory = get_trajectory_from_file(jump_file, jump_freq, num_legs)
         
         self.declare_parameter('swim_trajectory_file', 'swim.txt')
         swim_file = self.get_parameter('swim_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('swim_frequency', 0.75)
+        self.declare_parameter('swim_frequency', 3.5)
         swim_freq = self.get_parameter('swim_frequency').get_parameter_value().double_value
         self.swim_trajectory = get_trajectory_from_file(swim_file, swim_freq, num_legs)
         
@@ -57,7 +57,7 @@ class STARQGaitJoystick(Node):
         
         self.declare_parameter('crawl_trajectory_file', 'crawl.txt')
         crawl_file = self.get_parameter('crawl_trajectory_file').get_parameter_value().string_value
-        self.declare_parameter('crawl_frequency', 0.25)
+        self.declare_parameter('crawl_frequency', 1.0)
         crawl_freq = self.get_parameter('crawl_frequency').get_parameter_value().double_value
         self.crawl_trajectory = get_trajectory_from_file(crawl_file, crawl_freq, num_legs)
         
