@@ -194,8 +194,6 @@ public:
 
         assert(std::is_sorted(msg.timing.begin(), msg.timing.end()));
 
-	RCLCPP_INFO(_node->get_logger(), "Recieved trajectory");
-
         const auto cstart = _node->now();
         for (std::size_t i = 0; i < msg.commands.size(); i++)
         {
@@ -203,13 +201,9 @@ public:
             const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
             const auto delay = std::chrono::nanoseconds(time_t(msg.timing[i] * 1e9));
 
-	    RCLCPP_INFO(_node->get_logger(), "msg.timing[i] = %f", msg.timing[i]);
-	    RCLCPP_INFO(_node->get_logger(), "cdiff = %lu, delay = %lu", cdiff.count(), delay.count());
-
             if (delay > cdiff)
             {
                 rclcpp::sleep_for(delay - cdiff);
-		RCLCPP_INFO(_node->get_logger(), "Sleeping for %lu ns", (delay - cdiff).count());
             }
 
             legCommand(msg.commands[i]);
