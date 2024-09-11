@@ -6,7 +6,8 @@
 #include <net/if.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <thread>
+
+#define CAN_RECEIVE_RATE 2000.0
 
 static inline rclcpp::QoS qos_fast()
 {
@@ -32,6 +33,8 @@ namespace can_bus
 
         rclcpp::Subscription<CanFrame>::SharedPtr _can_tx_sub;
         rclcpp::Publisher<CanFrame>::SharedPtr _can_rx_pub;
+
+        rclcpp::TimerBase::SharedPtr _receive_timer;
 
     public:
         CanBusNode(const rclcpp::NodeOptions &options)
@@ -66,9 +69,9 @@ namespace can_bus
 
             _can_rx_pub = this->create_publisher<CanFrame>("can/rx", qos_fast());
 
-            std::thread([this]()
-                        { while (rclcpp::ok()) receive(); })
-                .detach();
+            _receive_timer = this->create_wall_timer(
+                std::chrono::microseconds(time_t(1E6 / CAN_RECEIVE_RATE)),
+                std::bind(&CanBusNode::receive, this));
 
             RCLCPP_INFO(this->get_logger(), "CAN bus node initialized on interface %s", _interface.c_str());
         }
@@ -106,6 +109,9 @@ namespace can_bus
             msg->id = frame.can_id;
             msg->size = frame.can_dlc;
             std::copy(std::begin(frame.data), std::end(frame.data), std::begin(msg->data));
+
+            static int count = 0;
+            RCLCPP_INFO(this->get_logger(), "CAN MSG COUNT: %d", ++count);
 
             _can_rx_pub->publish(std::move(msg));
         }

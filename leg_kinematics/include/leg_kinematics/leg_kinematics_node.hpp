@@ -169,6 +169,9 @@ public:
 
             _motor_command_pubs[i]->publish(std::move(motor_cmds[i]));
         }
+
+        static int count = 0;
+        RCLCPP_INFO(_node->get_logger(), "LEG MSG COUNT: %d", ++count);
     }
 
     void legEstimate()
@@ -201,25 +204,24 @@ public:
         const static std::chrono::nanoseconds limit_dt(time_t(1E9 / MAX_COMMAND_FREQUENCY));
 
         const auto cstart = _node->now();
-        auto climit = cstart + limit_dt;
+        auto climit = cstart;
         for (std::size_t i = 0; i < msg->commands.size(); i++)
         {
             const auto cnow = _node->now();
-            const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
             const auto delay = std::chrono::nanoseconds(time_t(msg->timing[i] * 1E9));
-
             if (cnow + delay < climit)
             {
                 continue;
             }
+            climit += limit_dt;
 
+            const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
             if (delay > cdiff)
             {
                 rclcpp::sleep_for(delay - cdiff);
             }
 
             legCommand(std::make_unique<LegCommand>(msg->commands[i]));
-            climit += limit_dt;
         }
     }
 };

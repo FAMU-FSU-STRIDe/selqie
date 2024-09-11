@@ -84,6 +84,8 @@ namespace odrive_ros2
             frame->id = arb_id;
             frame->size = len;
             std::copy(data, data + len, frame->data.begin());
+            static int count = 0;
+            RCLCPP_INFO(this->get_logger(), "ODRIVE MSG COUNT: %d", ++count);
             return frame;
         }
 

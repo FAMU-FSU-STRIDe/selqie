@@ -86,7 +86,7 @@ def generate_launch_description():
             name='starq_actuation_container',
             namespace='',
             package='rclcpp_components',
-            executable='component_container_mt',
+            executable='component_container',
             composable_node_descriptions=[
                 CanBusNode("can0"),
                 CanBusNode("can1"),
