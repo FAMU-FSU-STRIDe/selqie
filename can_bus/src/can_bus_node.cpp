@@ -109,10 +109,6 @@ namespace can_bus
             msg->id = frame.can_id;
             msg->size = frame.can_dlc;
             std::copy(std::begin(frame.data), std::end(frame.data), std::begin(msg->data));
-
-            static int count = 0;
-            RCLCPP_INFO(this->get_logger(), "CAN MSG COUNT: %d", ++count);
-
             _can_rx_pub->publish(std::move(msg));
         }
     };

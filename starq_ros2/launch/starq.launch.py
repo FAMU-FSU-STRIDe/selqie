@@ -83,23 +83,31 @@ def MicroStrainIMULaunch():
 def generate_launch_description():
     return LaunchDescription([
         ComposableNodeContainer(
-            name='starq_actuation_container',
+            name='starq_actuation_left_container',
             namespace='',
             package='rclcpp_components',
-            executable='component_container',
+            executable='component_container_mt',
             composable_node_descriptions=[
                 CanBusNode("can0"),
-                CanBusNode("can1"),
                 ODriveCanNode(0, "can0"),
                 ODriveCanNode(1, "can0"),
                 ODriveCanNode(2, "can0"),
                 ODriveCanNode(3, "can0"),
+                FiveBar2DNode('FL', 0, 1, True),
+                FiveBar2DNode('RL', 2, 3, True),
+            ],
+        ),
+        ComposableNodeContainer(
+            name='starq_actuation_right_container',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container_mt',
+            composable_node_descriptions=[
+                CanBusNode("can1"),
                 ODriveCanNode(4, "can1"),
                 ODriveCanNode(5, "can1"),
                 ODriveCanNode(6, "can1"),
                 ODriveCanNode(7, "can1"),
-                FiveBar2DNode('FL', 0, 1, True),
-                FiveBar2DNode('RL', 2, 3, True),
                 FiveBar2DNode('RR', 4, 5, False),
                 FiveBar2DNode('FR', 6, 7, False),
             ],

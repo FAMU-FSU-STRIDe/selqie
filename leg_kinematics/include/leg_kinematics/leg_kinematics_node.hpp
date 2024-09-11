@@ -11,7 +11,7 @@
 #include <robot_msgs/msg/leg_estimate.hpp>
 #include <robot_msgs/msg/leg_trajectory.hpp>
 
-#define MAX_COMMAND_FREQUENCY 500.0
+#define MAX_COMMAND_FREQUENCY 200.0
 
 using namespace Eigen;
 using namespace robot_msgs::msg;
@@ -169,9 +169,6 @@ public:
 
             _motor_command_pubs[i]->publish(std::move(motor_cmds[i]));
         }
-
-        static int count = 0;
-        RCLCPP_INFO(_node->get_logger(), "LEG MSG COUNT: %d", ++count);
     }
 
     void legEstimate()
