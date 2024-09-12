@@ -9,9 +9,6 @@
 #include <robot_msgs/msg/motor_estimate.hpp>
 #include <robot_msgs/msg/leg_command.hpp>
 #include <robot_msgs/msg/leg_estimate.hpp>
-#include <robot_msgs/msg/leg_trajectory.hpp>
-
-#define MAX_COMMAND_FREQUENCY 200.0
 
 using namespace Eigen;
 using namespace robot_msgs::msg;
@@ -50,7 +47,6 @@ private:
 
     rclcpp::Subscription<LegCommand>::SharedPtr _leg_command_sub;
     rclcpp::Publisher<LegEstimate>::SharedPtr _leg_estimate_pub;
-    rclcpp::Subscription<LegTrajectory>::SharedPtr _leg_trajectory_sub;
 
     std::vector<rclcpp::Subscription<MotorEstimate>::SharedPtr> _motor_estimate_subs;
     std::vector<rclcpp::Publisher<MotorCommand>::SharedPtr> _motor_command_pubs;
@@ -111,8 +107,6 @@ public:
         _leg_command_sub = node->create_subscription<LegCommand>(
             "leg/command", qos_fast(), std::bind(&LegKinematicsNode::legCommand, this, std::placeholders::_1));
         _leg_estimate_pub = node->create_publisher<LegEstimate>("leg/estimate", qos_fast());
-        _leg_trajectory_sub = node->create_subscription<LegTrajectory>(
-            "leg/trajectory", qos_reliable(), std::bind(&LegKinematicsNode::legTrajectory, this, std::placeholders::_1));
 
         for (std::size_t m = 0; m < num_motors; m++)
         {
@@ -138,8 +132,10 @@ public:
     void legCommand(const LegCommand::UniquePtr msg)
     {
         std::vector<MotorCommand::UniquePtr> motor_cmds(_model->getNumMotors());
-        std::generate(motor_cmds.begin(), motor_cmds.end(), []()
-                      { return std::make_unique<MotorCommand>(); });
+        for (std::size_t i = 0; i < _model->getNumMotors(); i++)
+        {
+            motor_cmds[i] = std::make_unique<MotorCommand>();
+        }
 
         for (auto &motor_cmd : motor_cmds)
         {
@@ -185,40 +181,5 @@ public:
         msg->force_estimate = toVector3(foot_torque);
 
         _leg_estimate_pub->publish(std::move(msg));
-    }
-
-    void legTrajectory(const LegTrajectory::UniquePtr msg)
-    {
-        if (msg->timing.size() != msg->commands.size())
-        {
-            RCLCPP_ERROR(_node->get_logger(), "Trajectory size mismatch: %lu timing, %lu commands",
-                         msg->timing.size(), msg->commands.size());
-            return;
-        }
-
-        assert(std::is_sorted(msg->timing.begin(), msg->timing.end()));
-
-        const static std::chrono::nanoseconds limit_dt(time_t(1E9 / MAX_COMMAND_FREQUENCY));
-
-        const auto cstart = _node->now();
-        auto climit = cstart;
-        for (std::size_t i = 0; i < msg->commands.size(); i++)
-        {
-            const auto cnow = _node->now();
-            const auto delay = std::chrono::nanoseconds(time_t(msg->timing[i] * 1E9));
-            if (cnow + delay < climit)
-            {
-                continue;
-            }
-            climit += limit_dt;
-
-            const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
-            if (delay > cdiff)
-            {
-                rclcpp::sleep_for(delay - cdiff);
-            }
-
-            legCommand(std::make_unique<LegCommand>(msg->commands[i]));
-        }
     }
 };

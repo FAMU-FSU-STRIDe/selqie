@@ -18,7 +18,7 @@ find_package(Eigen3 REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include_directories(include)
 
-# add executable
+# add library
 add_library(leg_kinematics_component SHARED 
   src/fivebar2d_node.cpp 
   src/unitree_a1_leg_node.cpp
@@ -47,6 +47,16 @@ install(
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
+)
+
+# add executable
+add_executable(leg_trajectory_publisher_node src/leg_trajectory_publisher_node.cpp)
+ament_target_dependencies(leg_trajectory_publisher_node rclcpp robot_msgs)
+
+# install targets
+install(TARGETS
+leg_trajectory_publisher_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # install launch and models files
