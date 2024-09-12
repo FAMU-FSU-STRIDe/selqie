@@ -1,7 +1,6 @@
 import os
 import time
 import math
-from dataclasses import dataclass, field
 from ament_index_python.packages import get_package_share_directory
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from robot_msgs.msg import *
@@ -84,7 +83,7 @@ def get_error_name(motor_info : MotorInfo):
                 return attr_name
     return "UNKNOWN_ERROR"
 
-def to_leg_command(mode, pos, vel, force):
+def to_leg_command(mode, pos, vel = [0.0, 0.0, 0.0], force = [0.0, 0.0, 0.0]):
     msg = LegCommand()
     msg.control_mode = mode
     msg.pos_setpoint.x = pos[0]

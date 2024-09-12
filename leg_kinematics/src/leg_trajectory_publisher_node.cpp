@@ -2,6 +2,8 @@
 #include <robot_msgs/msg/leg_command.hpp>
 #include <robot_msgs/msg/leg_trajectory.hpp>
 
+#include <thread>
+
 static inline rclcpp::QoS qos_fast()
 {
     return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
@@ -17,22 +19,28 @@ using namespace robot_msgs::msg;
 class LegTrajectoryPublisherNode : public rclcpp::Node
 {
 private:
-    double max_freq_ = 500.0; // Hz
+    double _max_freq = 500.0; // Hz
 
-    rclcpp::Subscription<robot_msgs::msg::LegTrajectory>::SharedPtr _leg_trajectory_sub;
-    rclcpp::Publisher<robot_msgs::msg::LegCommand>::SharedPtr _leg_command_pub;
+    LegTrajectory::SharedPtr _msg;
+
+    rclcpp::Subscription<LegTrajectory>::SharedPtr _leg_trajectory_sub;
+    rclcpp::Publisher<LegCommand>::SharedPtr _leg_command_pub;
+
+    std::mutex _mutex;
 
 public:
     LegTrajectoryPublisherNode() : rclcpp::Node("leg_trajectory_publisher")
     {
-        this->declare_parameter("max_frequency", max_freq_);
-        this->get_parameter("max_frequency", max_freq_);
+        this->declare_parameter("max_frequency", _max_freq);
+        this->get_parameter("max_frequency", _max_freq);
 
         _leg_trajectory_sub = this->create_subscription<LegTrajectory>(
             "leg/trajectory", qos_reliable(),
             std::bind(&LegTrajectoryPublisherNode::legTrajectory, this, std::placeholders::_1));
 
         _leg_command_pub = this->create_publisher<LegCommand>("leg/command", qos_fast());
+
+        std::thread(&LegTrajectoryPublisherNode::run, this).detach();
     }
 
     void legTrajectory(const LegTrajectory::SharedPtr msg)
@@ -50,13 +58,40 @@ public:
             return;
         }
 
-        const auto limit_dt = std::chrono::nanoseconds(time_t(1E9 / max_freq_));
-        const auto cstart = this->now();
+        std::lock_guard<std::mutex> lock(_mutex);
+        _msg = msg;
+    }
+
+    void run()
+    {
+        const auto limit_dt = std::chrono::nanoseconds(time_t(1E9 / _max_freq));
+
+        auto cstart = this->now();
         auto climit = cstart;
-        for (std::size_t i = 0; i < msg->commands.size(); i++)
+        auto msg = _msg;
+        size_t idx = 0;
+        while (rclcpp::ok())
         {
+            {
+                std::lock_guard<std::mutex> lock(_mutex);
+                if (msg != _msg)
+                {
+                    msg = _msg;
+                    idx = 0;
+                    cstart = this->now();
+                    climit = cstart;
+                }
+            }
+
+            if (!msg)
+            {
+                rclcpp::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
+            const auto delay = std::chrono::nanoseconds(time_t(msg->timing[idx] * 1E9));
+
             const auto cnow = this->now();
-            const auto delay = std::chrono::nanoseconds(time_t(msg->timing[i] * 1E9));
             if (cnow + delay < climit)
             {
                 continue;
@@ -69,7 +104,14 @@ public:
                 rclcpp::sleep_for(delay - cdiff);
             }
 
-            _leg_command_pub->publish(msg->commands[i]);
+            _leg_command_pub->publish(msg->commands[idx]);
+
+            if (++idx >= msg->timing.size())
+            {
+                idx = 0;
+                std::lock_guard<std::mutex> lock(_mutex);
+                _msg = nullptr;
+            }
         }
     }
 };
