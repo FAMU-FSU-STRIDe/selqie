@@ -19,8 +19,6 @@ using namespace robot_msgs::msg;
 class LegTrajectoryPublisherNode : public rclcpp::Node
 {
 private:
-    double _max_freq = 500.0; // Hz
-
     LegTrajectory::SharedPtr _msg;
 
     rclcpp::Subscription<LegTrajectory>::SharedPtr _leg_trajectory_sub;
@@ -31,9 +29,6 @@ private:
 public:
     LegTrajectoryPublisherNode() : rclcpp::Node("leg_trajectory_publisher")
     {
-        this->declare_parameter("max_frequency", _max_freq);
-        this->get_parameter("max_frequency", _max_freq);
-
         _leg_trajectory_sub = this->create_subscription<LegTrajectory>(
             "leg/trajectory", qos_reliable(),
             std::bind(&LegTrajectoryPublisherNode::legTrajectory, this, std::placeholders::_1));
@@ -64,10 +59,7 @@ public:
 
     void run()
     {
-        const auto limit_dt = std::chrono::nanoseconds(time_t(1E9 / _max_freq));
-
         auto cstart = this->now();
-        auto climit = cstart;
         auto msg = _msg;
         size_t idx = 0;
         while (rclcpp::ok())
@@ -79,7 +71,6 @@ public:
                     msg = _msg;
                     idx = 0;
                     cstart = this->now();
-                    climit = cstart;
                 }
             }
 
@@ -90,15 +81,7 @@ public:
             }
 
             const auto delay = std::chrono::nanoseconds(time_t(msg->timing[idx] * 1E9));
-
-            const auto cnow = this->now();
-            if (cnow + delay < climit)
-            {
-                continue;
-            }
-            climit += limit_dt;
-
-            const auto cdiff = (cnow - cstart).to_chrono<std::chrono::nanoseconds>();
+            const auto cdiff = (this->now() - cstart).to_chrono<std::chrono::nanoseconds>();
             if (delay > cdiff)
             {
                 rclcpp::sleep_for(delay - cdiff);
@@ -108,7 +91,6 @@ public:
 
             if (++idx >= msg->timing.size())
             {
-                idx = 0;
                 std::lock_guard<std::mutex> lock(_mutex);
                 _msg = nullptr;
             }

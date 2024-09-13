@@ -60,7 +60,7 @@ def LegTrajectoryPublisherNode(name : str):
     return Node(
         package='leg_kinematics',
         executable='leg_trajectory_publisher_node',
-        name=f'leg_trajectory_publisher{name}',
+        name=f'leg{name}_trajectory',
         parameters=[{
             'max_frequency': MAX_LEG_COMMAND_FREQUENCY
         }],
