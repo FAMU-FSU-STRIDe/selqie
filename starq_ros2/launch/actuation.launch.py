@@ -1,15 +1,13 @@
 from launch import LaunchDescription
-from launch_ros.actions import ComposableNodeContainer
-from launch_ros.descriptions import ComposableNode
 from launch_ros.actions import Node
 
 GEAR_RATIO = 6.0
 MAX_LEG_COMMAND_FREQUENCY = 1000.0
 
 def CanBusNode(ifc : str):
-    return ComposableNode(
+    return Node(
         package='can_bus',
-        plugin='can_bus::CanBusNode',
+        executable='can_bus_node',
         name=ifc,
         parameters=[{
             'interface': ifc
@@ -17,15 +15,14 @@ def CanBusNode(ifc : str):
         remappings=[
             ('can/tx', ifc + '/tx'),
             ('can/rx', ifc + '/rx')
-        ],
-        extra_arguments=[{'use_intra_process_comms': True}]
+        ]
     )
 
 def ODriveCanNode(id : int, ifc : str):
-    return ComposableNode(
+    return Node(
         package='odrive_ros2',
-        plugin='odrive_ros2::ODriveCanNode',
-        name=f'odrive_can{id}',
+        executable='odrive_can_node',
+        name=f'odrive{id}',
         parameters=[{
             'id': id,
             'gear_ratio': GEAR_RATIO
@@ -37,17 +34,16 @@ def ODriveCanNode(id : int, ifc : str):
             ('odrive/config', f'odrive{id}/config'),
             ('odrive/estimate', f'odrive{id}/estimate'),
             ('odrive/info', f'odrive{id}/info')
-        ],
-        extra_arguments=[{'use_intra_process_comms': True}]
+        ]
     )
 
 def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
-    return ComposableNode(
+    return Node(
         package='leg_kinematics',
-        plugin='leg_kinematics::FiveBar2DNode',
-        name=f'fivebar2d{name}',
+        executable='fivebar2d_node',
+        name=f'leg{name}',
         parameters=[{
-            'flip_y': flip_y # Left: False, Right: True
+            'flip_y': flip_y # Left: True, Right: False
         }],
         remappings=[
             ('leg/command', f'leg{name}/command'),
@@ -57,24 +53,8 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
             ('motor0/estimate', f'odrive{id0}/estimate'),
             ('motor1/command', f'odrive{id1}/command'),
             ('motor1/estimate', f'odrive{id1}/estimate')
-        ],
-        extra_arguments=[{'use_intra_process_comms': True}]
+        ]
     )
-
-def LegContainer(name : str, id0 : int, id1 : int, flip_y : bool, ifc : str):
-    return ComposableNodeContainer(
-            name=f'leg_container_{name}',
-            namespace='',
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                CanBusNode(ifc),
-                ODriveCanNode(id0, ifc),
-                ODriveCanNode(id1, ifc),
-                FiveBar2DNode(name, id0, id1, flip_y),
-            ]
-        )
-
 
 def LegTrajectoryPublisherNode(name : str):
     return Node(
@@ -92,10 +72,20 @@ def LegTrajectoryPublisherNode(name : str):
 
 def generate_launch_description():
     return LaunchDescription([
-        LegContainer('FL', 0, 1, False, "can0"),
-        LegContainer('RL', 2, 3, False, "can0"),
-        LegContainer('RR', 4, 5, True, "can1"),
-        LegContainer('FR', 6, 7, True, "can1"),
+        CanBusNode('can0'),
+        CanBusNode('can1'),
+        ODriveCanNode(0, 'can0'),
+        ODriveCanNode(1, 'can0'),
+        ODriveCanNode(2, 'can0'),
+        ODriveCanNode(3, 'can0'),
+        ODriveCanNode(4, 'can1'),
+        ODriveCanNode(5, 'can1'),
+        ODriveCanNode(6, 'can1'),
+        ODriveCanNode(7, 'can1'),
+        FiveBar2DNode('FL', 0, 1, True),
+        FiveBar2DNode('RL', 2, 3, True),
+        FiveBar2DNode('RR', 4, 5, False),
+        FiveBar2DNode('FR', 6, 7, False),
         LegTrajectoryPublisherNode('FL'),
         LegTrajectoryPublisherNode('RL'),
         LegTrajectoryPublisherNode('RR'),

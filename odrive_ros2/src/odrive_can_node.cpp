@@ -88,8 +88,7 @@ namespace odrive_ros2
         }
 
     public:
-        ODriveCanNode(const rclcpp::NodeOptions &options)
-            : Node("odrive_node", options)
+        ODriveCanNode() : Node("odrive_node")
         {
             this->declare_parameter("id", _id);
             this->get_parameter("id", _id);
@@ -373,5 +372,10 @@ namespace odrive_ros2
 
 }
 
-#include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(odrive_ros2::ODriveCanNode)
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<odrive_ros2::ODriveCanNode>());
+    rclcpp::shutdown();
+    return 0;
+}

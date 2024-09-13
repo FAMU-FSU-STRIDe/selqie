@@ -106,8 +106,7 @@ namespace leg_kinematics
         std::unique_ptr<LegKinematicsNode> _leg_kinematics_node;
 
     public:
-        FiveBar2DNode(const rclcpp::NodeOptions &options)
-            : Node("fivebar2d_node", options)
+        FiveBar2DNode() : Node("fivebar2d_node")
         {
             float L1 = 0.066;
             this->declare_parameter("L1", L1);
@@ -129,5 +128,10 @@ namespace leg_kinematics
 
 }
 
-#include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(leg_kinematics::FiveBar2DNode)
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<leg_kinematics::FiveBar2DNode>());
+    rclcpp::shutdown();
+    return 0;
+}

@@ -118,8 +118,7 @@ namespace leg_kinematics
         std::unique_ptr<LegKinematicsNode> _leg_kinematics_node;
 
     public:
-        UnitreeA1LegNode(const rclcpp::NodeOptions &options)
-            : Node("unitree_a1_leg_node", options)
+        UnitreeA1LegNode() : Node("unitree_a1_leg_node")
         {
             float D = 0.08505;
             this->declare_parameter("D", D);
@@ -145,5 +144,10 @@ namespace leg_kinematics
 
 }
 
-#include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(leg_kinematics::UnitreeA1LegNode)
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<leg_kinematics::UnitreeA1LegNode>());
+    rclcpp::shutdown();
+    return 0;
+}

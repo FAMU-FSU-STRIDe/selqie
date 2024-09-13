@@ -37,8 +37,7 @@ namespace can_bus
         rclcpp::TimerBase::SharedPtr _receive_timer;
 
     public:
-        CanBusNode(const rclcpp::NodeOptions &options)
-            : Node("can_bus_node", options)
+        CanBusNode() : Node("can_bus_node")
         {
             this->declare_parameter("interface", _interface);
             this->get_parameter("interface", _interface);
@@ -114,5 +113,10 @@ namespace can_bus
     };
 }
 
-#include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(can_bus::CanBusNode)
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<can_bus::CanBusNode>());
+    rclcpp::shutdown();
+    return 0;
+}
