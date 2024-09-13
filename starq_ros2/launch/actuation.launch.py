@@ -61,6 +61,21 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
         extra_arguments=[{'use_intra_process_comms': True}]
     )
 
+def LegContainer(name : str, id0 : int, id1 : int, flip_y : bool, ifc : str):
+    return ComposableNodeContainer(
+            name=f'leg_container_{name}',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+                CanBusNode(ifc),
+                ODriveCanNode(id0, ifc),
+                ODriveCanNode(id1, ifc),
+                FiveBar2DNode(name, id0, id1, flip_y),
+            ]
+        )
+
+
 def LegTrajectoryPublisherNode(name : str):
     return Node(
         package='leg_kinematics',
@@ -77,28 +92,10 @@ def LegTrajectoryPublisherNode(name : str):
 
 def generate_launch_description():
     return LaunchDescription([
-        ComposableNodeContainer(
-            name='starq_actuation_container',
-            namespace='',
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
-                CanBusNode("can0"),
-                CanBusNode("can1"),
-                ODriveCanNode(0, "can0"),
-                ODriveCanNode(1, "can0"),
-                ODriveCanNode(2, "can0"),
-                ODriveCanNode(3, "can0"),
-                ODriveCanNode(4, "can1"),
-                ODriveCanNode(5, "can1"),
-                ODriveCanNode(6, "can1"),
-                ODriveCanNode(7, "can1"),
-                FiveBar2DNode('FL', 0, 1, True),
-                FiveBar2DNode('RL', 2, 3, True),
-                FiveBar2DNode('RR', 4, 5, False),
-                FiveBar2DNode('FR', 6, 7, False),
-            ]
-        ),
+        LegContainer('FL', 0, 1, False, "can0"),
+        LegContainer('RL', 2, 3, False, "can0"),
+        LegContainer('RR', 4, 5, True, "can1"),
+        LegContainer('FR', 6, 7, True, "can1"),
         LegTrajectoryPublisherNode('FL'),
         LegTrajectoryPublisherNode('RL'),
         LegTrajectoryPublisherNode('RR'),
