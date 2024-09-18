@@ -7,15 +7,25 @@
 #include <robot_msgs/msg/body_trajectory.hpp>
 #include <robot_msgs/msg/foothold_trajectory.hpp>
 
-using namespace robot_msgs::msg;
+static inline rclcpp::QoS qos_fast()
+{
+    return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
+}
 
-static Vector3d quat2eul(const double w, const double x, const double y, const double z)
+static inline rclcpp::QoS qos_reliable()
+{
+    return rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
+}
+
+static OSQPVector3 quat2eul(const double w, const double x, const double y, const double z)
 {
   const double roll = std::atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
   const double pitch = std::asin(2 * (w * y - z * x));
   const double yaw = std::atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
-  return Vector3d(roll, pitch, yaw);
+  return OSQPVector3(roll, pitch, yaw);
 }
+
+using namespace robot_msgs::msg;
 
 class LeggedMPCNode : public rclcpp::Node
 {
@@ -52,12 +62,12 @@ public:
     int window_size = 10;
     this->declare_parameter("window_size", window_size);
     this->get_parameter("window_size", window_size);
-    _config.window_size = window_size;
+    _config.N = window_size;
 
     int time_step = 100;
     this->declare_parameter("time_step_ms", time_step);
     this->get_parameter("time_step_ms", time_step);
-    _config.time_step = milliseconds(time_step);
+    _config.time_step = std::chrono::milliseconds(time_step);
 
     std::vector<std::string> leg_names = {"FL", "RL", "RR", "FR"};
     this->declare_parameter("leg_names", leg_names);
@@ -67,7 +77,7 @@ public:
     std::vector<double> gravity_vector = {0.0, 0.0, -9.81};
     this->declare_parameter("gravity_vector", gravity_vector);
     this->get_parameter("gravity_vector", gravity_vector);
-    _config.gravity_vector = Vector3d(Map<Vector3d>(gravity_vector.data()));
+    _config.gravity_vector = OSQPVector3(Eigen::Map<OSQPVector3>(gravity_vector.data()));
 
     _config.body_mass = 10.0;
     this->declare_parameter("body_mass", _config.body_mass);
@@ -76,7 +86,7 @@ public:
     std::vector<double> body_inertia = {10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0};
     this->declare_parameter("body_inertia", body_inertia);
     this->get_parameter("body_inertia", body_inertia);
-    _config.body_inertia = Matrix3d(Map<Matrix3d>(body_inertia.data()));
+    _config.body_inertia = Eigen::Matrix3d(Eigen::Map<Eigen::Matrix3d>(body_inertia.data()));
 
     _config.friction_coefficient_x = 0.5;
     this->declare_parameter("friction_coefficient_x", _config.friction_coefficient_x);
@@ -97,71 +107,71 @@ public:
     std::vector<double> position_weights = {1.0, 1.0, 1.0};
     this->declare_parameter("position_weights", position_weights);
     this->get_parameter("position_weights", position_weights);
-    _config.position_weights = Vector3d(Map<Vector3d>(position_weights.data()));
+    _config.position_weights = OSQPVector3(Eigen::Map<OSQPVector3>(position_weights.data()));
 
     std::vector<double> orientation_weights = {1.0, 1.0, 1.0};
     this->declare_parameter("orientation_weights", orientation_weights);
     this->get_parameter("orientation_weights", orientation_weights);
-    _config.orientation_weights = Vector3d(Map<Vector3d>(orientation_weights.data()));
+    _config.orientation_weights = OSQPVector3(Eigen::Map<OSQPVector3>(orientation_weights.data()));
 
     std::vector<double> linear_velocity_weights = {1.0, 1.0, 1.0};
     this->declare_parameter("linear_velocity_weights", linear_velocity_weights);
     this->get_parameter("linear_velocity_weights", linear_velocity_weights);
-    _config.linear_velocity_weights = Vector3d(Map<Vector3d>(linear_velocity_weights.data()));
+    _config.linear_velocity_weights = OSQPVector3(Eigen::Map<OSQPVector3>(linear_velocity_weights.data()));
 
     std::vector<double> angular_velocity_weights = {1.0, 1.0, 1.0};
     this->declare_parameter("angular_velocity_weights", angular_velocity_weights);
     this->get_parameter("angular_velocity_weights", angular_velocity_weights);
-    _config.angular_velocity_weights = Vector3d(Map<Vector3d>(angular_velocity_weights.data()));
+    _config.angular_velocity_weights = OSQPVector3(Eigen::Map<OSQPVector3>(angular_velocity_weights.data()));
 
     std::vector<double> force_weights = {0.01, 0.01, 0.01};
     this->declare_parameter("force_weights", force_weights);
     this->get_parameter("force_weights", force_weights);
-    _config.force_weights = Vector3d(Map<Vector3d>(force_weights.data()));
+    _config.force_weights = OSQPVector3(Eigen::Map<OSQPVector3>(force_weights.data()));
 
-    _config.position.resize(_config.window_size);
-    _config.orientation.resize(_config.window_size);
-    _config.linear_velocity.resize(_config.window_size);
-    _config.angular_velocity.resize(_config.window_size);
+    _config.position.resize(_config.N);
+    _config.orientation.resize(_config.N);
+    _config.linear_velocity.resize(_config.N);
+    _config.angular_velocity.resize(_config.N);
 
     _leg_command_pubs.resize(_config.num_legs);
     for (std::size_t i = 0; i < _config.num_legs; i++)
     {
-      _leg_command_pubs[i] = this->create_publisher<LegCommand>("leg" + leg_names[i] + "/command", 10);
+      _leg_command_pubs[i] = this->create_publisher<LegCommand>("leg" + leg_names[i] + "/command", qos_fast());
     }
 
     _body_traj_sub = this->create_subscription<BodyTrajectory>(
-        "body/trajectory", 10,
+        "body/trajectory", qos_reliable(),
         [this](const BodyTrajectory &msg)
         {
-          if (msg.body_states.size() != _config.window_size)
+          if (msg.body_states.size() != _config.N)
           {
             RCLCPP_ERROR(this->get_logger(), "Invalid trajectory size.");
             return;
           }
 
-          for (std::size_t k = 0; k < _config.window_size; k++)
+          for (std::size_t k = 0; k < _config.N; k++)
           {
             const auto &pose = msg.body_states[k].pose.pose;
             const auto &twist = msg.body_states[k].twist.twist;
-            _config.position[k] = Vector3d(pose.position.x, pose.position.y, pose.position.z);
+            _config.position[k] = OSQPVector3(pose.position.x, pose.position.y, pose.position.z);
             _config.orientation[k] = quat2eul(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
-            _config.linear_velocity[k] = Vector3d(twist.linear.x, twist.linear.y, twist.linear.z);
-            _config.angular_velocity[k] = Vector3d(twist.angular.x, twist.angular.y, twist.angular.z);
+            _config.linear_velocity[k] = OSQPVector3(twist.linear.x, twist.linear.y, twist.linear.z);
+            _config.angular_velocity[k] = OSQPVector3(twist.angular.x, twist.angular.y, twist.angular.z);
           }
         });
 
     _foothold_traj_sub = this->create_subscription<FootholdTrajectory>(
-        "twist", 10,
+        "twist", qos_reliable(),
         [this](const FootholdTrajectory &msg)
         {
-          if (msg.foothold_states.size() != _config.window_size)
+          if (msg.foothold_states.size() != _config.N)
           {
             RCLCPP_ERROR(this->get_logger(), "Invalid trajectory size.");
             return;
           }
 
-          for (std::size_t k = 0; k < _config.window_size; k++)
+          for (std::size_t k = 0; k < _config.N; k++)
           {
             const std::size_t num_stance = msg.foothold_states[k].num_in_stance;
             _config.num_stance[k] = num_stance;
@@ -170,14 +180,14 @@ public:
               const auto &in_stance = msg.foothold_states[k].stance[i];
               const auto &foothold = msg.foothold_states[k].footholds[i];
               _config.in_stance[k][i] = in_stance;
-              _config.foothold_positions[k][i] = Vector3d(foothold.x, foothold.y, foothold.z);
+              _config.foothold_positions[k][i] = OSQPVector3(foothold.x, foothold.y, foothold.z);
             }
           }
         });
 
     double mpc_rate = 1000.0;
     _mpc_timer = this->create_wall_timer(
-        microseconds(static_cast<int>(1E6 / mpc_rate)),
+        std::chrono::microseconds(static_cast<int>(1E6 / mpc_rate)),
         std::bind(&LeggedMPCNode::solve, this));
 
     RCLCPP_INFO(this->get_logger(), "Legged MPC node initialized.");

@@ -1,36 +1,37 @@
 #pragma once
 
-#include "legged_mpc/mpc.hpp"
+#include "legged_mpc/osqp_mpc.hpp"
 
-using namespace std::chrono;
+using OSQPVector3 = Eigen::Vector3<OSQPFloat>;
+using OSQPMatrix3 = Eigen::Matrix3<OSQPFloat>;
 
 struct LeggedMPCConfig
 {
-    std::size_t window_size;
-    milliseconds time_step;
+    std::size_t N;
+    std::chrono::milliseconds time_step;
 
     std::size_t num_legs;
-    Vector3d gravity_vector;
+    OSQPVector gravity_vector;
     double body_mass;
-    Matrix3d body_inertia;
+    OSQPMatrix3 body_inertia;
     double friction_coefficient_x, friction_coefficient_y;
     double force_z_min, force_z_max;
 
-    Vector3d position_weights, orientation_weights;
-    Vector3d linear_velocity_weights, angular_velocity_weights;
-    Vector3d force_weights;
+    OSQPVector position_weights, orientation_weights;
+    OSQPVector linear_velocity_weights, angular_velocity_weights;
+    OSQPVector force_weights;
 
-    std::vector<Vector3d> position, orientation;
-    std::vector<Vector3d> linear_velocity, angular_velocity;
+    std::vector<OSQPVector> position, orientation;
+    std::vector<OSQPVector> linear_velocity, angular_velocity;
 
     std::vector<std::size_t> num_stance;
     std::vector<std::vector<bool>> in_stance;
-    std::vector<std::vector<Vector3d>> foothold_positions;
+    std::vector<std::vector<OSQPVector>> foothold_positions;
 };
 
-static inline Matrix3d getSkewSymmetricMatrix(const Vector3d &v)
+static inline OSQPMatrix3 getSkewSymmetricMatrix(const OSQPVector &v)
 {
-    Matrix3d S;
+    OSQPMatrix3 S;
     S << 0, -v.z(), v.y(),
         v.z(), 0, -v.x(),
         -v.y(), v.x(), 0;
@@ -39,28 +40,30 @@ static inline Matrix3d getSkewSymmetricMatrix(const Vector3d &v)
 
 MPCProblem getMPCProblem(const LeggedMPCConfig &config)
 {
-    assert(config.window_size > 1);
+    using namespace Eigen;
+    
+    assert(config.N > 1);
 
     MPCProblem mpc;
-    mpc.window_size = config.window_size;
-    mpc.xref.resize(mpc.window_size);
-    mpc.Q.resize(mpc.window_size);
-    mpc.R.resize(mpc.window_size - 1);
-    mpc.A.resize(mpc.window_size - 1);
-    mpc.B.resize(mpc.window_size - 1);
-    mpc.C.resize(mpc.window_size - 1);
-    mpc.lb.resize(mpc.window_size - 1);
-    mpc.ub.resize(mpc.window_size - 1);
+    mpc.N = config.N;
+    mpc.xref.resize(mpc.N);
+    mpc.Q.resize(mpc.N);
+    mpc.R.resize(mpc.N - 1);
+    mpc.A.resize(mpc.N - 1);
+    mpc.B.resize(mpc.N - 1);
+    mpc.C.resize(mpc.N - 1);
+    mpc.lb.resize(mpc.N - 1);
+    mpc.ub.resize(mpc.N - 1);
 
     const double invm = 1.0 / config.body_mass;
-    const Matrix3d invI = config.body_inertia.inverse();
+    const OSQPMatrix3 invI = config.body_inertia.inverse();
 
-    assert(config.linear_velocity.size() == mpc.window_size);
-    assert(config.angular_velocity.size() == mpc.window_size);
-    assert(config.num_stance.size() == mpc.window_size);
-    assert(config.in_stance.size() == mpc.window_size);
-    assert(config.foothold_positions.size() == mpc.window_size);
-    for (std::size_t k = 0; k < mpc.window_size; k++)
+    assert(config.linear_velocity.size() == mpc.N);
+    assert(config.angular_velocity.size() == mpc.N);
+    assert(config.num_stance.size() == mpc.N);
+    assert(config.in_stance.size() == mpc.N);
+    assert(config.foothold_positions.size() == mpc.N);
+    for (std::size_t k = 0; k < mpc.N; k++)
     {
         // X reference
         mpc.xref[k] = Vector<OSQPFloat, 13>::Zero();
@@ -79,7 +82,7 @@ MPCProblem getMPCProblem(const LeggedMPCConfig &config)
         mpc.Q[k].block<3, 3>(9, 9) = config.linear_velocity_weights.asDiagonal();
         mpc.Q[k](12, 12) = 0.0;
 
-        if (k < config.window_size - 1)
+        if (k < config.N - 1)
         {
             const std::size_t Ns = config.num_stance[k];
             assert(Ns <= config.num_legs);
@@ -93,8 +96,8 @@ MPCProblem getMPCProblem(const LeggedMPCConfig &config)
 
             // A
             mpc.A[k] = Matrix<OSQPFloat, 13, 13>::Zero();
-            mpc.A[k].block<3, 3>(0, 6) = AngleAxisd(config.orientation[k].z(), Vector3d::UnitZ()).toRotationMatrix();
-            mpc.A[k].block<3, 3>(3, 9) = Matrix3d::Identity();
+            mpc.A[k].block<3, 3>(0, 6) = AngleAxisd(config.orientation[k].z(), OSQPVector3::UnitZ()).toRotationMatrix();
+            mpc.A[k].block<3, 3>(3, 9) = OSQPMatrix3::Identity();
             mpc.A[k].block<3, 1>(9, 12) = config.gravity_vector;
             mpc.A[k] = mpc.A[k] * config.time_step.count() + Matrix<OSQPFloat, 13, 13>::Identity();
 
@@ -110,9 +113,9 @@ MPCProblem getMPCProblem(const LeggedMPCConfig &config)
             {
                 if (in_stance[i])
                 {
-                    const Matrix3d invIskewr = invI * getSkewSymmetricMatrix(leg_positions[i]);
+                    const OSQPMatrix3 invIskewr = invI * getSkewSymmetricMatrix(leg_positions[i]);
                     mpc.B[k].block<3, 3>(6, 3 * j) = invIskewr;
-                    mpc.B[k].block<3, 3>(9, 3 * j) = invm * Matrix3d::Identity();
+                    mpc.B[k].block<3, 3>(9, 3 * j) = invm * OSQPMatrix3::Identity();
                     j++;
                 }
             }
