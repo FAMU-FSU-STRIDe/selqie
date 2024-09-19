@@ -2,8 +2,6 @@
 
 #include <memory>
 #include <vector>
-#include <chrono>
-#include <numeric>
 
 #include "osqp/osqp.h"
 #include "eigen3/Eigen/Sparse"
@@ -19,13 +17,32 @@ struct QPProblem
     std::size_t n, m;
     OSQPSparseMatrix H, Ac;
     OSQPVector g, lc, uc;
+
+    QPProblem(const std::size_t n, const std::size_t m)
+        : n(n), m(m)
+    {
+        H = OSQPSparseMatrix(n, n);
+        g = OSQPVector::Zero(n);
+        Ac = OSQPSparseMatrix(m, n);
+        lc = OSQPVector::Zero(m);
+        uc = OSQPVector::Zero(m);
+    }
 };
 
 struct QPSolution
 {
     OSQPInt exit_flag;
-    std::chrono::microseconds run_time, setup_time, solve_time;
+    double run_time, setup_time, solve_time; // in seconds
     OSQPVector xstar;
+
+    QPSolution(const OSQPSolver *solver, const std::size_t n)
+    {
+        exit_flag = solver->info->status_val;
+        run_time = solver->info->run_time;
+        setup_time = solver->info->setup_time;
+        solve_time = solver->info->solve_time;
+        xstar = Eigen::Map<OSQPVector>(solver->solution->x, n);
+    }
 };
 
 static OSQPCscMatrix convertEigenSparseToCSC(const OSQPSparseMatrix &matrix)
@@ -68,19 +85,10 @@ static QPSolution solveOSQP(const QPProblem &qp, OSQPSettings *settings)
     OSQPCscMatrix A = convertEigenSparseToCSC(qp.Ac);
 
     OSQPSolver *solver;
-    QPSolution solution;
-    solution.exit_flag = osqp_setup(&solver, &P, qp.g.data(), &A, qp.lc.data(), qp.uc.data(), qp.m, qp.n, settings);
-    if (solution.exit_flag != 0)
-    {
-        return solution;
-    }
+    osqp_setup(&solver, &P, qp.g.data(), &A, qp.lc.data(), qp.uc.data(), qp.m, qp.n, settings);
+    osqp_solve(solver);
 
-    using namespace std::chrono;
-    solution.exit_flag = osqp_solve(solver);
-    solution.xstar = OSQPVector(Eigen::Map<OSQPVector>(solver->solution->x, qp.n));
-    solution.run_time = microseconds(static_cast<time_t>(solver->info->run_time * 1e6));
-    solution.setup_time = microseconds(static_cast<time_t>(solver->info->setup_time * 1e6));
-    solution.solve_time = microseconds(static_cast<time_t>(solver->info->solve_time * 1e6));
+    QPSolution solution(solver, qp.n);
 
     osqp_cleanup(solver);
     cleanupCSC(P);
@@ -93,8 +101,24 @@ struct MPCProblem
 {
     std::size_t N;
     OSQPVector x0;
-    std::vector<OSQPVector> xref, lb, ub;
-    std::vector<OSQPMatrix> Q, R, A, B, C;
+    std::vector<OSQPVector> xref, lbx, ubx, lbu, ubu;
+    std::vector<OSQPMatrix> Q, R, A, B, Cx, Cu;
+
+    MPCProblem(const std::size_t N)
+        : N(N)
+    {
+        xref.resize(N);
+        Q.resize(N);
+        R.resize(N - 1);
+        A.resize(N - 1);
+        B.resize(N - 1);
+        Cx.resize(N);
+        lbx.resize(N);
+        ubx.resize(N);
+        Cu.resize(N - 1);
+        lbu.resize(N - 1);
+        ubu.resize(N - 1);
+    }
 };
 
 static void addNonZeroTriplets(std::vector<OSQPTriplet> &triplets, const OSQPMatrix &matrix,
@@ -116,48 +140,40 @@ static void addNonZeroTriplets(std::vector<OSQPTriplet> &triplets, const OSQPMat
 static QPProblem getQPProblem(const MPCProblem &mpc)
 {
     assert(mpc.N > 1);
-    assert(mpc.xref.size() == mpc.N);
-    assert(mpc.Q.size() == mpc.N);
-    assert(mpc.R.size() == mpc.N - 1);
-    assert(mpc.A.size() == mpc.N - 1);
-    assert(mpc.B.size() == mpc.N - 1);
-    assert(mpc.C.size() == mpc.N - 1);
-    assert(mpc.lb.size() == mpc.N - 1);
-    assert(mpc.ub.size() == mpc.N - 1);
 
     const std::size_t num_states = mpc.A[0].cols();
     const std::size_t Nx = num_states * mpc.N;
 
     std::size_t Nu = 0;
-    std::size_t Nc = 0;
+    std::size_t Ncu = 0;
     for (std::size_t i = 0; i < mpc.N - 1; ++i)
     {
         Nu += mpc.B[i].cols();
-        Nc += mpc.C[i].rows();
+        Ncu += mpc.Cu[i].rows();
     }
 
-    QPProblem qp;
-    qp.n = Nx + Nu;
-    qp.m = Nx + Nc;
+    std::size_t Ncx = 0;
+    for (std::size_t i = 0; i < mpc.N; ++i)
+    {
+        Ncx += mpc.Cx[i].rows();
+    }
 
-    qp.H = OSQPSparseMatrix(qp.n, qp.n);
-    qp.g = OSQPVector::Zero(qp.n);
-    qp.Ac = OSQPSparseMatrix(qp.m, qp.n);
-    qp.lc = OSQPVector::Zero(qp.m);
-    qp.uc = OSQPVector::Zero(qp.m);
+    const std::size_t n = Nx + Nu;
+    const std::size_t m = Nx + Ncx + Ncu;
+    QPProblem qp(n, m);
 
     assert(std::size_t(mpc.x0.rows()) == num_states);
     qp.lc.segment(0, num_states) = -mpc.x0;
     qp.uc.segment(0, num_states) = -mpc.x0;
 
-    std::size_t nu_offset = 0, nc_offset = 0;
+    std::size_t nu_offset = 0, ncx_offset = 0, ncu_offset = 0;
     std::vector<OSQPTriplet> H_triplets;
     std::vector<OSQPTriplet> Ac_triplets;
     for (std::size_t i = 0; i < mpc.N; ++i)
     {
         const std::size_t nx_offset = num_states * i;
         const std::size_t num_controls = mpc.B[i].cols();
-        const std::size_t num_constraints = mpc.C[i].rows();
+        const std::size_t num_constraints_x = mpc.Cx[i].rows();
 
         // Hessian
         assert(std::size_t(mpc.Q[i].rows()) == num_states && std::size_t(mpc.Q[i].cols()) == num_states);
@@ -167,8 +183,21 @@ static QPProblem getQPProblem(const MPCProblem &mpc)
         assert(std::size_t(mpc.xref[i].rows()) == num_states);
         qp.g.segment(nx_offset, num_states) = -mpc.Q[i] * mpc.xref[i];
 
+        // Linear Constraints
+        assert(std::size_t(mpc.Cx[i].cols()) == num_states);
+        addNonZeroTriplets(Ac_triplets, mpc.Cx[i], Nx + nx_offset, ncx_offset);
+
+        // Control bounds
+        assert(std::size_t(mpc.lbx[i].rows()) == num_constraints_x);
+        qp.lc.segment(Nx + ncx_offset, mpc.Cx[i].rows()) = mpc.lbx[i];
+
+        assert(std::size_t(mpc.ubx[i].rows()) == num_constraints_x);
+        qp.uc.segment(Nx + ncx_offset, mpc.Cx[i].rows()) = mpc.ubx[i];
+
         if (i < mpc.N - 1)
         {
+            const std::size_t num_constraints_u = mpc.Cu[i].rows();
+
             // Hessian
             assert(std::size_t(mpc.R[i].rows()) == num_controls && std::size_t(mpc.R[i].cols()) == num_controls);
             addNonZeroTriplets(H_triplets, mpc.R[i], Nx + nu_offset, Nx + nu_offset);
@@ -180,19 +209,21 @@ static QPProblem getQPProblem(const MPCProblem &mpc)
             assert(std::size_t(mpc.B[i].rows()) == num_states);
             addNonZeroTriplets(Ac_triplets, mpc.B[i], nx_offset + num_states, Nx + nu_offset);
 
-            assert(std::size_t(mpc.C[i].cols()) == num_controls);
-            addNonZeroTriplets(Ac_triplets, mpc.C[i], Nx + nu_offset, Nx + nc_offset);
+            assert(std::size_t(mpc.Cu[i].cols()) == num_controls);
+            addNonZeroTriplets(Ac_triplets, mpc.Cu[i], Nx + Ncx + nu_offset, Nx + ncu_offset);
 
             // Control bounds
-            assert(std::size_t(mpc.lb[i].rows()) == num_constraints);
-            qp.lc.segment(Nx + nc_offset, mpc.C[i].rows()) = mpc.lb[i];
+            assert(std::size_t(mpc.lbu[i].rows()) == num_constraints_u);
+            qp.lc.segment(Nx + Ncx + ncu_offset, mpc.Cu[i].rows()) = mpc.lbu[i];
 
-            assert(std::size_t(mpc.ub[i].rows()) == num_constraints);
-            qp.uc.segment(Nx + nc_offset, mpc.C[i].rows()) = mpc.ub[i];
+            assert(std::size_t(mpc.ubu[i].rows()) == num_constraints_u);
+            qp.uc.segment(Nx + Ncx + ncu_offset, mpc.Cu[i].rows()) = mpc.ubu[i];
 
             nu_offset += num_controls;
-            nc_offset += num_constraints;
+            ncu_offset += num_constraints_u;
         }
+
+        ncx_offset += num_constraints_x;
     }
 
     for (std::size_t i = 0; i < Nx; ++i)

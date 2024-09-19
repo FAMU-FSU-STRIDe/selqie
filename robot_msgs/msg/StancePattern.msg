@@ -1,7 +1,5 @@
-# Constants
-uint32 GAIT_RESOLUTION = 1000
-
 # Variables
+std_msgs/Header header
 float64 frequency
-uint32[] timing
+float64[] timing
 uint32[] stance

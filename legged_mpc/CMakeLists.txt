@@ -24,9 +24,17 @@ add_executable(legged_mpc_node src/legged_mpc_node.cpp)
 ament_target_dependencies(legged_mpc_node rclcpp nav_msgs robot_msgs)
 target_link_libraries(legged_mpc_node Eigen3::Eigen osqp::osqp)
 
+add_executable(body_trajectory_node src/body_trajectory_node.cpp)
+ament_target_dependencies(body_trajectory_node rclcpp nav_msgs robot_msgs)
+
+add_executable(foothold_planner_node src/foothold_planner_node.cpp)
+ament_target_dependencies(foothold_planner_node rclcpp robot_msgs)
+target_link_libraries(foothold_planner_node Eigen3::Eigen)
+
 # install targets
 install(TARGETS
   legged_mpc_node
+  body_trajectory_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
