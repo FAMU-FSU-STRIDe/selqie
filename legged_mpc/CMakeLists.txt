@@ -35,6 +35,7 @@ target_link_libraries(foothold_planner_node Eigen3::Eigen)
 install(TARGETS
   legged_mpc_node
   body_trajectory_node
+  foothold_planner_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

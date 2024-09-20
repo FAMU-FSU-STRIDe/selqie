@@ -19,7 +19,8 @@ using namespace robot_msgs::msg;
 class LegTrajectoryPublisherNode : public rclcpp::Node
 {
 private:
-    LegTrajectory::SharedPtr _msg;
+    LegTrajectory::SharedPtr _traj;
+    bool _update = false;
 
     rclcpp::Subscription<LegTrajectory>::SharedPtr _leg_trajectory_sub;
     rclcpp::Publisher<LegCommand>::SharedPtr _leg_command_pub;
@@ -54,46 +55,42 @@ public:
         }
 
         std::lock_guard<std::mutex> lock(_mutex);
-        _msg = msg;
+        _traj = msg;
+        _update = true;
     }
 
     void run()
     {
         auto cstart = this->now();
-        auto msg = _msg;
-        size_t idx = 0;
+        LegTrajectory traj;
+        std::size_t idx = 0;
         while (rclcpp::ok())
         {
             {
                 std::lock_guard<std::mutex> lock(_mutex);
-                if (msg != _msg)
+                if (_update)
                 {
-                    msg = _msg;
+                    traj = *_traj;
                     idx = 0;
                     cstart = this->now();
+                    _update = false;
                 }
             }
 
-            if (!msg)
+            if (idx >= traj.timing.size() || traj.commands.empty())
             {
                 rclcpp::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
-            const auto delay = std::chrono::nanoseconds(time_t(msg->timing[idx] * 1E9));
+            const auto delay = std::chrono::nanoseconds(time_t(traj.timing[idx] * 1E9));
             const auto cdiff = (this->now() - cstart).to_chrono<std::chrono::nanoseconds>();
             if (delay > cdiff)
             {
                 rclcpp::sleep_for(delay - cdiff);
             }
 
-            _leg_command_pub->publish(msg->commands[idx]);
-
-            if (++idx >= msg->timing.size())
-            {
-                std::lock_guard<std::mutex> lock(_mutex);
-                _msg = nullptr;
-            }
+            _leg_command_pub->publish(traj.commands[idx++]);
         }
     }
 };

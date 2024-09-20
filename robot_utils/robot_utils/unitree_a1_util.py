@@ -3,24 +3,22 @@ from rclpy.node import Node
 from cmd import Cmd
 import os
 import threading
-import subprocess
 
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import *
 from robot_utils.utils.robot_util_functions import *
+from geometry_msgs.msg import Twist
 
-NUM_MOTORS = 8
+NUM_MOTORS = 12
 LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
-STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
+LEFT_STANDING_LEG_POSITION = [0.0, 0.08505, -0.27]
+RIGHT_STANDING_LEG_POSITION = [0.0, -0.08505, -0.27]
 TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), 'trajectories')
-ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
-                        '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
-                        '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
-                        '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',]
+JOYSTICK_PACKAGE = 'robot_joysticks'
 
-class STARQRobotNode(Node):
+class UnitreeA1RobotNode(Node):
     def __init__(self):
-        super().__init__('robot_terminal_node')
+        super().__init__('unitree_terminal_node')
         
         print("Connecting...")
         
@@ -40,23 +38,21 @@ class STARQRobotNode(Node):
 
         self.motor_command_publishers = []
         for i in range(NUM_MOTORS):
-            self.motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', qos_fast()))
+            self.motor_command_publishers.append(self.create_publisher(MotorCommand, f'motor{i}/command', qos_fast()))
 
         self.motor_estimates = [MotorEstimate() for _ in range(NUM_MOTORS)]
         self.motor_estimate_subscribers = []
         for i in range(NUM_MOTORS):
             motor_estimate_callback = lambda msg, i=i: self.motor_estimates.__setitem__(i, msg)
-            self.motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'odrive{i}/estimate', motor_estimate_callback, qos_fast()))
+            self.motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'motor{i}/estimate', motor_estimate_callback, qos_fast()))
 
         self.motor_config_publishers = []
         for i in range(NUM_MOTORS):
-            self.motor_config_publishers.append(self.create_publisher(ODriveConfig, f'odrive{i}/config', qos_reliable()))
+            self.motor_config_publishers.append(self.create_publisher(ODriveConfig, f'motor{i}/config', qos_reliable()))
 
-        self.motor_infos = [ODriveInfo() for _ in range(NUM_MOTORS)]
-        self.motor_info_subscribers = []
-        for i in range(NUM_MOTORS):
-            motor_info_callback = lambda msg, i=i: self.motor_infos.__setitem__(i, msg)
-            self.motor_info_subscribers.append(self.create_subscription(ODriveInfo, f'odrive{i}/info', motor_info_callback, qos_fast()))
+        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
+
+        self.stance_pattern_pub = self.create_publisher(StancePattern, 'stance_pattern', qos_reliable())
 
         if not wait_for_subs(self.leg_command_publishers):
             print("Failed to connect to Leg command")
@@ -65,14 +61,15 @@ class STARQRobotNode(Node):
         if not wait_for_subs(self.motor_config_publishers):
             print("Failed to connect to Motor config")
 
-class STARQTerminal(Cmd):
-    intro = 'Welcome to the STARQ terminal. Type help or ? to list commands.\n'
-    prompt = 'STARQ> '
+class UnitreeA1Terminal(Cmd):
+    intro = 'Welcome to the Unitree A1 terminal. Type help or ? to list commands.\n'
+    prompt = 'A1> '
     
-    def __init__(self, robot_instance : STARQRobotNode):
+    def __init__(self, robot_instance : UnitreeA1RobotNode):
         super().__init__()
         self.robot = robot_instance
         self.rosbag_process = None
+        self.leg_trajectory_process = None
 
     def do_exit(self, line):
         """
@@ -82,27 +79,9 @@ class STARQTerminal(Cmd):
         rclpy.shutdown()
         return True
 
-    def do_ready(self, line):
-        """
-        Ready the ODrive motors
-        """
-        set_motor_states(self.robot.motor_config_publishers, ODriveConfig.AXIS_STATE_CLOSED_LOOP_CONTROL)
-
-    def do_idle(self, line):
-        """
-        Idle the ODrive motors
-        """
-        set_motor_states(self.robot.motor_config_publishers, ODriveConfig.AXIS_STATE_IDLE)
-
-    def do_clear_errors(self, line):
-        """
-        Clear errors on the ODrive motors
-        """
-        clear_motor_errors(self.robot.motor_config_publishers)
-
     def do_zero(self, line):
         """
-        Zero the ODrive motors
+        Zero the motors
         """
         set_motor_positions(self.robot.motor_command_publishers, 0.0)
 
@@ -128,7 +107,8 @@ class STARQTerminal(Cmd):
         """
         Stand the robot
         """
-        set_leg_states(self.robot.leg_command_publishers, MotorCommand.CONTROL_MODE_POSITION, STANDING_LEG_POSITION)
+        set_leg_states(self.robot.leg_command_publishers[0:2], MotorCommand.CONTROL_MODE_POSITION, LEFT_STANDING_LEG_POSITION)
+        set_leg_states(self.robot.leg_command_publishers[2:4], MotorCommand.CONTROL_MODE_POSITION, RIGHT_STANDING_LEG_POSITION)
 
     def do_set_leg_position(self, line):
         """
@@ -186,13 +166,12 @@ class STARQTerminal(Cmd):
             return [f for f in files if f.startswith(text)]
         return []
 
-    def do_print_motor_info(self, line):
+    def do_print_motor_estimate(self, line):
         """
-        Print motor info
+        Print motor estimate
         """
         for i in range(NUM_MOTORS):
             print(f"Motor {i}:")
-            print_motor_info(self.robot.motor_infos[i])
             print_motor_estimate(self.robot.motor_estimates[i])
 
     def do_print_leg_info(self, line):
@@ -202,53 +181,52 @@ class STARQTerminal(Cmd):
         for i in range(len(LEG_NAMES)):
             print(f"Leg {LEG_NAMES[i]}:")
             print_leg_info(self.robot.leg_estimates[i])
-            
-    def do_print_errors(self, line):
-        """
-        Print all motor errors
-        """
-        iserr = False
-        for i in range(NUM_MOTORS):
-            if self.robot.motor_infos[i].axis_error != 0:
-                iserr = True
-                print(f"Error on Motor {i}: " + get_error_name(self.robot.motor_infos[i]))
-        if not iserr:
-            print("No errors on all motors")
 
-    def do_start_recording(self, line):
+    def do_command_velocity(self, line):
         """
-        Start rosbag recording of specific topics
-        Usage: start_recording <output_folder (default: rosbag2_latest)>
+        Command velocity to the motors
+        Usage: command_velocity <velocity>
         """
-        output_folder = "rosbag2_latest"
-        if len(line.split()) > 0:
-            output_folder = line.split()[0]
-            
-        if self.rosbag_process is not None:
-            print("Rosbag recording is already running")
+        try:
+            velocity = float(line)
+        except ValueError:
+            print("Invalid velocity value")
             return
         
-        self.rosbag_process = subprocess.Popen(['ros2', 'bag', 'record', '-o', output_folder] + ROSBAG_RECORD_TOPICS, 
-                              stdin=subprocess.DEVNULL)
+        twist = Twist()
+        twist.linear.x = velocity
+        twist.angular.z = 0.0
+        self.robot.cmd_vel_pub.publish(twist)
 
-    def do_stop_recording(self, line):
+    def do_set_gait(self, line):
         """
-        Stop rosbag recording
+        Stand the robot using MPC
         """
-        if self.rosbag_process is None:
-            print("Rosbag recording is not running")
+        args = line.split()
+        if len(args) != 1:
+            print("Invalid number of arguments")
             return
         
-        self.rosbag_process.terminate()
-        self.rosbag_process.wait()
-        self.rosbag_process = None
+        gait = args[0]
+        if gait == "stand":
+            pattern = StancePattern()
+            pattern.header.stamp = self.robot.get_clock().now().to_msg()
+            pattern.frequency = 1.0
+            pattern.timing = [0.0, 1.0]
+            pattern.stance = [7, 7]
+            self.robot.stance_pattern_pub.publish(pattern)
+        else:
+            print("Invalid gait name")
+            return
+        
+        
 
 def main():
     rclpy.init()
-    robot = STARQRobotNode()
+    robot = UnitreeA1RobotNode()
     spin_thread = threading.Thread(target=rclpy.spin, args=(robot,))
     spin_thread.start()
-    STARQTerminal(robot).cmdloop()
+    UnitreeA1Terminal(robot).cmdloop()
     spin_thread.join()
     robot.destroy_node()
 

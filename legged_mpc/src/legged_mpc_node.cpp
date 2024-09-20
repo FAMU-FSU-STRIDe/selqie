@@ -19,9 +19,18 @@ static inline rclcpp::QoS qos_reliable()
   return rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
 }
 
-static OSQPVector3 toVector3(const geometry_msgs::msg::Vector3 &msg)
+static inline Eigen::Vector3d toVector3(const geometry_msgs::msg::Vector3 &v)
 {
-  return OSQPVector3(msg.x, msg.y, msg.z);
+  return Eigen::Vector3d(v.x, v.y, v.z);
+}
+
+static inline geometry_msgs::msg::Vector3 toVectorMsg(const Eigen::Vector3d &v)
+{
+  geometry_msgs::msg::Vector3 msg;
+  msg.x = v.x();
+  msg.y = v.y();
+  msg.z = v.z();
+  return msg;
 }
 
 using namespace robot_msgs::msg;
@@ -30,20 +39,26 @@ class LeggedMPCNode : public rclcpp::Node
 {
 private:
   LeggedMPCConfig _config;
-  std::unique_ptr<OSQPSettings> _osqp_settings;
+  OSQPSettings _osqp_settings;
 
   std::vector<rclcpp::Publisher<LegCommand>::SharedPtr> _leg_command_pubs;
   rclcpp::Subscription<BodyTrajectory>::SharedPtr _body_traj_sub;
   rclcpp::Subscription<FootholdTrajectory>::SharedPtr _foothold_traj_sub;
 
-  rclcpp::Time _ref_time;
+  rclcpp::Time _ref_stamp;
+  std::vector<bool> _current_stance;
 
   void updateReference(const BodyTrajectory &msg)
   {
-    _ref_time = msg.header.stamp;
+    _ref_stamp = msg.header.stamp;
 
     _config.N = msg.positions.size();
     _config.time_step = msg.time_step;
+    if (_config.N < 2)
+    {
+      RCLCPP_WARN(this->get_logger(), "Body trajectory must have at least 2 waypoints.");
+      return;
+    }
 
     _config.position.resize(_config.N);
     _config.orientation.resize(_config.N);
@@ -60,11 +75,14 @@ private:
 
   void updateFootholds(const FootholdTrajectory &msg)
   {
-    if (msg.header.stamp != _ref_time)
+    if (msg.header.stamp != _ref_stamp)
     {
       RCLCPP_WARN(this->get_logger(), "Foothold trajectory timestamp does not match reference timestamp.");
       return;
     }
+
+    _current_stance.resize(_config.num_legs);
+    _current_stance = msg.foothold_states[0].stance;
 
     _config.num_stance.resize(_config.N);
     _config.in_stance.resize(_config.N);
@@ -91,9 +109,8 @@ private:
 public:
   LeggedMPCNode() : Node("legged_mpc_node")
   {
-    _osqp_settings = std::make_unique<OSQPSettings>();
-    osqp_set_default_settings(_osqp_settings.get());
-    _osqp_settings->verbose = false;
+    osqp_set_default_settings(&_osqp_settings);
+    _osqp_settings.verbose = false;
 
     std::vector<std::string> leg_names = {"FL", "RL", "RR", "FR"};
     this->declare_parameter("leg_names", leg_names);
@@ -173,8 +190,7 @@ public:
   void solve()
   {
     const MPCProblem mpc = getMPCProblem(_config);
-    const QPProblem qp = getQPProblem(mpc);
-    const QPSolution sol = solveOSQP(qp, _osqp_settings.get());
+    const MPCSolution sol = solveMPC(mpc, &_osqp_settings);
 
     if (sol.exit_flag != OSQP_SOLVED)
     {
@@ -182,7 +198,18 @@ public:
       return;
     }
 
-    /// TODO: Parse solution and publish leg commands
+    for (std::size_t i = 0, j = 0; i < _config.num_legs; i++)
+    {
+      if (_current_stance[i])
+      {
+        OSQPVector3 ctrl = -sol.ustar[0].block<3, 1>(3 * j++, 0);
+
+        LegCommand cmd;
+        cmd.control_mode = LegCommand::CONTROL_MODE_FORCE;
+        cmd.force_setpoint = toVectorMsg(ctrl);
+        _leg_command_pubs[i]->publish(cmd);
+      }
+    }
   }
 };
 

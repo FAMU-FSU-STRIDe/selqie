@@ -137,8 +137,8 @@ private:
             {
                 if (k == 0) // current
                 {
-                    const Matrix3Xd w_pos_feet = w_pos_body + w_rot_b * b_pos_feet;
-                    foothold_traj.foothold_states[0].footholds[i] = toVectorMsg(w_pos_feet.col(i));
+                    const Vector3d w_pos_feet = w_pos_body + w_rot_b * b_pos_feet.col(i);
+                    foothold_traj.foothold_states[0].footholds[i] = toVectorMsg(w_pos_feet);
                 }
                 else if (in_stance[i]) // standing or landing
                 {
@@ -154,6 +154,8 @@ private:
                 }
             }
         }
+
+        _foothold_traj_pub->publish(foothold_traj);
     }
 
 public:
@@ -174,7 +176,7 @@ public:
         this->declare_parameter("default_leg_positions", default_leg_positions);
         this->get_parameter("default_leg_positions", default_leg_positions);
         assert(default_leg_positions.size() == 3 * _num_legs);
-        _hip_locations = Eigen::Map<Eigen::MatrixXd>(default_leg_positions.data(), 3, _num_legs);
+        _default_leg_positions = Eigen::Map<Eigen::MatrixXd>(default_leg_positions.data(), 3, _num_legs);
 
         _leg_estimate_subs.resize(leg_names.size());
         _leg_positions.resize(3, leg_names.size());
@@ -188,10 +190,10 @@ public:
                 });
         }
 
-        _foothold_traj_pub = this->create_publisher<FootholdTrajectory>("foothold_trajectory", qos_reliable());
+        _foothold_traj_pub = this->create_publisher<FootholdTrajectory>("foothold/trajectory", qos_reliable());
 
         _body_traj_sub = this->create_subscription<BodyTrajectory>(
-            "body_trajectory", qos_reliable(),
+            "body/trajectory", qos_reliable(),
             std::bind(&FootholdPlannerNode::updateTrajectory, this, std::placeholders::_1));
 
         _stance_pattern_sub = this->create_subscription<StancePattern>(

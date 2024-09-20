@@ -16,9 +16,9 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CanFrame.msg"
   "msg/MotorCommand.msg"
-  "msg/MotorConfig.msg"
   "msg/MotorEstimate.msg"
-  "msg/MotorInfo.msg"
+  "msg/ODriveConfig.msg"
+  "msg/ODriveInfo.msg"
   "msg/LegCommand.msg"
   "msg/LegEstimate.msg"
   "msg/LegTrajectory.msg"

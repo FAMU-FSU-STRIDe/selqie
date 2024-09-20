@@ -2,9 +2,9 @@
 
 #include <robot_msgs/msg/can_frame.hpp>
 #include <robot_msgs/msg/motor_command.hpp>
-#include <robot_msgs/msg/motor_config.hpp>
 #include <robot_msgs/msg/motor_estimate.hpp>
-#include <robot_msgs/msg/motor_info.hpp>
+#include <robot_msgs/msg/o_drive_config.hpp>
+#include <robot_msgs/msg/o_drive_info.hpp>
 
 static inline rclcpp::QoS qos_fast()
 {
@@ -52,15 +52,15 @@ namespace odrive_ros2
         rclcpp::Publisher<CanFrame>::SharedPtr _can_tx_pub;
 
         rclcpp::Subscription<MotorCommand>::SharedPtr _command_sub;
-        rclcpp::Subscription<MotorConfig>::SharedPtr _config_sub;
         rclcpp::Publisher<MotorEstimate>::SharedPtr _estimate_pub;
-        rclcpp::Publisher<MotorInfo>::SharedPtr _info_pub;
+        rclcpp::Subscription<ODriveConfig>::SharedPtr _config_sub;
+        rclcpp::Publisher<ODriveInfo>::SharedPtr _info_pub;
 
         rclcpp::TimerBase::SharedPtr _estimate_timer;
         rclcpp::TimerBase::SharedPtr _info_timer;
 
         MotorEstimate _estimate_msg;
-        MotorInfo _info_msg;
+        ODriveInfo _info_msg;
         MotorCommand _command_msg;
 
         inline uint32_t getArbitrationID(const uint8_t can_id, const uint8_t cmd_id) const
@@ -104,12 +104,12 @@ namespace odrive_ros2
             _command_sub = this->create_subscription<MotorCommand>(
                 "odrive/command", qos_fast(), std::bind(&ODriveCanNode::command, this, std::placeholders::_1));
 
-            _config_sub = this->create_subscription<MotorConfig>(
+            _config_sub = this->create_subscription<ODriveConfig>(
                 "odrive/config", qos_reliable(), std::bind(&ODriveCanNode::config, this, std::placeholders::_1));
 
             _estimate_pub = this->create_publisher<MotorEstimate>("odrive/estimate", qos_fast());
 
-            _info_pub = this->create_publisher<MotorInfo>("odrive/info", qos_fast());
+            _info_pub = this->create_publisher<ODriveInfo>("odrive/info", qos_fast());
 
             double estimate_rate = 50.0;
             _estimate_timer = this->create_wall_timer(
@@ -285,7 +285,7 @@ namespace odrive_ros2
             _command_msg = *msg;
         }
 
-        void config(const MotorConfig::UniquePtr msg)
+        void config(const ODriveConfig::UniquePtr msg)
         {
             if (msg->axis_state != 0)
             {

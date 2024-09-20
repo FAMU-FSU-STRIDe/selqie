@@ -83,7 +83,7 @@ MPCProblem getMPCProblem(const LeggedMPCConfig &config)
         mpc.Q[k](12, 12) = 0.0;
 
         // Cx
-        mpc.Cx[k] = Matrix<OSQPFloat, 0, 13>::Zero();
+        mpc.C[k] = Matrix<OSQPFloat, 0, 13>::Zero();
 
         // Bounds X
         mpc.lbx[k] = Vector<OSQPFloat, 0>();
@@ -130,12 +130,12 @@ MPCProblem getMPCProblem(const LeggedMPCConfig &config)
             mpc.B[k] = mpc.B[k] * config.time_step;
 
             // Cu
-            mpc.Cu[k] = MatrixX<OSQPFloat>::Zero(5 * Ns, 3 * Ns);
+            mpc.D[k] = MatrixX<OSQPFloat>::Zero(5 * Ns, 3 * Ns);
             for (std::size_t i = 0; i < Ns; i++)
             {
                 const auto mux = config.friction_coefficient_x;
                 const auto muy = config.friction_coefficient_y;
-                mpc.Cu[k].block<3, 3>(5 * i, 3 * i) << 0, 0, 1,
+                mpc.D[k].block<5, 3>(5 * i, 3 * i) << 0, 0, 1,
                     -1, 0, -mux,
                     1, 0, -mux,
                     0, -1, -muy,

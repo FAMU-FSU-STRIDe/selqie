@@ -113,7 +113,7 @@ public:
 
         _body_traj_pub = this->create_publisher<BodyTrajectory>("body/trajectory", qos_reliable());
         _odometry_sub = this->create_subscription<nav_msgs::msg::Odometry>(
-            "odom", qos_reliable(),
+            "odom", qos_fast(),
             std::bind(&BodyTrajectoryNode::updateOdometry, this, std::placeholders::_1));
         _twist_sub = this->create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", qos_reliable(),

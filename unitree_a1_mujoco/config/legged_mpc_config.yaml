@@ -1,0 +1,20 @@
+/**:
+  ros__parameters:
+    window_size: 20
+    time_step: 0.05
+    leg_names: ['FL', 'RL', 'RR', 'FR']
+    body_height: 0.27
+    gravity_vector: [0.0, 0.0, -9.81]
+    body_mass: 10.75
+    body_inertia: [0.25, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.5]
+    friction_coefficient_x: 0.8
+    friction_coefficient_y: 0.8
+    force_z_min: 10.0
+    force_z_max: 250.0
+    position_weights: [10.0, 10.0, 50.0]
+    orientation_weights: [50.0, 50.0, 10.0]
+    linear_velocity_weights: [10.0, 10.0, 50.0]
+    angular_velocity_weights: [50.0, 50.0, 10.0]
+    force_weights: [0.000001, 0.000001, 0.000001]
+    hip_locations: [0.183, -0.183, -0.183, 0.183, 0.047, 0.047, -0.047, -0.047, 0.0, 0.0, 0.0, 0.0]
+    default_leg_positions: [0.0, 0.0, 0.0, 0.0, 0.08505, 0.08505, -0.08505, -0.08505, -0.27, -0.27, -0.27, -0.27]

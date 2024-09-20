@@ -5,9 +5,9 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <robot_msgs/msg/motor_command.hpp>
-#include <robot_msgs/msg/motor_config.hpp>
 #include <robot_msgs/msg/motor_estimate.hpp>
-#include <robot_msgs/msg/motor_info.hpp>
+#include <robot_msgs/msg/o_drive_config.hpp>
+#include <robot_msgs/msg/o_drive_info.hpp>
 
 #include "mujoco_ros2/mujoco.hpp"
 
@@ -35,7 +35,7 @@ private:
 
     struct
     {
-        uint32_t state = MotorConfig::AXIS_STATE_IDLE;
+        uint32_t state = ODriveConfig::AXIS_STATE_IDLE;
         uint32_t control_mode = MotorCommand::CONTROL_MODE_TORQUE;
         uint32_t input_mode = MotorCommand::INPUT_MODE_PASSTHROUGH;
         float pos_cmd = 0.f;
@@ -53,7 +53,7 @@ private:
     float _gear_ratio = 1.0;
 
     rclcpp::Subscription<MotorCommand>::SharedPtr _command_sub;
-    rclcpp::Subscription<MotorConfig>::SharedPtr _config_sub;
+    rclcpp::Subscription<ODriveConfig>::SharedPtr _config_sub;
     rclcpp::Publisher<MotorEstimate>::SharedPtr _estimate_pub;
 
     rclcpp::TimerBase::SharedPtr _estimate_timer;
@@ -64,7 +64,7 @@ public:
         _command_sub = node->create_subscription<MotorCommand>(
             "motor" + std::to_string(id) + "/command", qos_fast(), std::bind(&MuJoCoMotorNode::command, this, std::placeholders::_1));
 
-        _config_sub = node->create_subscription<MotorConfig>(
+        _config_sub = node->create_subscription<ODriveConfig>(
             "motor" + std::to_string(id) + "/config", qos_reliable(), std::bind(&MuJoCoMotorNode::config, this, std::placeholders::_1));
 
         _estimate_pub = node->create_publisher<MotorEstimate>("motor" + std::to_string(id) + "/estimate", qos_fast());
@@ -97,7 +97,7 @@ public:
         _state.torq_cmd = msg->torq_setpoint / _gear_ratio;
     }
 
-    void config(const MotorConfig::SharedPtr msg)
+    void config(const ODriveConfig::SharedPtr msg)
     {
         std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
 

@@ -2,7 +2,6 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 GEAR_RATIO = 6.0
-MAX_LEG_COMMAND_FREQUENCY = 1000.0
 
 def CanBusNode(ifc : str):
     return Node(
@@ -61,9 +60,6 @@ def LegTrajectoryPublisherNode(name : str):
         package='leg_kinematics',
         executable='leg_trajectory_publisher_node',
         name=f'leg{name}_trajectory',
-        parameters=[{
-            'max_frequency': MAX_LEG_COMMAND_FREQUENCY
-        }],
         remappings=[
             ('leg/trajectory', f'leg{name}/trajectory'),
             ('leg/command', f'leg{name}/command')
