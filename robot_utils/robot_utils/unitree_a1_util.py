@@ -213,7 +213,7 @@ class UnitreeA1Terminal(Cmd):
             pattern.header.stamp = self.robot.get_clock().now().to_msg()
             pattern.frequency = 1.0
             pattern.timing = [0.0, 1.0]
-            pattern.stance = [7, 7]
+            pattern.stance = [0b1111, 0b1111]
             self.robot.stance_pattern_pub.publish(pattern)
         else:
             print("Invalid gait name")

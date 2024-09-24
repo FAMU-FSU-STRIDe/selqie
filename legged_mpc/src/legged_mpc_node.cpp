@@ -129,7 +129,7 @@ public:
     std::vector<double> body_inertia = {10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0};
     this->declare_parameter("body_inertia", body_inertia);
     this->get_parameter("body_inertia", body_inertia);
-    _config.body_inertia = Eigen::Map<Eigen::Matrix3d>(body_inertia.data());
+    _config.body_inertia = Eigen::Map<Eigen::Matrix3d>(body_inertia.data(), 3, 3);
 
     _config.friction_coefficient_x = 0.5;
     this->declare_parameter("friction_coefficient_x", _config.friction_coefficient_x);
