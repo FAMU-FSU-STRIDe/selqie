@@ -259,14 +259,39 @@ public:
             odom_msg.pose.pose.position.y = MuJoCoData.data->qpos[1];
             odom_msg.pose.pose.position.z = MuJoCoData.data->qpos[2];
 
-            odom_msg.pose.pose.orientation.w = MuJoCoData.data->qpos[3];
-            odom_msg.pose.pose.orientation.x = MuJoCoData.data->qpos[4];
-            odom_msg.pose.pose.orientation.y = MuJoCoData.data->qpos[5];
-            odom_msg.pose.pose.orientation.z = MuJoCoData.data->qpos[6];
+            const double qw = MuJoCoData.data->qpos[3];
+            const double qx = MuJoCoData.data->qpos[4];
+            const double qy = MuJoCoData.data->qpos[5];
+            const double qz = MuJoCoData.data->qpos[6];
 
-            odom_msg.twist.twist.linear.x = MuJoCoData.data->qvel[0];
-            odom_msg.twist.twist.linear.y = MuJoCoData.data->qvel[1];
-            odom_msg.twist.twist.linear.z = MuJoCoData.data->qvel[2];
+            odom_msg.pose.pose.orientation.w = qw;
+            odom_msg.pose.pose.orientation.x = qx;
+            odom_msg.pose.pose.orientation.y = qy;
+            odom_msg.pose.pose.orientation.z = qz;
+
+            const double r00 = 1 - 2 * (qy * qy + qz * qz);
+            const double r01 = 2 * (qx * qy - qz * qw);
+            const double r02 = 2 * (qx * qz + qy * qw);
+
+            const double r10 = 2 * (qx * qy + qz * qw);
+            const double r11 = 1 - 2 * (qx * qx + qz * qz);
+            const double r12 = 2 * (qy * qz - qx * qw);
+
+            const double r20 = 2 * (qx * qz - qy * qw);
+            const double r21 = 2 * (qy * qz + qx * qw);
+            const double r22 = 1 - 2 * (qx * qx + qy * qy);
+
+            const double vx_body = MuJoCoData.data->qvel[0];
+            const double vy_body = MuJoCoData.data->qvel[1];
+            const double vz_body = MuJoCoData.data->qvel[2];
+
+            const double vx_world = r00 * vx_body + r01 * vy_body + r02 * vz_body;
+            const double vy_world = r10 * vx_body + r11 * vy_body + r12 * vz_body;
+            const double vz_world = r20 * vx_body + r21 * vy_body + r22 * vz_body;
+
+            odom_msg.twist.twist.linear.x = vx_world;
+            odom_msg.twist.twist.linear.y = vy_world;
+            odom_msg.twist.twist.linear.z = vz_world;
 
             odom_msg.twist.twist.angular.x = MuJoCoData.data->qvel[3];
             odom_msg.twist.twist.angular.y = MuJoCoData.data->qvel[4];

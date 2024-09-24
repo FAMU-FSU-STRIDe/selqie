@@ -36,15 +36,6 @@ static inline geometry_msgs::msg::Vector3 toVectorMsg(const Eigen::Vector3d &v)
     return msg;
 }
 
-static inline Eigen::Matrix3d toRotationMatrix(const geometry_msgs::msg::Vector3 &orientation)
-{
-    Eigen::Matrix3d rotation;
-    rotation = Eigen::AngleAxisd(orientation.z, Eigen::Vector3d::UnitZ()) *
-               Eigen::AngleAxisd(orientation.y, Eigen::Vector3d::UnitY()) *
-               Eigen::AngleAxisd(orientation.x, Eigen::Vector3d::UnitX());
-    return rotation;
-}
-
 using namespace robot_msgs::msg;
 
 class FootholdPlannerNode : public rclcpp::Node
@@ -124,12 +115,8 @@ private:
 
             const std::vector<bool> &in_stance = stance_it->second;
 
-            const Vector3d w_pos_body = toVector3(msg.positions[k]);
-            const Matrix3d w_rot_b = toRotationMatrix(msg.orientations[k]);
-            const Vector3d w_vel_body = toVector3(msg.linear_velocities[k]);
-            const Vector3d w_omega_body = toVector3(msg.angular_velocities[k]);
-
-            const Matrix3Xd w_pos_hips_b = w_rot_b * b_pos_hips;
+            const Vector3d b_vel_body = toVector3(msg.linear_velocities[k]);
+            const Vector3d b_omega_body = toVector3(msg.angular_velocities[k]);
 
             foothold_traj.foothold_states[k].stance = in_stance;
             foothold_traj.foothold_states[k].footholds.resize(_num_legs);
@@ -137,18 +124,20 @@ private:
             {
                 if (k == 0) // current
                 {
-                    const Vector3d w_pos_feet = w_pos_body + w_rot_b * b_pos_feet.col(i);
-                    foothold_traj.foothold_states[0].footholds[i] = toVectorMsg(w_pos_feet);
+                    const Vector3d b_pos_foot = b_pos_feet.col(i);
+                    foothold_traj.foothold_states[0].footholds[i] = toVectorMsg(b_pos_foot);
                 }
                 else if (in_stance[i]) // standing or landing
                 {
-                    foothold_traj.foothold_states[k].footholds[i] = foothold_traj.foothold_states[k - 1].footholds[i];
+                    const Vector3d delta = -b_vel_body * dt;
+                    const Vector3d b_pos_foot = toVector3(foothold_traj.foothold_states[k - 1].footholds[i]) + delta;
+                    foothold_traj.foothold_states[k].footholds[i] = toVectorMsg(b_pos_foot);
                 }
                 else // swinging
                 {
-                    const Vector3d w_vel_hip = w_vel_body + w_omega_body.cross(w_pos_hips_b.col(i));
+                    const Vector3d b_vel_hip = b_vel_body + b_omega_body.cross(b_pos_hips.col(i));
                     const double stance_duration = 0.5 * pattern.duration;
-                    const Vector3d w_pos_foot = w_pos_body + w_rot_b * b_pos_feet_def.col(i) + 0.5 * w_vel_hip * stance_duration;
+                    const Vector3d w_pos_foot = b_pos_feet_def.col(i) + 0.5 * b_vel_hip * stance_duration;
 
                     foothold_traj.foothold_states[k].footholds[i] = toVectorMsg(w_pos_foot);
                 }

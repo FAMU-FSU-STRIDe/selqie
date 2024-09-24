@@ -7,7 +7,7 @@ import threading
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import *
 from robot_utils.utils.robot_util_functions import *
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Pose, Twist
 
 NUM_MOTORS = 12
 LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
@@ -50,6 +50,7 @@ class UnitreeA1RobotNode(Node):
         for i in range(NUM_MOTORS):
             self.motor_config_publishers.append(self.create_publisher(ODriveConfig, f'motor{i}/config', qos_reliable()))
 
+        self.cmd_pose_pub = self.create_publisher(Pose, 'cmd_pose', qos_reliable())
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
 
         self.stance_pattern_pub = self.create_publisher(StancePattern, 'stance_pattern', qos_reliable())
@@ -182,10 +183,10 @@ class UnitreeA1Terminal(Cmd):
             print(f"Leg {LEG_NAMES[i]}:")
             print_leg_info(self.robot.leg_estimates[i])
 
-    def do_command_velocity(self, line):
+    def do_cmd_vel(self, line):
         """
         Command velocity to the motors
-        Usage: command_velocity <velocity>
+        Usage: cmd_vel <vel_x>
         """
         try:
             velocity = float(line)
@@ -198,9 +199,33 @@ class UnitreeA1Terminal(Cmd):
         twist.angular.z = 0.0
         self.robot.cmd_vel_pub.publish(twist)
 
-    def do_set_gait(self, line):
+    def do_cmd_pose(self, line):
         """
-        Stand the robot using MPC
+        Command velocity to the motors
+        Usage: cmd_pose <pos_x> <pos_y> <pos_z> <rot_x> <rot_y> <rot_z>
+        """
+        args = line.split()
+        if len(args) != 6:
+            print("Invalid number of arguments")
+            return
+
+        pose = Pose()
+        try:
+            pose.position.x = float(args[0])
+            pose.position.y = float(args[1])
+            pose.position.z = float(args[2])
+            pose.orientation.x = float(args[3])
+            pose.orientation.y = float(args[4])
+            pose.orientation.z = float(args[5])
+        except ValueError:
+            print("Invalid position or rotation values")
+            return
+        
+        self.robot.cmd_pose_pub.publish(pose)
+
+    def do_gait(self, line):
+        """
+        Set the robot MPC gait
         """
         args = line.split()
         if len(args) != 1:
@@ -215,6 +240,7 @@ class UnitreeA1Terminal(Cmd):
             pattern.timing = [0.0, 1.0]
             pattern.stance = [0b1111, 0b1111]
             self.robot.stance_pattern_pub.publish(pattern)
+            self.do_cmd_pose("0.0 0.0 0.27 0.0 0.0 0.0")
         else:
             print("Invalid gait name")
             return

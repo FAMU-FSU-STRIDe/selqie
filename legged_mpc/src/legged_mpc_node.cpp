@@ -60,14 +60,10 @@ private:
       return;
     }
 
-    _config.position.resize(_config.N);
-    _config.orientation.resize(_config.N);
     _config.linear_velocity.resize(_config.N);
     _config.angular_velocity.resize(_config.N);
     for (std::size_t k = 0; k < _config.N; k++)
     {
-      _config.position[k] = toVector3(msg.positions[k]);
-      _config.orientation[k] = toVector3(msg.orientations[k]);
       _config.linear_velocity[k] = toVector3(msg.linear_velocities[k]);
       _config.angular_velocity[k] = toVector3(msg.angular_velocities[k]);
     }
@@ -146,16 +142,6 @@ public:
     _config.force_z_max = 1000.0;
     this->declare_parameter("force_z_max", _config.force_z_max);
     this->get_parameter("force_z_max", _config.force_z_max);
-
-    std::vector<double> position_weights = {1.0, 1.0, 1.0};
-    this->declare_parameter("position_weights", position_weights);
-    this->get_parameter("position_weights", position_weights);
-    _config.position_weights = Eigen::Map<OSQPVector3>(position_weights.data());
-
-    std::vector<double> orientation_weights = {1.0, 1.0, 1.0};
-    this->declare_parameter("orientation_weights", orientation_weights);
-    this->get_parameter("orientation_weights", orientation_weights);
-    _config.orientation_weights = Eigen::Map<OSQPVector3>(orientation_weights.data());
 
     std::vector<double> linear_velocity_weights = {1.0, 1.0, 1.0};
     this->declare_parameter("linear_velocity_weights", linear_velocity_weights);
