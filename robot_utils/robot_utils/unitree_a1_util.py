@@ -6,13 +6,18 @@ import threading
 
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import *
-from robot_utils.utils.robot_util_functions import *
+from robot_utils.utils.ros_util_functions import *
+from robot_utils.utils.motor_util_functions import *
+from robot_utils.utils.leg_util_functions import *
+from robot_utils.utils.gait_util_functions import *
 from geometry_msgs.msg import Pose, Twist
+from nav_msgs.msg import Odometry
 
 NUM_MOTORS = 12
 LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
-LEFT_STANDING_LEG_POSITION = [0.0, 0.08505, -0.27]
-RIGHT_STANDING_LEG_POSITION = [0.0, -0.08505, -0.27]
+STAND_HEIGHT = 0.27
+LEFT_STANDING_LEG_POSITION = [0.0, 0.08505, -STAND_HEIGHT]
+RIGHT_STANDING_LEG_POSITION = [0.0, -0.08505, -STAND_HEIGHT]
 TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), 'trajectories')
 JOYSTICK_PACKAGE = 'robot_joysticks'
 
@@ -52,6 +57,10 @@ class UnitreeA1RobotNode(Node):
 
         self.cmd_pose_pub = self.create_publisher(Pose, 'cmd_pose', qos_reliable())
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
+        
+        self.odom = Odometry()
+        odom_callback = lambda msg: setattr(self, 'odom', msg)
+        self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_fast())
 
         self.stance_pattern_pub = self.create_publisher(StancePattern, 'stance_pattern', qos_reliable())
 
@@ -104,9 +113,9 @@ class UnitreeA1Terminal(Cmd):
         
         set_motor_gains(self.robot.motor_config_publishers, gains)
 
-    def do_stand(self, line):
+    def do_default(self, line):
         """
-        Stand the robot
+        Go to default standing position
         """
         set_leg_states(self.robot.leg_command_publishers[0:2], MotorCommand.CONTROL_MODE_POSITION, LEFT_STANDING_LEG_POSITION)
         set_leg_states(self.robot.leg_command_publishers[2:4], MotorCommand.CONTROL_MODE_POSITION, RIGHT_STANDING_LEG_POSITION)
@@ -186,18 +195,20 @@ class UnitreeA1Terminal(Cmd):
     def do_cmd_vel(self, line):
         """
         Command velocity to the motors
-        Usage: cmd_vel <vel_x>
+        Usage: cmd_vel <vel_x> <vel_y> <vel_z>
         """
+        args = line.split()
+        if len(args) != 3:
+            print("Invalid number of arguments")
+            return
+        
         try:
-            velocity = float(line)
+            vel = [float(args[0]), float(args[1]), float(args[2])]
         except ValueError:
             print("Invalid velocity value")
             return
         
-        twist = Twist()
-        twist.linear.x = velocity
-        twist.angular.z = 0.0
-        self.robot.cmd_vel_pub.publish(twist)
+        set_cmd_vel(self.robot.cmd_vel_pub, vel)
 
     def do_cmd_pose(self, line):
         """
@@ -209,41 +220,50 @@ class UnitreeA1Terminal(Cmd):
             print("Invalid number of arguments")
             return
 
-        pose = Pose()
         try:
-            pose.position.x = float(args[0])
-            pose.position.y = float(args[1])
-            pose.position.z = float(args[2])
-            pose.orientation.x = float(args[3])
-            pose.orientation.y = float(args[4])
-            pose.orientation.z = float(args[5])
+            pose = [float(args[0]), float(args[1]), float(args[2])]
+            rot = [float(args[3]), float(args[4]), float(args[5])]
         except ValueError:
             print("Invalid position or rotation values")
             return
         
-        self.robot.cmd_pose_pub.publish(pose)
+        set_cmd_pose(self.robot.cmd_pose_pub, pose, rot)
 
-    def do_gait(self, line):
+    def do_stop_mpc(self, line):
         """
-        Set the robot MPC gait
+        Stop the MPC controller
+        """
+        pattern = get_stop_stance_pattern(self.robot.get_clock())
+        self.robot.stance_pattern_pub.publish(pattern)
+
+    def do_stand(self, line):
+        """
+        Stand the robot using MPC
+        """
+        pattern = get_stand_stance_pattern(self.robot.get_clock())
+        self.robot.stance_pattern_pub.publish(pattern)
+        self.do_cmd_pose(f"0.0 0.0 {STAND_HEIGHT} 0.0 0.0 0.0")
+        
+    def do_walk(self, line):
+        """
+        Walk the robot using MPC
+        Usage: walk <frequency = 1.0>
         """
         args = line.split()
-        if len(args) != 1:
+        if len(args) > 1:
             print("Invalid number of arguments")
             return
-        
-        gait = args[0]
-        if gait == "stand":
-            pattern = StancePattern()
-            pattern.header.stamp = self.robot.get_clock().now().to_msg()
-            pattern.frequency = 1.0
-            pattern.timing = [0.0, 1.0]
-            pattern.stance = [0b1111, 0b1111]
-            self.robot.stance_pattern_pub.publish(pattern)
-            self.do_cmd_pose("0.0 0.0 0.27 0.0 0.0 0.0")
+        elif len(args) == 0:
+            frequency = 1.0
         else:
-            print("Invalid gait name")
-            return
+            try:
+                frequency = float(args[0])
+            except ValueError:
+                print("Invalid frequency value")
+                return
+        
+        pattern = get_walk_stance_pattern(self.robot.get_clock(), frequency)
+        self.robot.stance_pattern_pub.publish(pattern)
         
         
 

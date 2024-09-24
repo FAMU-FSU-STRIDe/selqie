@@ -1,7 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
 from robot_msgs.msg import *
-from robot_utils.utils.robot_util_functions import *
+from robot_utils.utils.leg_util_functions import *
 
 @dataclass
 class SwimTrajectory:

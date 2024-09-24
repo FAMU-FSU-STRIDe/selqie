@@ -70,6 +70,7 @@ def LeggedMPCNode():
         executable='legged_mpc_node',
         name='legged_mpc',
         output='screen',
+        # prefix='xterm -e gdb -ex run --args',
         parameters=[unitree_config_folder + '/legged_mpc_config.yaml']
     )
 
@@ -87,6 +88,15 @@ def FootholdPlannerNode():
         package='legged_mpc',
         executable='foothold_planner_node',
         name='foothold_planner',
+        output='screen',
+        parameters=[unitree_config_folder + '/legged_mpc_config.yaml']
+    )
+    
+def SwingLegNode():
+    return Node(
+        package='legged_mpc',
+        executable='swing_leg_node',
+        name='swing_leg_trajectory',
         output='screen',
         parameters=[unitree_config_folder + '/legged_mpc_config.yaml']
     )
@@ -108,5 +118,6 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('RL'),
         LeggedMPCNode(),
         BodyTrajectoryNode(),
-        FootholdPlannerNode()
+        FootholdPlannerNode(),
+        SwingLegNode()
     ])

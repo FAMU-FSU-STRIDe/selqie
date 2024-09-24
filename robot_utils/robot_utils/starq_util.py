@@ -7,7 +7,9 @@ import subprocess
 
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import *
-from robot_utils.utils.robot_util_functions import *
+from robot_utils.utils.ros_util_functions import *
+from robot_utils.utils.motor_util_functions import *
+from robot_utils.utils.leg_util_functions import *
 
 NUM_MOTORS = 8
 LEG_NAMES = ['FL', 'RL', 'RR', 'FR']

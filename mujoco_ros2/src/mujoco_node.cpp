@@ -41,9 +41,9 @@ private:
         float pos_cmd = 0.f;
         float vel_cmd = 0.f;
         float torq_cmd = 0.f;
-        float kp = 50.0f;
-        float kd = 1.0f;
-        float ki = 0.3f;
+        float kp = 100.0f;
+        float kd = 5.0f;
+        float ki = 0.0f;
         float torq_integral = 0.f;
         float pos_est = 0.0;
         float vel_est = 0.0;

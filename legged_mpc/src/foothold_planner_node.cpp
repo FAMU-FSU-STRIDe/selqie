@@ -1,10 +1,9 @@
-#include <rclcpp/rclcpp.hpp>
-
 #include <assert.h>
 #include <cmath>
 #include <vector>
 #include <map>
 
+#include <rclcpp/rclcpp.hpp>
 #include <robot_msgs/msg/leg_estimate.hpp>
 #include <robot_msgs/msg/body_trajectory.hpp>
 #include <robot_msgs/msg/foothold_trajectory.hpp>
@@ -56,14 +55,18 @@ private:
     {
         double duration = 0.0;
         double start_time = 0.0;
+        double stance_duration = 0.0;
         std::map<double, std::vector<bool>> stance_timing;
     } _current_pattern, _next_pattern;
 
     void updateNextStancePattern(const StancePattern &msg)
     {
         auto &pattern = _next_pattern;
-        pattern.duration = 1.0 / msg.frequency;
+        pattern.duration = msg.frequency == 0.0 ? 0.0 : 1.0 / msg.frequency;
         pattern.start_time = _current_pattern.start_time + _current_pattern.duration;
+        pattern.stance_duration = 0.0;
+        pattern.stance_timing.clear();
+        double last_time = 0.0;
         for (std::size_t i = 0; i < msg.timing.size(); i++)
         {
             const double time = msg.timing[i] * pattern.duration;
@@ -71,8 +74,16 @@ private:
             pattern.stance_timing[time] = std::vector<bool>(_num_legs);
             for (std::size_t j = 0; j < _num_legs; j++)
             {
-                pattern.stance_timing[time][j] = (bitset & (1 << j)) != 0;
+                const bool stance = (bitset & (1 << j)) != 0;
+                pattern.stance_timing[time][j] = stance;
+
+                if (j == 0 && stance)
+                {
+                    pattern.stance_duration += time - last_time;
+                }
             }
+
+            last_time = time;
         }
     }
 
@@ -98,9 +109,8 @@ private:
         foothold_traj.header.stamp = msg.header.stamp;
         foothold_traj.foothold_states.resize(N);
 
-        const Matrix3Xd b_pos_hips = _hip_locations;
-        const Matrix3Xd b_pos_feet = b_pos_hips + _leg_positions;
-        const Matrix3Xd b_pos_feet_def = b_pos_hips + _default_leg_positions;
+        const Matrix3Xd b_pos_feet_def = _hip_locations + _default_leg_positions;
+        Matrix3Xd b_pos_feet = _hip_locations + _leg_positions;
 
         const double start_time = _current_pattern.start_time;
         const double end_time = _next_pattern.start_time;
@@ -118,29 +128,28 @@ private:
             const Vector3d b_vel_body = toVector3(msg.linear_velocities[k]);
             const Vector3d b_omega_body = toVector3(msg.angular_velocities[k]);
 
+            foothold_traj.foothold_states[k].duration = pattern.duration;
+            foothold_traj.foothold_states[k].duty_factor = pattern.stance_duration / pattern.duration;
             foothold_traj.foothold_states[k].stance = in_stance;
             foothold_traj.foothold_states[k].footholds.resize(_num_legs);
             for (std::size_t i = 0; i < _num_legs; i++)
             {
                 if (k == 0) // current
                 {
-                    const Vector3d b_pos_foot = b_pos_feet.col(i);
-                    foothold_traj.foothold_states[0].footholds[i] = toVectorMsg(b_pos_foot);
+                    // nothing to do
                 }
                 else if (in_stance[i]) // standing or landing
                 {
                     const Vector3d delta = -b_vel_body * dt;
-                    const Vector3d b_pos_foot = toVector3(foothold_traj.foothold_states[k - 1].footholds[i]) + delta;
-                    foothold_traj.foothold_states[k].footholds[i] = toVectorMsg(b_pos_foot);
+                    b_pos_feet.col(i) += delta;
                 }
                 else // swinging
                 {
-                    const Vector3d b_vel_hip = b_vel_body + b_omega_body.cross(b_pos_hips.col(i));
-                    const double stance_duration = 0.5 * pattern.duration;
-                    const Vector3d w_pos_foot = b_pos_feet_def.col(i) + 0.5 * b_vel_hip * stance_duration;
-
-                    foothold_traj.foothold_states[k].footholds[i] = toVectorMsg(w_pos_foot);
+                    const Vector3d b_vel_hip = b_vel_body + b_omega_body.cross(_hip_locations.col(i));
+                    b_pos_feet.col(i) = b_pos_feet_def.col(i) + 0.5 * b_vel_hip * pattern.stance_duration;
                 }
+
+                foothold_traj.foothold_states[k].footholds[i] = toVectorMsg(b_pos_feet.col(i));
             }
         }
 
@@ -155,13 +164,13 @@ public:
         this->get_parameter("leg_names", leg_names);
         _num_legs = leg_names.size();
 
-        std::vector<double> hip_locations = {/* TODO */};
+        std::vector<double> hip_locations = {};
         this->declare_parameter("hip_locations", hip_locations);
         this->get_parameter("hip_locations", hip_locations);
         assert(hip_locations.size() == 3 * _num_legs);
         _hip_locations = Eigen::Map<Eigen::MatrixXd>(hip_locations.data(), 3, _num_legs);
 
-        std::vector<double> default_leg_positions = {/* TODO */};
+        std::vector<double> default_leg_positions = {};
         this->declare_parameter("default_leg_positions", default_leg_positions);
         this->get_parameter("default_leg_positions", default_leg_positions);
         assert(default_leg_positions.size() == 3 * _num_legs);

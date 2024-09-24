@@ -1,5 +1,4 @@
 #include <rclcpp/rclcpp.hpp>
-
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <robot_msgs/msg/body_trajectory.hpp>
@@ -162,7 +161,8 @@ private:
                 break;
             }
             default:
-                break;
+                RCLCPP_ERROR(this->get_logger(), "Invalid control mode.");
+                return;
             }
 
             last_position += R * linear_velocity * _dt;

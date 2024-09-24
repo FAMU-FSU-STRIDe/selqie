@@ -1,13 +1,10 @@
-#include <rclcpp/rclcpp.hpp>
-
 #include <legged_mpc/legged_mpc.hpp>
 
+#include <rclcpp/rclcpp.hpp>
 #include <robot_msgs/msg/leg_command.hpp>
 #include <robot_msgs/msg/leg_estimate.hpp>
 #include <robot_msgs/msg/body_trajectory.hpp>
 #include <robot_msgs/msg/foothold_trajectory.hpp>
-
-#include <nav_msgs/msg/odometry.hpp>
 
 static inline rclcpp::QoS qos_fast()
 {
@@ -122,7 +119,7 @@ public:
     this->declare_parameter("body_mass", _config.body_mass);
     this->get_parameter("body_mass", _config.body_mass);
 
-    std::vector<double> body_inertia = {10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0};
+    std::vector<double> body_inertia = {};
     this->declare_parameter("body_inertia", body_inertia);
     this->get_parameter("body_inertia", body_inertia);
     _config.body_inertia = Eigen::Map<Eigen::Matrix3d>(body_inertia.data(), 3, 3);
@@ -153,7 +150,7 @@ public:
     this->get_parameter("angular_velocity_weights", angular_velocity_weights);
     _config.angular_velocity_weights = Eigen::Map<OSQPVector3>(angular_velocity_weights.data());
 
-    std::vector<double> force_weights = {0.01, 0.01, 0.01};
+    std::vector<double> force_weights = {1e-6, 1e-6, 1e-6};
     this->declare_parameter("force_weights", force_weights);
     this->get_parameter("force_weights", force_weights);
     _config.force_weights = Eigen::Map<OSQPVector3>(force_weights.data());

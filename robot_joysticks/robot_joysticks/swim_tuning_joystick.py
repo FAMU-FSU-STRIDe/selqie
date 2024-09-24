@@ -5,8 +5,8 @@ from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from robot_msgs.msg import LegCommand
 
-from robot_utils.utils.robot_util_functions import *
-from robot_utils.utils.starq_util_functions import *
+from robot_utils.utils.ros_util_functions import *
+from robot_utils.utils.swim_util_functions import *
 
 class SwimTuningJoystick(Node):
     def __init__(self):
@@ -22,7 +22,7 @@ class SwimTuningJoystick(Node):
 
         self.leg_command_pubs = []
         for l in self.leg_names:
-            self.leg_command_pubs.append(self.create_publisher(LegCommand, f'leg{l}/command', 10))
+            self.leg_command_pubs.append(self.create_publisher(LegCommand, f'leg{l}/command', qos_fast()))
 
         self.last_msg = None
         self.joy_sub = self.create_subscription(Joy, 'joy', self.joy_callback, 10)

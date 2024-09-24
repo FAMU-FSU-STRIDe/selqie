@@ -6,8 +6,10 @@ from rclpy.node import Node
 from sensor_msgs.msg import Joy, Imu
 from robot_msgs.msg import *
 
-from robot_utils.utils.robot_util_functions import *
-from robot_utils.utils.starq_util_functions import *
+from robot_utils.utils.ros_util_functions import *
+from robot_utils.utils.motor_util_functions import *
+from robot_utils.utils.leg_util_functions import *
+from robot_utils.utils.swim_util_functions import *
 
 INF_LOOP = -1
 NUM_MOTORS = 8
@@ -66,7 +68,7 @@ class STARQGaitJoystick(Node):
             
         self.odrive_config_pubs = []
         for i in range(self.num_motors):
-            self.odrive_config_pubs.append(self.create_publisher(MotorConfig, f'odrive{i}/config', qos_reliable()))
+            self.odrive_config_pubs.append(self.create_publisher(ODriveConfig, f'odrive{i}/config', qos_reliable()))
 
         self.leg_traj_pubs = []
         for l in self.leg_names:
@@ -149,14 +151,14 @@ class STARQGaitJoystick(Node):
         elif msg.buttons[8] == 1 and self.last_msg.buttons[8] == 0:
             # 9 : Ready
             self.curr_traj = None
-            set_motor_states(self.odrive_config_pubs, MotorConfig.AXIS_STATE_CLOSED_LOOP_CONTROL)
+            set_motor_states(self.odrive_config_pubs, ODriveConfig.AXIS_STATE_CLOSED_LOOP_CONTROL)
             self.get_logger().info('Readied ODrives')
         elif msg.buttons[9] == 1 and self.last_msg.buttons[9] == 0:
             # 10 : Idle
             self.curr_traj = None
             clear_motor_errors(self.odrive_config_pubs)
             self.get_logger().info('Cleared ODrive errors')
-            set_motor_states(self.odrive_config_pubs, MotorConfig.AXIS_STATE_IDLE)
+            set_motor_states(self.odrive_config_pubs, ODriveConfig.AXIS_STATE_IDLE)
             self.get_logger().info('Idled ODrives')
         elif msg.axes[4] >= 0.5 and self.last_msg.axes[4] < 0.5:
             # Cross left
