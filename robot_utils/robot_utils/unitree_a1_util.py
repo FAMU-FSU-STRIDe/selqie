@@ -233,16 +233,17 @@ class UnitreeA1Terminal(Cmd):
         """
         Stop the MPC controller
         """
-        pattern = get_stop_stance_pattern(self.robot.get_clock())
-        self.robot.stance_pattern_pub.publish(pattern)
+        set_cmd_pose(self.robot.cmd_pose_pub, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
     def do_stand(self, line):
         """
         Stand the robot using MPC
         """
-        pattern = get_stand_stance_pattern(self.robot.get_clock())
-        self.robot.stance_pattern_pub.publish(pattern)
-        self.do_cmd_pose(f"0.0 0.0 {STAND_HEIGHT} 0.0 0.0 0.0")
+        pose, rot = get_pose(self.robot.odom.pose.pose)
+        pose[2] = STAND_HEIGHT
+        rot[0:2] = [0.0, 0.0]
+        set_cmd_pose(self.robot.cmd_pose_pub, pose, rot)
+        set_stand_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock())
         
     def do_walk(self, line):
         """
@@ -262,11 +263,9 @@ class UnitreeA1Terminal(Cmd):
                 print("Invalid frequency value")
                 return
         
-        pattern = get_walk_stance_pattern(self.robot.get_clock(), frequency)
-        self.robot.stance_pattern_pub.publish(pattern)
+        set_cmd_vel(self.robot.cmd_vel_pub, [0.0, 0.0, 0.0])
+        set_walk_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock(), frequency)
         
-        
-
 def main():
     rclpy.init()
     robot = UnitreeA1RobotNode()

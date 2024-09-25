@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'swim_tuning_joystick = robot_joysticks.swim_tuning_joystick:main',
             'starq_gait_joystick = robot_joysticks.starq_gait_joystick:main',
+            'legged_mpc_joystick = robot_joysticks.legged_mpc_joystick:main',
         ],
     },
 )
