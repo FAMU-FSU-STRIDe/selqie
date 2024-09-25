@@ -61,7 +61,10 @@ def LegTrajectoryPublisherNode(name : str):
         remappings=[
             ('leg/trajectory', f'leg{name}/trajectory'),
             ('leg/command', f'leg{name}/command')
-        ]
+        ],
+        parameters=[{
+            'use_sim_time': True
+        }]
     )
 
 def LeggedMPCNode():

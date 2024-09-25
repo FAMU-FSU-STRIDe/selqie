@@ -4,6 +4,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <nav_msgs/msg/odometry.hpp>
+#include <rosgraph_msgs/msg/clock.hpp>
 #include <robot_msgs/msg/motor_command.hpp>
 #include <robot_msgs/msg/motor_estimate.hpp>
 #include <robot_msgs/msg/o_drive_config.hpp>
@@ -196,8 +197,8 @@ private:
 
     std::vector<std::shared_ptr<MuJoCoMotorNode>> _motor_nodes;
 
+    rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr _clock_pub;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr _odom_pub;
-    rclcpp::TimerBase::SharedPtr _odom_timer;
 
 public:
     MuJoCoNode() : Node("mujoco_node")
@@ -211,16 +212,12 @@ public:
         this->declare_parameter("odom_frame_id", _odom_frame_id);
         this->get_parameter("odom_frame_id", _odom_frame_id);
 
+        _clock_pub = this->create_publisher<rosgraph_msgs::msg::Clock>("clock", qos_reliable());
+        _odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", qos_fast());
+
         std::thread([this]()
                     { runMuJoCo(); })
             .detach();
-
-        _odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", qos_fast());
-
-        double odom_rate = 50.0;
-        _odom_timer = this->create_wall_timer(
-            std::chrono::milliseconds(static_cast<int>(1000.0 / odom_rate)),
-            std::bind(&MuJoCoNode::odometry, this));
 
         RCLCPP_INFO(this->get_logger(), "MuJoCo node initialized.");
     }
@@ -228,6 +225,9 @@ public:
     void runMuJoCo()
     {
         initMuJoCo(_model_path);
+
+        MuJoCoData.control_functions.push_back(
+            std::bind(&MuJoCoNode::update, this, std::placeholders::_1, std::placeholders::_2));
 
         const int num_motors = MuJoCoData.model->nu;
         for (int i = 0; i < num_motors; i++)
@@ -240,63 +240,67 @@ public:
         rclcpp::shutdown();
     }
 
-    void odometry()
+    void update(const mjModel *, mjData *data)
+    {
+        publishClock(data);
+        publishOdometry(data);
+    }
+
+    void publishClock(mjData *data)
+    {
+        rosgraph_msgs::msg::Clock clock_msg;
+        clock_msg.clock = rclcpp::Time(int64_t(data->time * 1E9));
+        _clock_pub->publish(clock_msg);
+    }
+
+    void publishOdometry(mjData *data)
     {
         nav_msgs::msg::Odometry odom_msg;
         odom_msg.header.frame_id = _odom_frame_id;
 
-        {
-            std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
+        odom_msg.header.stamp = rclcpp::Time(int64_t(data->time * 1E9));
 
-            if (!MuJoCoData.data)
-            {
-                return;
-            }
+        odom_msg.pose.pose.position.x = data->qpos[0];
+        odom_msg.pose.pose.position.y = data->qpos[1];
+        odom_msg.pose.pose.position.z = data->qpos[2];
 
-            odom_msg.header.stamp = rclcpp::Time(MuJoCoData.data->time);
+        const double qw = data->qpos[3];
+        const double qx = data->qpos[4];
+        const double qy = data->qpos[5];
+        const double qz = data->qpos[6];
 
-            odom_msg.pose.pose.position.x = MuJoCoData.data->qpos[0];
-            odom_msg.pose.pose.position.y = MuJoCoData.data->qpos[1];
-            odom_msg.pose.pose.position.z = MuJoCoData.data->qpos[2];
+        odom_msg.pose.pose.orientation.w = qw;
+        odom_msg.pose.pose.orientation.x = qx;
+        odom_msg.pose.pose.orientation.y = qy;
+        odom_msg.pose.pose.orientation.z = qz;
 
-            const double qw = MuJoCoData.data->qpos[3];
-            const double qx = MuJoCoData.data->qpos[4];
-            const double qy = MuJoCoData.data->qpos[5];
-            const double qz = MuJoCoData.data->qpos[6];
+        const double r00 = 1 - 2 * (qy * qy + qz * qz);
+        const double r01 = 2 * (qx * qy - qz * qw);
+        const double r02 = 2 * (qx * qz + qy * qw);
 
-            odom_msg.pose.pose.orientation.w = qw;
-            odom_msg.pose.pose.orientation.x = qx;
-            odom_msg.pose.pose.orientation.y = qy;
-            odom_msg.pose.pose.orientation.z = qz;
+        const double r10 = 2 * (qx * qy + qz * qw);
+        const double r11 = 1 - 2 * (qx * qx + qz * qz);
+        const double r12 = 2 * (qy * qz - qx * qw);
 
-            const double r00 = 1 - 2 * (qy * qy + qz * qz);
-            const double r01 = 2 * (qx * qy - qz * qw);
-            const double r02 = 2 * (qx * qz + qy * qw);
+        const double r20 = 2 * (qx * qz - qy * qw);
+        const double r21 = 2 * (qy * qz + qx * qw);
+        const double r22 = 1 - 2 * (qx * qx + qy * qy);
 
-            const double r10 = 2 * (qx * qy + qz * qw);
-            const double r11 = 1 - 2 * (qx * qx + qz * qz);
-            const double r12 = 2 * (qy * qz - qx * qw);
+        const double vx_body = data->qvel[0];
+        const double vy_body = data->qvel[1];
+        const double vz_body = data->qvel[2];
 
-            const double r20 = 2 * (qx * qz - qy * qw);
-            const double r21 = 2 * (qy * qz + qx * qw);
-            const double r22 = 1 - 2 * (qx * qx + qy * qy);
+        const double vx_world = r00 * vx_body + r01 * vy_body + r02 * vz_body;
+        const double vy_world = r10 * vx_body + r11 * vy_body + r12 * vz_body;
+        const double vz_world = r20 * vx_body + r21 * vy_body + r22 * vz_body;
 
-            const double vx_body = MuJoCoData.data->qvel[0];
-            const double vy_body = MuJoCoData.data->qvel[1];
-            const double vz_body = MuJoCoData.data->qvel[2];
+        odom_msg.twist.twist.linear.x = vx_world;
+        odom_msg.twist.twist.linear.y = vy_world;
+        odom_msg.twist.twist.linear.z = vz_world;
 
-            const double vx_world = r00 * vx_body + r01 * vy_body + r02 * vz_body;
-            const double vy_world = r10 * vx_body + r11 * vy_body + r12 * vz_body;
-            const double vz_world = r20 * vx_body + r21 * vy_body + r22 * vz_body;
-
-            odom_msg.twist.twist.linear.x = vx_world;
-            odom_msg.twist.twist.linear.y = vy_world;
-            odom_msg.twist.twist.linear.z = vz_world;
-
-            odom_msg.twist.twist.angular.x = MuJoCoData.data->qvel[3];
-            odom_msg.twist.twist.angular.y = MuJoCoData.data->qvel[4];
-            odom_msg.twist.twist.angular.z = MuJoCoData.data->qvel[5];
-        }
+        odom_msg.twist.twist.angular.x = data->qvel[3];
+        odom_msg.twist.twist.angular.y = data->qvel[4];
+        odom_msg.twist.twist.angular.z = data->qvel[5];
 
         _odom_pub->publish(odom_msg);
     }

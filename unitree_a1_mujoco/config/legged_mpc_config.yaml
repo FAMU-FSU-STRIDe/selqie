@@ -1,5 +1,6 @@
 /**:
   ros__parameters:
+    solve_frequency: 100.0
     window_size: 20
     time_step: 0.025
     leg_names: ['FL', 'RL', 'RR', 'FR']
@@ -20,4 +21,4 @@
     default_leg_positions: [0.0, 0.08505, -0.27, 0.0, 0.08505, -0.27, 0.0, -0.08505, -0.27, 0.0, -0.08505, -0.27]
     swing_resolution: 100
     step_height: 0.075
-    swing_duration_factor: 1.0
+    swing_duration_factor: 0.5
