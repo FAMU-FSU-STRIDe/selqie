@@ -34,7 +34,7 @@ class LeggedMPCJoystick(Node):
 
         self.cmd_pose_pub = self.create_publisher(Pose, 'cmd_pose', qos_reliable())
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
-        self.mode = POSITION_MODE
+        self.mode = NONE_MODE
         self.base_pos = [0.0, 0.0, STAND_HEIGHT]
         self.base_rot = [0.0, 0.0, 0.0]
         
@@ -105,21 +105,19 @@ class LeggedMPCJoystick(Node):
 
         self.last_msg = msg
 
-        left_axis_x = int(msg.axes[1] * 127)
-        left_axis_y = int(msg.axes[0] * 127)
-        right_axis_x = int(msg.axes[3] * 127)
+        left_axis_x = msg.axes[1]
+        left_axis_y = msg.axes[0]
+        right_axis_x = msg.axes[3]
 
         if self.mode == VELOCITY_MODE:
-            vel = [MAX_LINEAR_VELOCITY[0] * left_axis_x / 127.0, 
-                   MAX_LINEAR_VELOCITY[1] * left_axis_y / 127.0, 
-                   MAX_ANGULAR_VELOCITY[2] * right_axis_x / 127.0]
+            vel = [MAX_LINEAR_VELOCITY[0] * left_axis_x, MAX_LINEAR_VELOCITY[1] * left_axis_y, MAX_ANGULAR_VELOCITY[2] * right_axis_x]
             set_cmd_vel(self.cmd_vel_pub, vel)
         elif self.mode == POSITION_MODE:
-            delta_pos = [MAX_POSITION[0] * left_axis_x / 127.0, 
-                         MAX_POSITION[1] * left_axis_y / 127.0, 
-                         STAND_HEIGHT]
-            delta_rot = [0.0, 0.0, MAX_ROTATION[2] * right_axis_x / 127.0]
-            set_cmd_pose(self.cmd_pose_pub, self.base_pos + delta_pos, self.base_rot + delta_rot)
+            delta_pos = [MAX_POSITION[0] * left_axis_x, MAX_POSITION[1] * left_axis_y, 0.0]
+            delta_rot = [0.0, 0.0, MAX_ROTATION[2] * right_axis_x]
+            cmd_pos = [self.base_pos[i] + delta_pos[i] for i in range(3)]
+            cmd_rot = [self.base_rot[i] + delta_rot[i] for i in range(3)]
+            set_cmd_pose(self.cmd_pose_pub, cmd_pos, cmd_rot)
             
 
 def main(args=None):
