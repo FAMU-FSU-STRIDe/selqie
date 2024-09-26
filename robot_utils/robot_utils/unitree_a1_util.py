@@ -71,6 +71,9 @@ class UnitreeA1RobotNode(Node):
         if not wait_for_subs(self.motor_config_publishers):
             print("Failed to connect to Motor config")
 
+        set_leg_states(self.leg_command_publishers[0:2], MotorCommand.CONTROL_MODE_POSITION, LEFT_STANDING_LEG_POSITION)
+        set_leg_states(self.leg_command_publishers[2:4], MotorCommand.CONTROL_MODE_POSITION, RIGHT_STANDING_LEG_POSITION)
+
 class UnitreeA1Terminal(Cmd):
     intro = 'Welcome to the Unitree A1 terminal. Type help or ? to list commands.\n'
     prompt = 'A1> '

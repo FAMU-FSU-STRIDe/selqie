@@ -255,48 +255,41 @@ public:
 
     void publishOdometry(mjData *data)
     {
-        nav_msgs::msg::Odometry odom_msg;
-        odom_msg.header.frame_id = _odom_frame_id;
-
-        odom_msg.header.stamp = rclcpp::Time(int64_t(data->time * 1E9));
-
-        odom_msg.pose.pose.position.x = data->qpos[0];
-        odom_msg.pose.pose.position.y = data->qpos[1];
-        odom_msg.pose.pose.position.z = data->qpos[2];
 
         const double qw = data->qpos[3];
         const double qx = data->qpos[4];
         const double qy = data->qpos[5];
         const double qz = data->qpos[6];
 
+        const double vx_world = data->qvel[0];
+        const double vy_world = data->qvel[1];
+        const double vz_world = data->qvel[2];
+
+        double lw = qx * vx_world + qy * vy_world + qz * vz_world;
+        double lx = qw * vx_world - qy * vz_world + qz * vy_world;
+        double ly = qw * vy_world - qz * vx_world + qx * vz_world;
+        double lz = qw * vz_world - qx * vy_world + qy * vx_world;
+
+        double vx_body = lw * qx + lx * qw + ly * qz - lz * qy;
+        double vy_body = lw * qy - lx * qz + ly * qw + lz * qx;
+        double vz_body = lw * qz + lx * qy - ly * qx + lz * qw;
+
+        nav_msgs::msg::Odometry odom_msg;
+        odom_msg.header.frame_id = _odom_frame_id;
+        odom_msg.header.stamp = rclcpp::Time(int64_t(data->time * 1E9));
+
+        odom_msg.pose.pose.position.x = data->qpos[0];
+        odom_msg.pose.pose.position.y = data->qpos[1];
+        odom_msg.pose.pose.position.z = data->qpos[2];
+
         odom_msg.pose.pose.orientation.w = qw;
         odom_msg.pose.pose.orientation.x = qx;
         odom_msg.pose.pose.orientation.y = qy;
         odom_msg.pose.pose.orientation.z = qz;
 
-        const double r00 = 1 - 2 * (qy * qy + qz * qz);
-        const double r01 = 2 * (qx * qy - qz * qw);
-        const double r02 = 2 * (qx * qz + qy * qw);
-
-        const double r10 = 2 * (qx * qy + qz * qw);
-        const double r11 = 1 - 2 * (qx * qx + qz * qz);
-        const double r12 = 2 * (qy * qz - qx * qw);
-
-        const double r20 = 2 * (qx * qz - qy * qw);
-        const double r21 = 2 * (qy * qz + qx * qw);
-        const double r22 = 1 - 2 * (qx * qx + qy * qy);
-
-        const double vx_body = data->qvel[0];
-        const double vy_body = data->qvel[1];
-        const double vz_body = data->qvel[2];
-
-        const double vx_world = r00 * vx_body + r01 * vy_body + r02 * vz_body;
-        const double vy_world = r10 * vx_body + r11 * vy_body + r12 * vz_body;
-        const double vz_world = r20 * vx_body + r21 * vy_body + r22 * vz_body;
-
-        odom_msg.twist.twist.linear.x = vx_world;
-        odom_msg.twist.twist.linear.y = vy_world;
-        odom_msg.twist.twist.linear.z = vz_world;
+        odom_msg.twist.twist.linear.x = vx_body;
+        odom_msg.twist.twist.linear.y = vy_body;
+        odom_msg.twist.twist.linear.z = vz_body;
 
         odom_msg.twist.twist.angular.x = data->qvel[3];
         odom_msg.twist.twist.angular.y = data->qvel[4];
