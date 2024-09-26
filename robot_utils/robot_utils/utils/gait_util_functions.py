@@ -1,5 +1,6 @@
 from robot_msgs.msg import *
 from geometry_msgs.msg import Pose, Twist
+from robot_utils.utils.ros_util_functions import *
 
 def set_cmd_vel(cmd_vel_pub, vel):
     msg = Twist()
@@ -13,9 +14,7 @@ def set_cmd_pose(cmd_pose_pub, pos, rot):
     pose.position.x = pos[0]
     pose.position.y = pos[1]
     pose.position.z = pos[2]
-    pose.orientation.x = rot[0]
-    pose.orientation.y = rot[1]
-    pose.orientation.z = rot[2]
+    pose.orientation = euler_to_quaternion(rot)
     cmd_pose_pub.publish(pose)
 
 def set_stop_stance_pattern(stance_pub, clock):
