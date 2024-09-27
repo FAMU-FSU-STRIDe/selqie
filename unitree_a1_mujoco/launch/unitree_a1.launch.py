@@ -104,6 +104,18 @@ def SwingLegNode():
         parameters=[unitree_config_folder + '/legged_mpc_config.yaml']
     )
 
+def WalkingPlannerNode():
+    return Node(
+        package='local_planning',
+        executable='walking_planner_node',
+        name='walking_planner',
+        output='screen',
+        remappings=[
+            ('goal', f'walk/goal')
+        ],
+        parameters=[unitree_config_folder + '/walking_planner_config.yaml']
+    )
+
 def generate_launch_description():
     return LaunchDescription([
         MuJoCoNode(),
@@ -122,5 +134,6 @@ def generate_launch_description():
         LeggedMPCNode(),
         BodyTrajectoryNode(),
         FootholdPlannerNode(),
-        SwingLegNode()
+        SwingLegNode(),
+        WalkingPlannerNode()
     ])

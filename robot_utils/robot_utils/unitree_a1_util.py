@@ -3,15 +3,15 @@ from rclpy.node import Node
 from cmd import Cmd
 import os
 import threading
-
 from ament_index_python.packages import get_package_share_directory
 from robot_msgs.msg import *
+from geometry_msgs.msg import Pose, Twist, PoseStamped
+from nav_msgs.msg import Odometry
 from robot_utils.utils.ros_util_functions import *
 from robot_utils.utils.motor_util_functions import *
 from robot_utils.utils.leg_util_functions import *
 from robot_utils.utils.gait_util_functions import *
-from geometry_msgs.msg import Pose, Twist
-from nav_msgs.msg import Odometry
+from robot_utils.utils.planning_util_functions import *
 
 NUM_MOTORS = 12
 LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
@@ -20,6 +20,7 @@ LEFT_STANDING_LEG_POSITION = [0.0, 0.08505, -STAND_HEIGHT]
 RIGHT_STANDING_LEG_POSITION = [0.0, -0.08505, -STAND_HEIGHT]
 TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), 'trajectories')
 JOYSTICK_PACKAGE = 'robot_joysticks'
+DEFAULT_WALK_FREQUENCY = 2.5
 
 class UnitreeA1RobotNode(Node):
     def __init__(self):
@@ -63,6 +64,8 @@ class UnitreeA1RobotNode(Node):
         self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_fast())
 
         self.stance_pattern_pub = self.create_publisher(StancePattern, 'stance_pattern', qos_reliable())
+
+        self.walk_planner_pub = self.create_publisher(PoseStamped, 'walk/goal', qos_reliable())
 
         if not wait_for_subs(self.leg_command_publishers):
             print("Failed to connect to Leg command")
@@ -251,14 +254,14 @@ class UnitreeA1Terminal(Cmd):
     def do_walk(self, line):
         """
         Walk the robot using MPC
-        Usage: walk <frequency = 1.0>
+        Usage: walk <frequency (optional)>
         """
         args = line.split()
         if len(args) > 1:
             print("Invalid number of arguments")
             return
         elif len(args) == 0:
-            frequency = 1.0
+            frequency = DEFAULT_WALK_FREQUENCY
         else:
             try:
                 frequency = float(args[0])
@@ -268,6 +271,27 @@ class UnitreeA1Terminal(Cmd):
         
         set_cmd_vel(self.robot.cmd_vel_pub, [0.0, 0.0, 0.0])
         set_walk_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock(), frequency)
+
+    def do_walk_to(self, line):
+        """
+        Go to a position using walking planner
+        Usage: walk_to <x> <y> <theta>
+        """
+        args = line.split()
+        if len(args) != 3:
+            print("Invalid number of arguments")
+            return
+        
+        try:
+            x = float(args[0])
+            y = float(args[1])
+            theta = float(args[2])
+        except ValueError:
+            print("Invalid position values")
+            return
+        
+        set_walk_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock(), DEFAULT_WALK_FREQUENCY)
+        set_goal(self.robot.walk_planner_pub, [x, y, theta])
         
 def main():
     rclpy.init()
