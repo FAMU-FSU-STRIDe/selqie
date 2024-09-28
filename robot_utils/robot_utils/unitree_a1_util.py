@@ -291,7 +291,13 @@ class UnitreeA1Terminal(Cmd):
             return
         
         set_walk_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock(), DEFAULT_WALK_FREQUENCY)
-        set_goal(self.robot.walk_planner_pub, [x, y, theta])
+        set_planner_goal(self.robot.walk_planner_pub, [x, y, theta])
+
+    def do_stop_walk(self, line):
+        """
+        Stop the walking planner
+        """
+        set_planner_stop(self.robot.walk_planner_pub)
         
 def main():
     rclpy.init()

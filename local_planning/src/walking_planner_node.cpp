@@ -1,6 +1,8 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <sbmpo/SBMPO.hpp>
+#include <sbmpo/tools/CSVTool.hpp>
+
 #include "local_planning/walking_model.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
@@ -8,12 +10,12 @@
 
 static inline rclcpp::QoS qos_fast()
 {
-  return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
+    return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
 }
 
 static inline rclcpp::QoS qos_reliable()
 {
-  return rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
+    return rclcpp::QoS(rclcpp::KeepLast(10)).reliable();
 }
 
 class WalkingPlannerNode : public rclcpp::Node
@@ -178,6 +180,17 @@ public:
         default:
             RCLCPP_WARN(this->get_logger(), "Failed to solve.");
             break;
+        }
+
+        static bool first_run = true;
+        if (first_run)
+        {
+            first_run = false;
+            sbmpo_csv::clear_file("/tmp/csv/stats.csv");
+            sbmpo_csv::clear_file("/tmp/csv/nodes.csv");
+            sbmpo_csv::append_stats("/tmp/csv/stats.csv", *_sbmpo->results());
+            sbmpo_csv::append_node_path("/tmp/csv/nodes.csv", _sbmpo->results()->node_path);
+            sbmpo_csv::append_nodes("/tmp/csv/nodes.csv", _sbmpo->results()->nodes);
         }
     }
 };

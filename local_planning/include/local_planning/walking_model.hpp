@@ -28,13 +28,17 @@ public:
 
     State next_state(const State &x, const Control &u, const float dt) override
     {
+        const float x1 = x[0];
+        const float y1 = x[1];
+        const float theta1 = x[2];
+        
         const float vx = u[0];
         const float vy = u[1];
-        const float wz = u[2];
+        const float omega = u[2];
 
-        const float theta2 = wrap(x[2] + wz * dt);
-        const float x2 = x[0] + vx * std::cos(theta2) * dt - vy * std::sin(theta2) * dt;
-        const float y2 = x[1] + vx * std::sin(theta2) * dt + vy * std::cos(theta2) * dt;
+        const float theta2 = wrap(theta1 + omega * dt);
+        const float x2 = x1 + vx * std::cos(theta2) * dt - vy * std::sin(theta2) * dt;
+        const float y2 = y1 + vx * std::sin(theta2) * dt + vy * std::cos(theta2) * dt;
 
         return {x2, y2, theta2};
     }
