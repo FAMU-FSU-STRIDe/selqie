@@ -7,6 +7,9 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <grid_map_msgs/msg/grid_map.hpp>
+
+#include <grid_map_ros/GridMapRosConverter.hpp>
 
 static inline rclcpp::QoS qos_fast()
 {
@@ -30,6 +33,7 @@ private:
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _sub_odom;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr _sub_goal;
+    rclcpp::Subscription<grid_map_msgs::msg::GridMap>::SharedPtr _sub_map;
     rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr _pub_cmd_pose;
 
     rclcpp::TimerBase::SharedPtr _solve_timer;
@@ -45,6 +49,13 @@ private:
     void goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
         _goal = msg->pose.position.z < 0.0 ? nullptr : msg;
+    }
+
+    void map_callback(const grid_map_msgs::msg::GridMap::SharedPtr msg)
+    {
+        grid_map::GridMap map;
+        grid_map::GridMapRosConverter::fromMessage(*msg, map);
+        _sbmpo->model()->set_map(map);
     }
 
     void generateActions()
@@ -110,10 +121,13 @@ public:
         generateActions();
 
         _sub_odom = this->create_subscription<nav_msgs::msg::Odometry>(
-            "odom", qos_fast(), std::bind(&WalkingPlannerNode::odom_callback, this, std::placeholders::_1));
+            "odom", qos_reliable(), std::bind(&WalkingPlannerNode::odom_callback, this, std::placeholders::_1));
 
         _sub_goal = this->create_subscription<geometry_msgs::msg::PoseStamped>(
             "goal", qos_reliable(), std::bind(&WalkingPlannerNode::goal_callback, this, std::placeholders::_1));
+
+        _sub_map = this->create_subscription<grid_map_msgs::msg::GridMap>(
+            "map", qos_reliable(), std::bind(&WalkingPlannerNode::map_callback, this, std::placeholders::_1));
 
         _pub_cmd_pose = this->create_publisher<geometry_msgs::msg::Pose>("cmd_pose", qos_reliable());
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sbmpo/types/Model.hpp>
+#include <grid_map_core/grid_map_core.hpp>
 
 using namespace sbmpo;
 
@@ -19,8 +20,23 @@ class WalkingModel : public Model
 {
 private:
     WalkingModelParams _params;
+    grid_map::GridMap _map;
+    bool _is_map_set = false;
 
 public:
+    void set_map(const grid_map::GridMap &map)
+    {
+        if (map.exists("cost"))
+        {
+            _map = map;
+            _is_map_set = true;
+        }
+        else
+        {
+            _is_map_set = false;
+        }
+    }
+
     void set_params(const WalkingModelParams &params)
     {
         _params = params;
@@ -31,7 +47,7 @@ public:
         const float x1 = x[0];
         const float y1 = x[1];
         const float theta1 = x[2];
-        
+
         const float vx = u[0];
         const float vy = u[1];
         const float omega = u[2];
@@ -43,9 +59,18 @@ public:
         return {x2, y2, theta2};
     }
 
-    float cost(const State &, const State &, const Control &, const float dt) override
+    float cost(const State &state1, const State &, const Control &, const float dt) override
     {
-        return dt;
+        double cost = dt;
+        if (_is_map_set)
+        {
+            grid_map::Position pos(state1[0], state1[1]);
+            if (_map.isInside(pos))
+            {
+                cost += _map.atPosition("cost", pos);
+            }
+        }
+        return cost;
     }
 
     float heuristic(const State &state, const State &goal) override

@@ -1,4 +1,5 @@
 clear
+close all
 
 stats = sbmpo_stats("/tmp/csv/stats.csv");
 [paths, nodes] = sbmpo_results("/tmp/csv/nodes.csv");

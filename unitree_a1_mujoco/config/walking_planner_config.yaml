@@ -3,8 +3,8 @@
     max_iterations: 100000
     max_generations: 1000
     time_limit_us: 10000000
-    sample_time: 0.5
-    grid_resolution: [0.01, 0.01, 0.01]
+    sample_time: 0.25
+    grid_resolution: [0.0075, 0.0075, 0.01]
     max_velocities: [0.5, 0.25, 0.5]
     goal_threshold: 0.5
     solve_frequency: 10.0

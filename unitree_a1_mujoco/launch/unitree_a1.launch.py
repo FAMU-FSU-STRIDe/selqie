@@ -111,9 +111,21 @@ def WalkingPlannerNode():
         name='walking_planner',
         output='screen',
         remappings=[
-            ('goal', f'walk/goal')
+            ('goal', f'walk/goal'),
+            ('map', f'local/map'),
         ],
         parameters=[unitree_config_folder + '/walking_planner_config.yaml']
+    )
+
+def TestGridMapNode():
+    return Node(
+        package='local_planning',
+        executable='test_grid_map_node',
+        name='test_grid_map',
+        output='screen',
+        remappings=[
+            ('map', f'local/map'),
+        ]
     )
 
 def generate_launch_description():
@@ -135,5 +147,6 @@ def generate_launch_description():
         BodyTrajectoryNode(),
         FootholdPlannerNode(),
         SwingLegNode(),
-        WalkingPlannerNode()
+        WalkingPlannerNode(),
+        TestGridMapNode()
     ])

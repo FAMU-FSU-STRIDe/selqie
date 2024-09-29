@@ -213,7 +213,7 @@ public:
         this->get_parameter("odom_frame_id", _odom_frame_id);
 
         _clock_pub = this->create_publisher<rosgraph_msgs::msg::Clock>("clock", qos_reliable());
-        _odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", qos_fast());
+        _odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", qos_reliable());
 
         std::thread([this]()
                     { runMuJoCo(); })

@@ -61,7 +61,7 @@ class UnitreeA1RobotNode(Node):
         
         self.odom = Odometry()
         odom_callback = lambda msg: setattr(self, 'odom', msg)
-        self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_fast())
+        self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
 
         self.stance_pattern_pub = self.create_publisher(StancePattern, 'stance_pattern', qos_reliable())
 
@@ -298,6 +298,7 @@ class UnitreeA1Terminal(Cmd):
         Stop the walking planner
         """
         set_planner_stop(self.robot.walk_planner_pub)
+        set_stand_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock())
         
 def main():
     rclpy.init()
