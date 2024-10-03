@@ -15,5 +15,6 @@ def IncludeLaunchFile(name : str):
 def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('actuation.launch.py'),
-        IncludeLaunchFile('imu.launch.py')
+        IncludeLaunchFile('imu.launch.py'),
+        IncludeLaunchFile('visualization.launch.py'),
     ])

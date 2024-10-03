@@ -44,15 +44,6 @@ def UnitreeA1LegNode(name : str, id0 : int, id1 : int, id2 : int, flip_y : bool)
         ]
     )
 
-def SetLegPositionNode(name: str, position):
-    return ExecuteProcess(
-        cmd=[
-            'ros2', 'topic', 'pub', '--once', f'/leg{name}/command', 'robot_msgs/LegCommand',
-            '{control_mode: 3, pos_setpoint: {x: ' + str(position[0]) + ', y: ' + str(position[1]) + ', z: ' + str(position[2]) + '}}'
-        ],
-        output='screen'
-    )
-
 def LegTrajectoryPublisherNode(name : str):
     return Node(
         package='leg_kinematics',
@@ -128,6 +119,15 @@ def TestGridMapNode():
         ]
     )
 
+def RVIZ2Node():
+    return Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', unitree_config_folder + '/rviz_config.rviz']
+    )
+
 def generate_launch_description():
     return LaunchDescription([
         MuJoCoNode(),
@@ -135,10 +135,6 @@ def generate_launch_description():
         UnitreeA1LegNode('FL', 3, 4, 5, False),
         UnitreeA1LegNode('RR', 6, 7, 8, True),
         UnitreeA1LegNode('RL', 9, 10, 11, False),
-        # SetLegPositionNode('FR', default_leg_position_right),
-        # SetLegPositionNode('FL', default_leg_position_left),
-        # SetLegPositionNode('RR', default_leg_position_right),
-        # SetLegPositionNode('RL', default_leg_position_left),
         LegTrajectoryPublisherNode('FR'),
         LegTrajectoryPublisherNode('FL'),
         LegTrajectoryPublisherNode('RR'),
@@ -148,5 +144,6 @@ def generate_launch_description():
         FootholdPlannerNode(),
         SwingLegNode(),
         WalkingPlannerNode(),
-        TestGridMapNode()
+        TestGridMapNode(),
+        RVIZ2Node()
     ])
