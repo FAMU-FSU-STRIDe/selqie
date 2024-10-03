@@ -94,5 +94,39 @@ def generate_launch_description():
         FiveBar2DNode('RL', 2, 3, True),
         FiveBar2DNode('RR', 4, 5, False),
         FiveBar2DNode('FR', 6, 7, False),
-        MicroStrainIMULaunch()
+        MicroStrainIMULaunch(),
+        # Left camera node
+        Node(
+            package='usb_cam',
+            executable='usb_cam_node_exe',
+            name='left_camera',
+            namespace='stereo/left',
+            parameters=[{
+                'video_device': '/dev/video4',
+                'image_width': 640,
+                'image_height': 480,
+                'framerate': 30.0,
+                'pixel_format': 'mjpeg2rgb',
+                'camera_name': 'narrow_stereo/left',
+                'camera_info_url': 'file:///home/nvidia/slam_ws/starq_camera_slam/left.yaml',
+                'frame_id': 'camera_left'
+            }]
+        ),
+        # Right camera node
+        Node(
+            package='usb_cam',
+            executable='usb_cam_node_exe',
+            name='right_camera',
+            namespace='stereo/right',
+            parameters=[{
+                'video_device': '/dev/video0',
+                'image_width': 640,
+                'image_height': 480,
+                'framerate': 30.0,
+                'pixel_format': 'mjpeg2rgb',
+                'camera_name': 'narrow_stereo/right',
+                'camera_info_url': 'file:///home/nvidia/slam_ws/starq_camera_slam/right.yaml',
+                'frame_id': 'camera_right'
+            }]
+        )
     ])

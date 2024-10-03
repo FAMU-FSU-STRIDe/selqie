@@ -17,6 +17,7 @@ ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/
                         '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
                         '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
                         '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',
+                        '/stereo/left/image_raw', '/stereo/right/image_raw',
                         'imu/data']
 JOYSTICK_PACKAGE = 'robot_joysticks'
 
