@@ -22,15 +22,25 @@ def MicroStrainIMULaunch():
         }.items()
     )
 
-def StaticIMUTransform():
+def CameraLightNode():
     return Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'imu_link']
+        package='jetson_ros2',
+        executable='gpio_node',
+        name='camera_light_node',
+        output='screen',
+        parameters=[{
+            'gpio_pin': 18,
+            'is_pwm': True,
+            'frequency': 50.0,
+            'initial_value': 0,
+        }],
+        remappings=[
+            ('gpio/out', 'light/pwm'),
+        ]
     )
 
 def generate_launch_description():
     return LaunchDescription([
         MicroStrainIMULaunch(),
-        # StaticIMUTransform()
+        CameraLightNode(),
     ])
