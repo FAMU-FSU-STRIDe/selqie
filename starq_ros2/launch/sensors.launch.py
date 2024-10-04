@@ -31,16 +31,26 @@ def CameraLightNode():
         parameters=[{
             'gpio_pin': 18,
             'is_pwm': True,
-            'frequency': 50.0,
-            'initial_value': 0,
         }],
         remappings=[
             ('gpio/out', 'light/pwm'),
         ]
     )
 
+def Bar100Node():
+    return Node(
+        package='bar100_ros2',
+        executable='bar100_node',
+        name='bar100_node',
+        output='screen',
+        parameters=[{
+            'frequency': 20.0,
+        }],
+    )
+
 def generate_launch_description():
     return LaunchDescription([
         MicroStrainIMULaunch(),
         CameraLightNode(),
+        Bar100Node(),
     ])

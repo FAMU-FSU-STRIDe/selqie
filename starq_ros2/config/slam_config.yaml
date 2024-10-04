@@ -1,0 +1,18 @@
+/**:
+  ros__parameters:
+    rectified_images: true
+    enable_imu_fusion: false
+    debug_imu_mode: false
+    enable_debug_mode: false
+    debug_dump_path: 'debug'
+    enable_image_denoising: true
+    enable_slam_visualization: true
+    enable_landmarks_view: true
+    enable_observations_view: false
+    enable_localization_n_mapping: true
+    image_jitter_threshold_ms: 35.00
+    sync_matching_threshold_ms: 20.0
+    num_cameras: 2
+    base_frame: 'camera_link'
+    verbocity: 3
+    image_buffer_size: 200

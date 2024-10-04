@@ -17,4 +17,7 @@ def StaticTransform(pos, ori, parent, child):
 def generate_launch_description():
     return LaunchDescription([
         StaticTransform(IMU_POSITION, IMU_ORIENTATION, ROBOT_FRAME, IMU_FRAME)
+        # IMU to Camera Link
+        # Camera Link to Camera Left
+        # Camera Link to Camera Right
     ])
