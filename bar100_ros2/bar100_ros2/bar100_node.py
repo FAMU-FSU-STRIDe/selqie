@@ -13,7 +13,7 @@ class Bar100Node(Node):
         self.pressure_pub = self.create_publisher(Float32, 'bar100/pressure', 10)
         self.temperature_pub = self.create_publisher(Float32, 'bar100/temperature', 10)
 
-        self.declare_parameter('frequency', 20)
+        self.declare_parameter('frequency', 20.0)
         frequency = self.get_parameter('frequency').value
 
         self.timer = self.create_timer(1.0 / frequency, self.publish_data)

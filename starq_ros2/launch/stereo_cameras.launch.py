@@ -1,7 +1,6 @@
 import os
 from launch import LaunchDescription
-from launch_ros.actions import Node, ComposableNodeContainer
-from launch_ros.descriptions import ComposableNode
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 PACKAGE_NAME = 'starq_ros2'
@@ -28,100 +27,11 @@ def ExploreHDCameraNode(device, camera_name, cam_info_url):
         }]
     )
 
-def StereoCameraContainer():
-    return ComposableNodeContainer(
-        name='image_proc_container',
-        package='rclcpp_components',
-        executable='component_container',
-        namespace='stereo/',
-        composable_node_descriptions= [
-            # Separate mono and color for the left camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::DebayerNode',
-                name='debayer',
-                namespace='stereo/left'
-            ),
-            # Separate mono and color for the right camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::DebayerNode',
-                name='debayer',
-                namespace='stereo/right'
-            ),
-            # Mono image rectification for the left camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::RectifyNode',
-                name='rectify_mono',
-                namespace='stereo/left',
-                remappings=[
-                    ('image', 'image_mono'),
-                    ('image_rect', 'image_rect')
-                ],
-            ),
-            # Mono image rectification for the right camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::RectifyNode',
-                name='rectify_mono',
-                namespace='stereo/right',
-                remappings=[
-                    ('image', 'image_mono'),
-                    ('image_rect', 'image_rect')
-                ],
-            ),
-            # Color image rectification for the left camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::RectifyNode',
-                name='rectify_color',
-                namespace='stereo/left',
-                remappings=[
-                    ('image', 'image_color'),
-                    ('image_rect', 'image_rect_color')
-                ],
-            ),
-            # Color image rectification for the right camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::RectifyNode',
-                name='rectify_color',
-                namespace='stereo/right',
-                remappings=[
-                    ('image', 'image_color'),
-                    ('image_rect', 'image_rect_color')
-                ],
-            ),
-            # Disparity Map
-            ComposableNode(
-                package='stereo_image_proc',
-                plugin='stereo_image_proc::DisparityNode',
-                namespace='stereo',
-                parameters=[{
-                    'approximate_sync': True
-                }]
-            ),
-            # Point cloud 
-            ComposableNode(
-                package='stereo_image_proc',
-                plugin='stereo_image_proc::PointCloudNode',
-                namespace='stereo',
-                parameters=[{
-                    'approximate_sync': True,
-                    'use_color': True
-                }]
-            ),
-        ]
-    ),
-
 
 def generate_launch_description():
     return LaunchDescription([
         # Left camera node
-        ExploreHDCameraNode('/dev/video4', 'left', LEFT_CAMERA_INFO_URL),
+        ExploreHDCameraNode('/dev/video0', 'left', LEFT_CAMERA_INFO_URL),
         # Right camera node
-        ExploreHDCameraNode('/dev/video0', 'right', RIGHT_CAMERA_INFO_URL),
-        #   Image rectification container
-        StereoCameraContainer(),
+        ExploreHDCameraNode('/dev/video4', 'right', RIGHT_CAMERA_INFO_URL),
     ])
