@@ -1,18 +1,34 @@
 /**:
   ros__parameters:
     rectified_images: true
-    enable_imu_fusion: false
+    enable_imu_fusion: true
     debug_imu_mode: false
+
+    imu_jitter_threshold_ms: 100.0 # default is 10
+    # sigma_a is acclerometrer noise density
+    # sigma_g is gyroscope noise density
+
+    # accel_random_walk = 30 ug/sqrt(Hz)
+    # gyro_random_walk = .14 deg/sqrt(h)\
+    # accel_noise_density = 30 ug/sqrt(Hz)
+    # gyro_noise_density = 8.5 deg/h/sqrt(Hz)
+
+    accel_random_walk : .00000306 # 1/sqrt(Hz)
+    gyro_random_walk : .0000407 # 1/sqrt(Hz)
+    accel_noise_density : .00000306 # 1/sqrt(Hz)
+    gyro_noise_density : .0000412 # 1/sqrt(Hz)  
+
+
     enable_debug_mode: false
     debug_dump_path: 'debug'
     enable_image_denoising: true
     enable_slam_visualization: true
     enable_landmarks_view: true
-    enable_observations_view: false
     enable_localization_n_mapping: true
     image_jitter_threshold_ms: 35.00
     sync_matching_threshold_ms: 20.0
     num_cameras: 2
     base_frame: 'camera_link'
+    imu_frame: 'imu_link'
     verbocity: 3
     image_buffer_size: 200

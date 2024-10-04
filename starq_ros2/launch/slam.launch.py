@@ -25,7 +25,8 @@ def cuVSLAMContainer():
                 remappings=[('visual_slam/image_0', '/stereo/left/image_rect'),
                             ('visual_slam/camera_info_0', '/stereo/left/camera_info'),
                             ('visual_slam/image_1', '/stereo/right/image_rect'),
-                            ('visual_slam/camera_info_1', '/stereo/right/camera_info')
+                            ('visual_slam/camera_info_1', '/stereo/right/camera_info'),
+                            ('visual_slam/imu', '/imu/data')
                 ]
             )
         ]
