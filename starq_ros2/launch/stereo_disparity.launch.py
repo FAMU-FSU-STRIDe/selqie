@@ -73,7 +73,9 @@ def StereoDisparityContainer():
                 plugin='stereo_image_proc::DisparityNode',
                 namespace='stereo',
                 parameters=[{
-                    'approximate_sync': True
+                    'approximate_sync': True,
+                    'speckle_range': 16,
+                    'speckle_size': 500
                 }]
             ),
             # Point cloud 

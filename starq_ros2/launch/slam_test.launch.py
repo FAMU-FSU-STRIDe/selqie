@@ -14,7 +14,6 @@ def IncludeLaunchFile(name : str):
 
 def generate_launch_description():
     return LaunchDescription([
-        #IncludeLaunchFile('actuation.launch.py'),
         IncludeLaunchFile('sensors.launch.py'),
         IncludeLaunchFile('stereo_cameras.launch.py'),
         IncludeLaunchFile('stereo_disparity.launch.py'),
