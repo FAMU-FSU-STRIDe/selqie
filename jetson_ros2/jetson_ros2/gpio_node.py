@@ -37,9 +37,11 @@ class GPIONode(Node):
             self.pwm.start(self.initial_value)
             
 
-    def __del__(self):
-        self.pwm.stop()
-        GPIO.output(self.gpio_pin, GPIO.LOW)
+    def on_cleanup(self):
+        if self.is_pwm:
+            self.pwm.stop()
+        elif self.is_output:
+            GPIO.output(self.gpio_pin, GPIO.LOW)
         GPIO.cleanup()
 
     def timer_callback(self):
@@ -60,5 +62,9 @@ class GPIONode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = GPIONode()
-    rclpy.spin(node)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.on_cleanup()
+    node.destroy_node()
     rclpy.shutdown()

@@ -1,20 +1,23 @@
 import rclpy
 from rclpy.node import Node
-# from kellerLD import KellerLD
+from kellerLD import KellerLD
 from std_msgs.msg import Float32
 
 class Bar100Node(Node):
     def __init__(self):
         super().__init__('bar100_node')
 
-        # self.sensor = KellerLD()
-        # self.sensor.init()
-
-        self.pressure_pub = self.create_publisher(Float32, 'bar100/pressure', 10)
-        self.temperature_pub = self.create_publisher(Float32, 'bar100/temperature', 10)
+        self.declare_parameter('i2c-bus', 1)
+        i2c_bus = self.get_parameter('i2c-bus').value
 
         self.declare_parameter('frequency', 20.0)
         frequency = self.get_parameter('frequency').value
+
+        self.sensor = KellerLD(i2c_bus)
+        self.sensor.init()
+
+        self.pressure_pub = self.create_publisher(Float32, 'bar100/pressure', 10)
+        self.temperature_pub = self.create_publisher(Float32, 'bar100/temperature', 10)
 
         self.timer = self.create_timer(1.0 / frequency, self.publish_data)
 
@@ -25,9 +28,9 @@ class Bar100Node(Node):
         pressure = 0.0
         temperature = 0.0
 
-        # self.sensor.read()
-        # pressure = self.sensor.pressure()
-        # temperature = self.sensor.temperature()
+        self.sensor.read()
+        pressure = self.sensor.pressure()
+        temperature = self.sensor.temperature()
 
         pressure_msg = Float32()
         pressure_msg.data = pressure

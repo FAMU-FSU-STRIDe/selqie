@@ -44,6 +44,7 @@ def Bar100Node():
         name='bar100_node',
         output='screen',
         parameters=[{
+            'i2c-bus': 7,
             'frequency': 20.0,
         }],
     )
