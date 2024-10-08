@@ -6,6 +6,8 @@ from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'starq_ros2'
 config_folder = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
+CAMERA_CONFIG = os.path.join(config_folder, 'camera_config.yaml')
+
 LEFT_CAMERA_INFO_URL = 'file://' + config_folder + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + config_folder + '/calibration_right.yaml'
 
@@ -17,14 +19,10 @@ def ExploreHDCameraNode(device, camera_name, cam_info_url):
         namespace='stereo/' + camera_name,
         parameters=[{
             'video_device': device,
-            'image_width': 640,
-            'image_height': 480,
-            'framerate': 30.0,
-            'pixel_format': 'mjpeg2rgb',
             'camera_name': 'narrow_stereo/' + camera_name,
             'camera_info_url': cam_info_url,
-            'frame_id': 'camera_' + camera_name
-        }]
+            'frame_id': 'camera_' + camera_name,
+        }, CAMERA_CONFIG],
     )
 
 

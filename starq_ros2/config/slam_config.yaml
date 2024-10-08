@@ -2,7 +2,7 @@
   ros__parameters:
     num_cameras: 2
     min_num_images: 2
-    sync_matching_threshold_ms: 5.0 # def: 5.0
+    sync_matching_threshold_ms: 20.0 # def: 5.0
 
     enable_image_denoising: true
     rectified_images: true
