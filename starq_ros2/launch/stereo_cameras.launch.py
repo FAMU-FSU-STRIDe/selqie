@@ -29,7 +29,7 @@ def ExploreHDCameraNode(device, camera_name, cam_info_url):
 def generate_launch_description():
     return LaunchDescription([
         # Left camera node
-        ExploreHDCameraNode('/dev/video0', 'left', LEFT_CAMERA_INFO_URL),
+        ExploreHDCameraNode('/dev/video4', 'left', LEFT_CAMERA_INFO_URL),
         # Right camera node
-        ExploreHDCameraNode('/dev/video4', 'right', RIGHT_CAMERA_INFO_URL),
+        ExploreHDCameraNode('/dev/video0', 'right', RIGHT_CAMERA_INFO_URL),
     ])
