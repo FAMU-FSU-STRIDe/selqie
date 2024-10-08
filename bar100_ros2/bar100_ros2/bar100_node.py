@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from kellerLD import KellerLD
 from std_msgs.msg import Float32
+from geometry_msgs.msg import PoseWithCovarianceStamped
 
 class Bar100Node(Node):
     def __init__(self):
@@ -12,6 +13,27 @@ class Bar100Node(Node):
 
         self.declare_parameter('frequency', 20.0)
         frequency = self.get_parameter('frequency').value
+
+        self.declare_parameter('publish_pose', False)
+        self.publish_pose = self.get_parameter('publish_pose').value
+
+        if self.publish_pose:
+            self.declare_parameter('frame_id', 'bar100_link')
+            self.frame_id = self.get_parameter('frame_id').value
+
+            self.declare_parameter('fluid_density', 997.0474)
+            self.fluid_density = self.get_parameter('fluid_density').value
+
+            self.declare_parameter('gravity', 9.80665)
+            self.gravity = self.get_parameter('gravity').value
+
+            self.declare_parameter('surface_pressure', 1.0)
+            self.surface_pressure = self.get_parameter('surface_pressure').value
+
+            self.declare_parameter('variance', 2.89)
+            self.variance = self.get_parameter('variance').value
+
+            self.pose_pub = self.create_publisher(PoseWithCovarianceStamped, 'bar100/pose', 10)
 
         self.sensor = KellerLD(i2c_bus)
         self.sensor.init()
@@ -39,6 +61,23 @@ class Bar100Node(Node):
         temperature_msg = Float32()
         temperature_msg.data = temperature
         self.temperature_pub.publish(temperature_msg)
+
+        if self.publish_pose:
+            depth = (self.surface_pressure - pressure) / (self.fluid_density * self.gravity) * 1E5
+            self.publish_pose(depth)
+
+    def publish_pose(self, depth):
+        pose = PoseWithCovarianceStamped()
+        pose.header.frame_id = self.frame_id
+        pose.header.stamp = self.get_clock().now().to_msg()
+
+        pose.pose.pose.position.z = depth
+        pose.pose.pose.orientation.w = 1.0
+
+        pose.pose.covariance = [0.0] * 36
+        pose.pose.covariance[14] = self.variance
+
+        self.pose_pub.publish(pose)
 
 def main(args=None):
     rclpy.init(args=args)
