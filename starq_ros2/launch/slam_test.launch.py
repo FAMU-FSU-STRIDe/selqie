@@ -19,5 +19,6 @@ def generate_launch_description():
         IncludeLaunchFile('stereo_disparity.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
+        # IncludeLaunchFile('sensor_fusion.launch.py'),
         # IncludeLaunchFile('slam.launch.py')
     ])

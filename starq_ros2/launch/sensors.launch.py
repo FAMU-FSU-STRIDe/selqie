@@ -46,7 +46,7 @@ def Bar100Node():
         parameters=[{
             'i2c-bus': 7,
             'frequency': 20.0,
-            'publish_pose': True,
+            'publish_depth_as_pose': True,
             'frame_id': 'bar100_link',
             'fluid_density': 997.0474, # fresh water
             # 'fluid_density': 1023.6, # salt water

@@ -14,10 +14,10 @@ class Bar100Node(Node):
         self.declare_parameter('frequency', 20.0)
         frequency = self.get_parameter('frequency').value
 
-        self.declare_parameter('publish_pose', False)
-        self.publish_pose = self.get_parameter('publish_pose').value
+        self.declare_parameter('publish_depth_as_pose', False)
+        self.publish_depth_as_pose = self.get_parameter('publish_depth_as_pose').value
 
-        if self.publish_pose:
+        if self.publish_depth_as_pose:
             self.declare_parameter('frame_id', 'bar100_link')
             self.frame_id = self.get_parameter('frame_id').value
 
@@ -62,7 +62,7 @@ class Bar100Node(Node):
         temperature_msg.data = temperature
         self.temperature_pub.publish(temperature_msg)
 
-        if self.publish_pose:
+        if self.publish_depth_as_pose:
             depth = (self.surface_pressure - pressure) / (self.fluid_density * self.gravity) * 1E5
             self.publish_pose(depth)
 
