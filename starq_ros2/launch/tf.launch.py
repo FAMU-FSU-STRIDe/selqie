@@ -4,7 +4,7 @@ from launch_ros.actions import Node
 ROBOT_FRAME = 'base_link'
 
 IMU_POSITION = [0, 0, 0]
-IMU_ORIENTATION = [0, 0, 0]
+IMU_ORIENTATION = [0, 0, 1.5707]
 IMU_FRAME = 'imu_link'
 
 CAMERA_LINK_POSITION = [0.38, 0, 0.3345]
