@@ -1,22 +1,27 @@
-import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from ament_index_python.packages import get_package_share_directory
 
+import os
+from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'starq_ros2'
+LAUNCH_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'launch')
+
 def IncludeLaunchFile(name : str):
     return IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory(PACKAGE_NAME), 'launch', name)
+            os.path.join(LAUNCH_FOLDER, name)
         )
     )
 
 def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('actuation.launch.py'),
-        IncludeLaunchFile('sensors.launch.py'),
+        IncludeLaunchFile('imu.launch.py'),
+        IncludeLaunchFile('bar100.launch.py'),
+        IncludeLaunchFile('lights.launch.py'),
         IncludeLaunchFile('stereo_cameras.launch.py'),
+        # IncludeLaunchFile('stereo_disparity.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
         # IncludeLaunchFile('slam.launch.py')

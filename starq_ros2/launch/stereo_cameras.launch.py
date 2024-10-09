@@ -1,15 +1,15 @@
-import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
+
+import os
 from ament_index_python.packages import get_package_share_directory
-
 PACKAGE_NAME = 'starq_ros2'
-config_folder = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
+CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
-CAMERA_CONFIG = os.path.join(config_folder, 'camera_config.yaml')
+CAMERA_CONFIG = os.path.join(CONFIG_FOLDER, 'camera_config.yaml')
 
-LEFT_CAMERA_INFO_URL = 'file://' + config_folder + '/calibration_left.yaml'
-RIGHT_CAMERA_INFO_URL = 'file://' + config_folder + '/calibration_right.yaml'
+LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
+RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
 
 def ExploreHDCameraNode(device, camera_name, cam_info_url):
     return Node(

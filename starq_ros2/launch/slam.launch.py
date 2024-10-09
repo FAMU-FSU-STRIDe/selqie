@@ -1,14 +1,13 @@
-import os
 from launch import LaunchDescription
-from launch_ros.actions import Node, ComposableNodeContainer
+from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+
+import os
 from ament_index_python.packages import get_package_share_directory
-
 PACKAGE_NAME = 'starq_ros2'
-config_folder = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
+CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
-SLAM_CONFIG_FILE = config_folder + '/slam_config.yaml'
-RVIZ_CONFIG_FILE = config_folder + '/slam_rviz.rviz'
+SLAM_CONFIG_FILE = os.path.join(CONFIG_FOLDER, '/slam_config.yaml')
 
 def cuVSLAMContainer():
     return ComposableNodeContainer(
