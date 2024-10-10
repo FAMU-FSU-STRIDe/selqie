@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>explorehd_ros2</name>
+  <name>stereo_usb_cam</name>
   <version>1.0.0</version>
-  <description>ExploreHD Camera ROS2 Package</description>
+  <description>Stereo USB Camera ROS2 Package</description>
   <maintainer email="jtylerboylan@outlook.com">JTB</maintainer>
   <license>Apache-2.0</license>
 
