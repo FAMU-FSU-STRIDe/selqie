@@ -12,43 +12,25 @@ CAMERA_CONFIG = os.path.join(CONFIG_FOLDER, 'camera_config.yaml')
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
 
-def ComposableUSBCameraNode(device, camera_name, cam_info_url):
+def ComposableStereoCameraNode():
     return ComposableNode(
-        package='usb_cam',
-        plugin='usb_cam::UsbCamNode',
-        name=camera_name + "_camera",
-        namespace='stereo/' + camera_name,
+        package='stereo_usb_cam',
+        plugin='stereo_usb_cam::StereoUsbCam',
+        name="stereo_camera",
+        namespace='',
         parameters=[{
-            'video_device': device,
-            'camera_name': 'narrow_stereo/' + camera_name,
-            'camera_info_url': cam_info_url,
-            'frame_id': 'camera_' + camera_name,
-        }, CAMERA_CONFIG],
-        remappings=[
-            ('image_raw', 'image_raw'),
-            ('camera_info', 'camera_info_raw'),
-        ]
-    )
-
-def ComposableSyncStereoNode():
-    return ComposableNode(
-        package='isaac_ros_nitros_topic_tools',
-        plugin='nvidia::isaac_ros::nitros::NitrosCameraDrop',
-        name='nitros_camera_drop',
-        namespace='stereo',
-        remappings=[
-            ('image_1', 'left/image_raw'),
-            ('camera_info_1', 'left/camera_info_raw'),
-            ('image_2', 'right/image_raw'),
-            ('camera_info_2', 'right/camera_info_raw'),
-            ('image_1_drop', 'left/image'),
-            ('camera_info_1_drop', 'left/camera_info'),
-            ('image_2_drop', 'right/image'),
-            ('camera_info_2_drop', 'right/camera_info'),
-        ],
-        parameters=[{
-            'mode': 'stereo',
-        }]
+            'width': 1280,
+            'height': 720,
+            'framerate': 30.0,
+            'left_video_device': '/dev/video4',
+            'right_video_device': '/dev/video0',
+            'left_frame_id': 'camera_left',
+            'right_frame_id': 'camera_right',
+            'left_camera_info_url': LEFT_CAMERA_INFO_URL,
+            'right_camera_info_url': RIGHT_CAMERA_INFO_URL,
+            'left_camera_name': 'narrow_stereo/left',
+            'right_camera_name': 'narrow_stereo/right',
+        }],
     )
 
 def ComposableRectifyNode(camera_name):
@@ -58,12 +40,12 @@ def ComposableRectifyNode(camera_name):
         name='rectify_' + camera_name,
         namespace='stereo/' + camera_name,
         remappings=[
-            ('crop/image', 'image_rect')
+            ('crop/image', 'image_rect'),
             ('crop/camera_info', 'camera_info_rect')
         ],
         parameters=[{
-            'output_width': 640,
-            'output_height': 480,
+            'output_width': 1280,
+            'output_height': 720,
         }]
     )
 
@@ -73,7 +55,7 @@ def ComposableDisparityNode():
         plugin='nvidia::isaac_ros::stereo_image_proc::DisparityNode',
         namespace='stereo',
         parameters=[{
-            'max_disparity': 64,
+            'max_disparity': 64.0,
             'backends': 'CUDA',
         }]
     )
@@ -85,7 +67,11 @@ def ComposablePointCloudNode():
         namespace='stereo',
         parameters=[{
             'use_color': True,
-        }]
+        }],
+        remappings=[
+            ('left/image_rect_color', 'left/image_rect'),
+            ('right/image_rect_color', 'right/image_rect'),
+        ]
     )
 
 def StereoCameraContainer():
@@ -95,12 +81,8 @@ def StereoCameraContainer():
         executable='component_container_mt',
         namespace='stereo',
         composable_node_descriptions= [
-            # Left camera node
-            ComposableUSBCameraNode('/dev/video4', 'left', LEFT_CAMERA_INFO_URL),
-            # Right camera node
-            ComposableUSBCameraNode('/dev/video0', 'right', RIGHT_CAMERA_INFO_URL),
-            # Sync stereo node
-            ComposableSyncStereoNode(),
+            # Stereo camera node
+            ComposableStereoCameraNode(),
             # Rectify left camera node
             ComposableRectifyNode('left'),
             # Rectify right camera node

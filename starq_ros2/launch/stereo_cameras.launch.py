@@ -1,5 +1,6 @@
 from launch import LaunchDescription
-from launch_ros.actions import Node
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -11,25 +12,39 @@ CAMERA_CONFIG = os.path.join(CONFIG_FOLDER, 'camera_config.yaml')
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
 
-def ExploreHDCameraNode(device, camera_name, cam_info_url):
-    return Node(
-        package='usb_cam',
-        executable='usb_cam_node_exe',
-        name=camera_name + "_camera",
-        namespace='stereo/' + camera_name,
+def ExploreHDStereoCameraNode():
+    return ComposableNode(
+        package='stereo_usb_cam',
+        plugin='stereo_usb_cam::StereoUsbCam',
+        name="stereo_camera",
+        namespace='',
         parameters=[{
-            'video_device': device,
-            'camera_name': 'narrow_stereo/' + camera_name,
-            'camera_info_url': cam_info_url,
-            'frame_id': 'camera_' + camera_name,
-        }, CAMERA_CONFIG],
+            'width': 1920,
+            'height': 1080,
+            'framerate': 30.0,
+            'left_video_device': '/dev/video4',
+            'right_video_device': '/dev/video0',
+            'left_frame_id': 'camera_left',
+            'right_frame_id': 'camera_right',
+            'left_camera_info_url': LEFT_CAMERA_INFO_URL,
+            'right_camera_info_url': RIGHT_CAMERA_INFO_URL,
+            'left_camera_name': 'narrow_stereo/left',
+            'right_camera_name': 'narrow_stereo/right',
+        }],
     )
 
 
 def generate_launch_description():
     return LaunchDescription([
-        # Left camera node
-        ExploreHDCameraNode('/dev/video4', 'left', LEFT_CAMERA_INFO_URL),
-        # Right camera node
-        ExploreHDCameraNode('/dev/video0', 'right', RIGHT_CAMERA_INFO_URL),
+        # Stereo camera node
+        ComposableNodeContainer(
+            name='stereo_camera_container',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+                ExploreHDStereoCameraNode(),
+            ],
+            output='screen',
+        ),
     ])

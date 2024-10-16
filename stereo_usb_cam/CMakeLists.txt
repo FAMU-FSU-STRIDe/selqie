@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(camera_info_manager REQUIRED)
@@ -15,13 +16,21 @@ find_package(camera_info_manager REQUIRED)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(stereo_usb_cam_node src/stereo_usb_cam_node.cpp)
-ament_target_dependencies(stereo_usb_cam_node rclcpp sensor_msgs cv_bridge camera_info_manager)
-target_link_libraries(stereo_usb_cam_node ${OpenCV_LIBS})
+add_library(stereo_usb_cam_component SHARED src/stereo_usb_cam.cpp)
+ament_target_dependencies(stereo_usb_cam_component rclcpp rclcpp_components sensor_msgs cv_bridge camera_info_manager)
+target_link_libraries(stereo_usb_cam_component ${OpenCV_LIBS})
 
-install(TARGETS
-stereo_usb_cam_node
-  DESTINATION lib/${PROJECT_NAME}
+rclcpp_components_register_nodes(
+  stereo_usb_cam_component 
+  PLUGIN "stereo_usb_cam::StereoUsbCam"
+  EXECUTABLE stereo_usb_cam_node)
+
+ament_export_targets(export_stereo_usb_cam_component)
+install(TARGETS stereo_usb_cam_component
+  EXPORT export_stereo_usb_cam_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)
