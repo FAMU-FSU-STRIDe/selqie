@@ -19,8 +19,8 @@ def ExploreHDStereoCameraNode():
         name="stereo_camera",
         namespace='',
         parameters=[{
-            'width': 1920,
-            'height': 1080,
+            'width': 640,
+            'height': 480,
             'framerate': 30.0,
             'left_video_device': '/dev/video4',
             'right_video_device': '/dev/video0',

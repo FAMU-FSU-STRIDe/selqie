@@ -19,8 +19,8 @@ def ComposableStereoCameraNode():
         name="stereo_camera",
         namespace='',
         parameters=[{
-            'width': 1280,
-            'height': 720,
+            'width': 1920,
+            'height': 1080,
             'framerate': 30.0,
             'left_video_device': '/dev/video4',
             'right_video_device': '/dev/video0',
@@ -44,8 +44,8 @@ def ComposableRectifyNode(camera_name):
             ('crop/camera_info', 'camera_info_rect')
         ],
         parameters=[{
-            'output_width': 1280,
-            'output_height': 720,
+            'output_width': 1920,
+            'output_height': 1080,
         }]
     )
 
@@ -55,7 +55,7 @@ def ComposableDisparityNode():
         plugin='nvidia::isaac_ros::stereo_image_proc::DisparityNode',
         namespace='stereo',
         parameters=[{
-            'max_disparity': 64.0,
+            'max_disparity': 128.0,
             'backends': 'CUDA',
         }]
     )
