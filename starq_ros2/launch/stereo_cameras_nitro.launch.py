@@ -17,10 +17,10 @@ def ComposableStereoCameraNode():
         package='stereo_usb_cam',
         plugin='stereo_usb_cam::StereoUsbCam',
         name="stereo_camera",
-        namespace='',
+        namespace='stereo',
         parameters=[{
-            'width': 1920,
-            'height': 1080,
+            'width': 640,
+            'height': 480,
             'framerate': 30.0,
             'left_video_device': '/dev/video4',
             'right_video_device': '/dev/video0',
@@ -44,8 +44,8 @@ def ComposableRectifyNode(camera_name):
             ('crop/camera_info', 'camera_info_rect')
         ],
         parameters=[{
-            'output_width': 1920,
-            'output_height': 1080,
+            'output_width': 640,
+            'output_height': 480,
         }]
     )
 
@@ -53,10 +53,13 @@ def ComposableDisparityNode():
     return ComposableNode(
         package='isaac_ros_stereo_image_proc',
         plugin='nvidia::isaac_ros::stereo_image_proc::DisparityNode',
+        name='disparity',
         namespace='stereo',
         parameters=[{
-            'max_disparity': 128.0,
+            'max_disparity': 64.0,
+            # 'confidence_threshold': 1,
             'backends': 'CUDA',
+            'num_passes': 3,
         }]
     )
 
@@ -64,6 +67,7 @@ def ComposablePointCloudNode():
     return ComposableNode(
         package='isaac_ros_stereo_image_proc',
         plugin='nvidia::isaac_ros::stereo_image_proc::PointCloudNode',
+        name='point_cloud',
         namespace='stereo',
         parameters=[{
             'use_color': True,

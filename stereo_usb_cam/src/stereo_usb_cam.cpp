@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <camera_info_manager/camera_info_manager.hpp>
+#include <image_transport/image_transport.hpp>
 
 namespace stereo_usb_cam
 {
@@ -14,8 +15,7 @@ namespace stereo_usb_cam
         cv::VideoCapture _left_capture, _right_capture;
         std_msgs::msg::Header _left_header, _right_header;
         sensor_msgs::msg::CameraInfo _left_camera_info, _right_camera_info;
-        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr _left_image_pub, _right_image_pub;
-        rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr _left_camera_info_pub, _right_camera_info_pub;
+        image_transport::CameraPublisher _left_camera_pub, _right_camera_pub;
         rclcpp::TimerBase::SharedPtr _timer;
 
         void timer_callback()
@@ -30,6 +30,13 @@ namespace stereo_usb_cam
                 RCLCPP_ERROR(get_logger(), "Failed to capture left frame");
                 return;
             }
+            else
+            {
+                const auto left_image = cv_bridge::CvImage(_left_header, "bgr8", left_frame).toImageMsg();
+                left_image->header.stamp = timestamp;
+                _left_camera_info.header.stamp = timestamp;
+                _left_camera_pub.publish(left_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_left_camera_info));
+            }
 
             cv::Mat right_frame;
             if (!_right_capture.retrieve(right_frame))
@@ -37,24 +44,18 @@ namespace stereo_usb_cam
                 RCLCPP_ERROR(get_logger(), "Failed to capture right frame");
                 return;
             }
-
-            const auto left_image = cv_bridge::CvImage(_left_header, "bgr8", left_frame).toImageMsg();
-            left_image->header.stamp = timestamp;
-            _left_image_pub->publish(*left_image);
-
-            const auto right_image = cv_bridge::CvImage(_right_header, "bgr8", right_frame).toImageMsg();
-            right_image->header.stamp = timestamp;
-            _right_image_pub->publish(*right_image);
-
-            _left_camera_info.header.stamp = timestamp;
-            _left_camera_info_pub->publish(_left_camera_info);
-
-            _right_camera_info.header.stamp = timestamp;
-            _right_camera_info_pub->publish(_right_camera_info);
+            else
+            {
+                const auto right_image = cv_bridge::CvImage(_right_header, "bgr8", right_frame).toImageMsg();
+                right_image->header.stamp = timestamp;
+                _right_camera_info.header.stamp = timestamp;
+                _right_camera_pub.publish(right_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_right_camera_info));
+            }
         }
 
     public:
-        StereoUsbCam(const rclcpp::NodeOptions &options) : Node("stereo_usb_cam_node", options)
+        StereoUsbCam(const rclcpp::NodeOptions &options)
+            : Node("stereo_usb_cam_node", options)
         {
             this->declare_parameter("width", 640);
             const int width = this->get_parameter("width").as_int();
@@ -125,11 +126,8 @@ namespace stereo_usb_cam
                 _right_camera_info.header.frame_id = _right_header.frame_id;
             }
 
-            _left_image_pub = create_publisher<sensor_msgs::msg::Image>("stereo/left/image_raw", 10);
-            _right_image_pub = create_publisher<sensor_msgs::msg::Image>("stereo/right/image_raw", 10);
-
-            _left_camera_info_pub = create_publisher<sensor_msgs::msg::CameraInfo>("stereo/left/camera_info", 10);
-            _right_camera_info_pub = create_publisher<sensor_msgs::msg::CameraInfo>("stereo/right/camera_info", 10);
+            _left_camera_pub = image_transport::create_camera_publisher(this, "left/image_raw", rclcpp::QoS{100}.get_rmw_qos_profile());
+            _right_camera_pub = image_transport::create_camera_publisher(this, "right/image_raw", rclcpp::QoS{100}.get_rmw_qos_profile());
 
             _timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000 / framerate)),
                                              std::bind(&StereoUsbCam::timer_callback, this));

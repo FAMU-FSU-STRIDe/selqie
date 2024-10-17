@@ -8,7 +8,7 @@
     rectified_images: true
     enable_planar_mode: false
     enable_localization_n_mapping: true
-    enable_imu_fusion: true
+    enable_imu_fusion: false # true
 
     # sigma_a is acclerometrer noise density
     # sigma_g is gyroscope noise density

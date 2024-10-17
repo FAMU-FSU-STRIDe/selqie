@@ -12,12 +12,13 @@ find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(camera_info_manager REQUIRED)
+find_package(image_transport REQUIRED)
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS videoio)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(stereo_usb_cam_component SHARED src/stereo_usb_cam.cpp)
-ament_target_dependencies(stereo_usb_cam_component rclcpp rclcpp_components sensor_msgs cv_bridge camera_info_manager)
+ament_target_dependencies(stereo_usb_cam_component rclcpp rclcpp_components sensor_msgs cv_bridge camera_info_manager image_transport)
 target_link_libraries(stereo_usb_cam_component ${OpenCV_LIBS})
 
 rclcpp_components_register_nodes(
