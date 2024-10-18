@@ -40,10 +40,11 @@ private:
                                                   msg->linear_acceleration.y,
                                                   msg->linear_acceleration.z);
 
-        const Eigen::Vector3d world_acceleration = orientation * linear_acceleration; // - _gravity_vector;
+        const Eigen::Matrix3d rotation = orientation.toRotationMatrix();
+        RCLCPP_INFO_STREAM(this->get_logger(), "Rot: \n" << rotation);
 
-        const auto rot = orientation.toRotationMatrix();
-        RCLCPP_INFO_STREAM(this->get_logger(), "Rot: " << rot);
+        // const Eigen::Vector3d world_acceleration = rotation * linear_acceleration; // - _gravity_vector;
+        const Eigen::Vector3d world_acceleration = Eigen::Vector3d(0.0, 0.0, 0.0); // - _gravity_vector;
 
         RCLCPP_INFO(this->get_logger(), "Body Acceleration: [%f, %f, %f]", linear_acceleration.x(), linear_acceleration.y(), linear_acceleration.z());
         RCLCPP_INFO(this->get_logger(), "World Acceleration: [%f, %f, %f]", world_acceleration.x(), world_acceleration.y(), world_acceleration.z());
@@ -52,6 +53,7 @@ private:
         _position += _velocity * dt;
 
         const Eigen::Vector3d body_velocity = orientation.inverse() * _velocity;
+        const Eigen::Quaterniond body_orientation = Eigen::Quaterniond(rotation);
 
         nav_msgs::msg::Odometry odom;
         odom.header.stamp = current_time;
@@ -60,7 +62,10 @@ private:
         odom.pose.pose.position.x = _position.x();
         odom.pose.pose.position.y = _position.y();
         odom.pose.pose.position.z = _position.z();
-        odom.pose.pose.orientation = msg->orientation;
+        odom.pose.pose.orientation.w = body_orientation.w();
+        odom.pose.pose.orientation.x = body_orientation.x();
+        odom.pose.pose.orientation.y = body_orientation.y();
+        odom.pose.pose.orientation.z = body_orientation.z();
         odom.twist.twist.linear.x = body_velocity.x();
         odom.twist.twist.linear.y = body_velocity.y();
         odom.twist.twist.linear.z = body_velocity.z();
@@ -78,7 +83,10 @@ private:
             transform.transform.translation.x = _position.x();
             transform.transform.translation.y = _position.y();
             transform.transform.translation.z = _position.z();
-            transform.transform.rotation = msg->orientation;
+            transform.transform.rotation.w = body_orientation.w();
+            transform.transform.rotation.x = body_orientation.x();
+            transform.transform.rotation.y = body_orientation.y();
+            transform.transform.rotation.z = body_orientation.z();
             _tf_broadcaster->sendTransform(transform);
         }
     }

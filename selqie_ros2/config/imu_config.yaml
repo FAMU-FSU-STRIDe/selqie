@@ -19,8 +19,8 @@ microstrain_inertial_driver:
 
     # During operation, we will assume that we are in a wheeled vehicle for more accurate heading
     # If using a drone, disable this option, and enable "filter_enable_magnetometer_aiding"
-    # filter_enable_wheeled_vehicle_constraint : True
-    filter_enable_magnetometer_aiding : True
+    filter_enable_wheeled_vehicle_constraint : True
+    # filter_enable_magnetometer_aiding : True
 
     # Disable some heading options that do not work for this device
     filter_enable_gnss_pos_vel_aiding : False
