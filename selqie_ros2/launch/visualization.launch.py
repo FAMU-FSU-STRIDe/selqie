@@ -3,21 +3,19 @@ from launch_ros.actions import Node
 
 import os
 from ament_index_python.packages import get_package_share_directory
-PACKAGE_NAME = 'starq_ros2'
+PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
-BAR100_CONFIG_FILE = os.path.join(CONFIG_FOLDER, 'bar100_config.yaml')
-
-def Bar100Node():
+def RVIZ2Node():
     return Node(
-        package='bar100_ros2',
-        executable='bar100_node',
-        name='bar100_node',
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
         output='screen',
-        parameters=[BAR100_CONFIG_FILE],
+        arguments=['-d', os.path.join(CONFIG_FOLDER, 'rviz_config.rviz')]
     )
 
 def generate_launch_description():
     return LaunchDescription([
-        Bar100Node(),
+        RVIZ2Node()
     ])

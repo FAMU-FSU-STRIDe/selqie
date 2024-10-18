@@ -4,7 +4,7 @@ from launch_ros.descriptions import ComposableNode
 
 import os
 from ament_index_python.packages import get_package_share_directory
-PACKAGE_NAME = 'starq_ros2'
+PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
 CAMERA_CONFIG = os.path.join(CONFIG_FOLDER, 'camera_config.yaml')

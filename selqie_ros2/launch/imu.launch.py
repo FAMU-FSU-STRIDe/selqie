@@ -4,7 +4,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 import os
 from ament_index_python.packages import get_package_share_directory
-PACKAGE_NAME = 'starq_ros2'
+PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
 IMU_CONFIG_FILE = os.path.join(CONFIG_FOLDER, 'imu_config.yaml')

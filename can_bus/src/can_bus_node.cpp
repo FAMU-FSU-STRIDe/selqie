@@ -64,7 +64,7 @@ namespace can_bus
             }
 
             _can_tx_sub = this->create_subscription<CanFrame>(
-                "can/tx", qos_fast(), std::bind(&CanBusNode::send, this, std::placeholders::_1));
+                "can/tx", qos_reliable(), std::bind(&CanBusNode::send, this, std::placeholders::_1));
 
             _can_rx_pub = this->create_publisher<CanFrame>("can/rx", qos_fast());
 
