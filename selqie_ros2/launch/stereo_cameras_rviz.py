@@ -16,10 +16,8 @@ def IncludeLaunchFile(name : str):
 
 def generate_launch_description():
     return LaunchDescription([
-        # IncludeLaunchFile('imu.launch.py'),
-        IncludeLaunchFile('stereo_cameras.launch.py'),
+        IncludeLaunchFile('imu.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
+        IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
-        # IncludeLaunchFile('sensor_fusion.launch.py'),
-        # IncludeLaunchFile('slam.launch.py'),
     ])

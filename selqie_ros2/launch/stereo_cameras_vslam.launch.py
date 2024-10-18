@@ -4,13 +4,12 @@ from launch_ros.descriptions import ComposableNode
 
 import os
 from ament_index_python.packages import get_package_share_directory
-PACKAGE_NAME = 'starq_ros2'
+PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
-
-CAMERA_CONFIG = os.path.join(CONFIG_FOLDER, 'camera_config.yaml')
 
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
+SLAM_CONFIG_FILE = os.path.join(CONFIG_FOLDER, '/slam_config.yaml')
 
 def ComposableStereoCameraNode():
     return ComposableNode(
@@ -78,29 +77,41 @@ def ComposablePointCloudNode():
         ]
     )
 
-def StereoCameraContainer():
-    return ComposableNodeContainer(
-        name='image_proc_container',
-        package='rclcpp_components',
-        executable='component_container_mt',
-        namespace='stereo',
-        composable_node_descriptions= [
-            # Stereo camera node
-            ComposableStereoCameraNode(),
-            # Rectify left camera node
-            ComposableRectifyNode('left'),
-            # Rectify right camera node
-            ComposableRectifyNode('right'),
-            # Disparity node
-            ComposableDisparityNode(),
-            # Point cloud node
-            ComposablePointCloudNode(),
+def ComposableVSLAMNode():
+    return ComposableNode(
+        name='visual_slam_node',
+        package='isaac_ros_visual_slam',
+        plugin='nvidia::isaac_ros::visual_slam::VisualSlamNode',
+        parameters=[SLAM_CONFIG_FILE],
+        remappings=[('visual_slam/image_0', '/stereo/left/image_rect'),
+                    ('visual_slam/camera_info_0', '/stereo/left/camera_info'),
+                    ('visual_slam/image_1', '/stereo/right/image_rect'),
+                    ('visual_slam/camera_info_1', '/stereo/right/camera_info'),
+                    ('visual_slam/imu', '/imu/data')
         ]
     )
-
 
 def generate_launch_description():
     return LaunchDescription([
         # Stereo Camera container
-        StereoCameraContainer(),
+        ComposableNodeContainer(
+            name='stereo_vslam_container',
+            package='rclcpp_components',
+            executable='component_container_mt',
+            namespace='stereo',
+            composable_node_descriptions= [
+                # Stereo camera node
+                ComposableStereoCameraNode(),
+                # Rectify left camera node
+                ComposableRectifyNode('left'),
+                # Rectify right camera node
+                ComposableRectifyNode('right'),
+                # Disparity node
+                ComposableDisparityNode(),
+                # Point cloud node
+                ComposablePointCloudNode(),
+                # Visual SLAM node
+                ComposableVSLAMNode(),
+            ]
+        )
     ])

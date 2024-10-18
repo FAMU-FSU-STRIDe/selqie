@@ -7,8 +7,6 @@ from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
-CAMERA_CONFIG = os.path.join(CONFIG_FOLDER, 'camera_config.yaml')
-
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
 
@@ -19,8 +17,8 @@ def ComposableStereoCameraNode():
         name="stereo_camera",
         namespace='stereo',
         parameters=[{
-            'width': 640,
-            'height': 480,
+            'width': 1280,
+            'height': 720,
             'framerate': 30.0,
             'left_video_device': '/dev/video4',
             'right_video_device': '/dev/video0',
@@ -35,7 +33,7 @@ def ComposableStereoCameraNode():
 
 def StereoDisparityContainer():
     return ComposableNodeContainer(
-        name='image_proc_container',
+        name='stereo_disparity_container',
         package='rclcpp_components',
         executable='component_container',
         namespace='stereo',
@@ -70,8 +68,6 @@ def StereoDisparityContainer():
                 plugin='stereo_image_proc::DisparityNode',
                 namespace='stereo',
                 parameters=[{
-                    'approximate_sync': True,
-                    'speckle_range': 16,
                     'speckle_size': 500
                 }]
             ),
@@ -81,7 +77,6 @@ def StereoDisparityContainer():
                 plugin='stereo_image_proc::PointCloudNode',
                 namespace='stereo',
                 parameters=[{
-                    'approximate_sync': True,
                     'use_color': True
                 }],
                 remappings=[

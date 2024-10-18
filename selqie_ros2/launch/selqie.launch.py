@@ -20,8 +20,7 @@ def generate_launch_description():
         IncludeLaunchFile('imu.launch.py'),
         IncludeLaunchFile('bar100.launch.py'),
         IncludeLaunchFile('lights.launch.py'),
-        IncludeLaunchFile('stereo_cameras.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
+        IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
-        # IncludeLaunchFile('slam.launch.py')
     ])
