@@ -1,6 +1,7 @@
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node
 
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -21,8 +22,22 @@ def MicroStrainIMULaunch():
             'namespace': '/',
         }.items()
     )
+    
+def DeadReckoningNode():
+    return Node(
+        package='selqie_localization',
+        executable='imu_dead_reckoning',
+        name='dead_reckoning_node',
+        output='screen',
+        parameters=[{
+            'frame_id': 'odom',
+            'child_frame_id': 'base_link',
+            'publish_tf': True,
+        }]
+    )
 
 def generate_launch_description():
     return LaunchDescription([
-        MicroStrainIMULaunch()
+        MicroStrainIMULaunch(),
+        DeadReckoningNode(),
     ])

@@ -14,7 +14,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr _imu_sub;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr _odom_pub;
     rclcpp::Time _last_time;
-    Eigen::Vector3d _position, _velocity;
+    Eigen::Vector3d _position, _velocity, _gravity_vector;
 
     void _imu_callback(sensor_msgs::msg::Imu::SharedPtr msg)
     {
@@ -40,10 +40,18 @@ private:
                                                   msg->linear_acceleration.y,
                                                   msg->linear_acceleration.z);
 
-        const Eigen::Vector3d world_acceleration = orientation * linear_acceleration; // - gravity_vector
+        const Eigen::Vector3d world_acceleration = orientation * linear_acceleration; // - _gravity_vector;
+
+        const auto rot = orientation.toRotationMatrix();
+        RCLCPP_INFO_STREAM(this->get_logger(), "Rot: " << rot);
+
+        RCLCPP_INFO(this->get_logger(), "Body Acceleration: [%f, %f, %f]", linear_acceleration.x(), linear_acceleration.y(), linear_acceleration.z());
+        RCLCPP_INFO(this->get_logger(), "World Acceleration: [%f, %f, %f]", world_acceleration.x(), world_acceleration.y(), world_acceleration.z());
 
         _velocity += world_acceleration * dt;
         _position += _velocity * dt;
+
+        const Eigen::Vector3d body_velocity = orientation.inverse() * _velocity;
 
         nav_msgs::msg::Odometry odom;
         odom.header.stamp = current_time;
@@ -53,11 +61,13 @@ private:
         odom.pose.pose.position.y = _position.y();
         odom.pose.pose.position.z = _position.z();
         odom.pose.pose.orientation = msg->orientation;
-        odom.twist.twist.linear.x = _velocity.x();
-        odom.twist.twist.linear.y = _velocity.y();
-        odom.twist.twist.linear.z = _velocity.z();
+        odom.twist.twist.linear.x = body_velocity.x();
+        odom.twist.twist.linear.y = body_velocity.y();
+        odom.twist.twist.linear.z = body_velocity.z();
         odom.twist.twist.angular = msg->angular_velocity;
         _odom_pub->publish(odom);
+
+        // RCLCPP_INFO(this->get_logger(), "Position: [%f, %f, %f]", _position.x(), _position.y(), _position.z());
 
         if (_tf_broadcaster)
         {
@@ -95,6 +105,7 @@ public:
 
         _position = Eigen::Vector3d::Zero();
         _velocity = Eigen::Vector3d::Zero();
+        _gravity_vector = Eigen::Vector3d(0.0, 0.0, 9.81);
     }
 };
 

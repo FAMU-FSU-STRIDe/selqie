@@ -15,6 +15,12 @@ find_package(tf2_ros REQUIRED)
 add_executable(imu_dead_reckoning src/imu_dead_reckoning.cpp)
 ament_target_dependencies(imu_dead_reckoning rclcpp sensor_msgs nav_msgs tf2_ros)
 
+# install targets
+install(TARGETS
+  imu_dead_reckoning
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
