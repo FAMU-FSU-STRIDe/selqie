@@ -17,8 +17,8 @@ def ComposableStereoCameraNode():
         name="stereo_camera",
         namespace='stereo',
         parameters=[{
-            'width': 1280,
-            'height': 720,
+            'width': 640,
+            'height': 480,
             'framerate': 30.0,
             'left_video_device': '/dev/video4',
             'right_video_device': '/dev/video0',
@@ -42,8 +42,8 @@ def ComposableRectifyNode(camera_name):
             ('crop/camera_info', 'camera_info_rect')
         ],
         parameters=[{
-            'output_width': 1280,
-            'output_height': 720,
+            'output_width': 640,
+            'output_height': 480,
         }]
     )
 

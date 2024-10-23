@@ -39,5 +39,5 @@ def DeadReckoningNode():
 def generate_launch_description():
     return LaunchDescription([
         MicroStrainIMULaunch(),
-        DeadReckoningNode(),
+        # DeadReckoningNode(),
     ])

@@ -52,7 +52,17 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        bar100_link:
+          Value: true
         base_link:
+          Value: true
+        camera_left:
+          Value: true
+        camera_link:
+          Value: true
+        camera_right:
+          Value: true
+        imu_link:
           Value: true
         odom:
           Value: true
@@ -64,7 +74,15 @@ Visualization Manager:
       Tree:
         odom:
           base_link:
-            {}
+            bar100_link:
+              {}
+            camera_link:
+              camera_left:
+                {}
+              camera_right:
+                {}
+            imu_link:
+              {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.009999999776482582
@@ -214,7 +232,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 4.678532600402832
+      Distance: 4.1171088218688965
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -229,10 +247,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.08499996364116669
+      Pitch: 0.4349997341632843
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.1566176414489746
+      Yaw: 2.4966068267822266
     Saved: ~
 Window Geometry:
   Displays:

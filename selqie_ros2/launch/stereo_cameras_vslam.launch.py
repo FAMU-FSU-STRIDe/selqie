@@ -9,7 +9,7 @@ CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config'
 
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
-SLAM_CONFIG_FILE = os.path.join(CONFIG_FOLDER, '/slam_config.yaml')
+SLAM_CONFIG_FILE = os.path.join(CONFIG_FOLDER, 'slam_config.yaml')
 
 def ComposableStereoCameraNode():
     return ComposableNode(

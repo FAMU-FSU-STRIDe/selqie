@@ -17,8 +17,8 @@ def ComposableStereoCameraNode():
         name="stereo_camera",
         namespace='stereo',
         parameters=[{
-            'width': 1280,
-            'height': 720,
+            'width': 640,
+            'height': 480,
             'framerate': 30.0,
             'left_video_device': '/dev/video4',
             'right_video_device': '/dev/video0',

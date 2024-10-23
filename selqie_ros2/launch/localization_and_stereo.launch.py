@@ -16,8 +16,14 @@ def IncludeLaunchFile(name : str):
 
 def generate_launch_description():
     return LaunchDescription([
-        IncludeLaunchFile('imu.launch.py'),
+        # Static Transforms Launch File
         IncludeLaunchFile('tf.launch.py'),
+        # IMU Launch File
+        IncludeLaunchFile('imu.launch.py'),
+        # EKF Launch File
+        IncludeLaunchFile('ekf.launch.py'),
+        # Stereo Cameras Launch File
         IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
+        # RViz Launch File
         IncludeLaunchFile('visualization.launch.py'),
     ])
