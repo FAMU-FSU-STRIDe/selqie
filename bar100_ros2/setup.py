@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'bar100_node = bar100_ros2.bar100_node:main',
+            'depth2pose_node = bar100_ros2.depth2pose_node:main',
         ],
     },
 )
