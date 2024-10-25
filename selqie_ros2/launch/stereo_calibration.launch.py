@@ -10,6 +10,7 @@ def CameraCalibrationNode():
         arguments=[
             '--size', '12x9',
             '--square', '0.020',
+            '--approximate', '0.05',
         ],
         remappings=[
             ('left', 'stereo/left/image_raw'),

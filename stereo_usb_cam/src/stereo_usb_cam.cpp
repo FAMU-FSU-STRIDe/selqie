@@ -20,37 +20,45 @@ namespace stereo_usb_cam
 
         void timer_callback()
         {
-            const rclcpp::Time timestamp = this->now();
-            _left_capture.grab();
-            _right_capture.grab();
+            const rclcpp::Time left_timestamp = this->now();
 
-            cv::Mat left_frame;
+            if (!_left_capture.grab())
+            {
+                RCLCPP_ERROR(get_logger(), "Failed to grab left frame");
+                return;
+            }
+
+            if (!_right_capture.grab())
+            {
+                RCLCPP_ERROR(get_logger(), "Failed to grab right frame");
+                return;
+            }
+
+            cv::Mat left_frame, right_frame;
             if (!_left_capture.retrieve(left_frame))
             {
                 RCLCPP_ERROR(get_logger(), "Failed to capture left frame");
                 return;
             }
-            else
-            {
-                const auto left_image = cv_bridge::CvImage(_left_header, "bgr8", left_frame).toImageMsg();
-                left_image->header.stamp = timestamp;
-                _left_camera_info.header.stamp = timestamp;
-                _left_camera_pub.publish(left_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_left_camera_info));
-            }
 
-            cv::Mat right_frame;
             if (!_right_capture.retrieve(right_frame))
             {
                 RCLCPP_ERROR(get_logger(), "Failed to capture right frame");
                 return;
             }
-            else
-            {
-                const auto right_image = cv_bridge::CvImage(_right_header, "bgr8", right_frame).toImageMsg();
-                right_image->header.stamp = timestamp;
-                _right_camera_info.header.stamp = timestamp;
-                _right_camera_pub.publish(right_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_right_camera_info));
-            }
+
+            const auto delta_frame_time = _right_capture.get(cv::CAP_PROP_POS_MSEC) - _left_capture.get(cv::CAP_PROP_POS_MSEC);
+            const auto right_timestamp = left_timestamp + rclcpp::Duration(0, delta_frame_time * 1e6);
+
+            const auto left_image = cv_bridge::CvImage(_left_header, "bgr8", left_frame).toImageMsg();
+            left_image->header.stamp = left_timestamp;
+            _left_camera_info.header.stamp = left_timestamp;
+            _left_camera_pub.publish(left_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_left_camera_info));
+
+            const auto right_image = cv_bridge::CvImage(_right_header, "bgr8", right_frame).toImageMsg();
+            right_image->header.stamp = right_timestamp;
+            _right_camera_info.header.stamp = right_timestamp;
+            _right_camera_pub.publish(right_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_right_camera_info));
         }
 
     public:

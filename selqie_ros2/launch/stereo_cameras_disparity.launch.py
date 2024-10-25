@@ -35,7 +35,7 @@ def StereoDisparityContainer():
     return ComposableNodeContainer(
         name='stereo_disparity_container',
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_mt',
         namespace='stereo',
         composable_node_descriptions= [
             # Stereo camera node
@@ -68,7 +68,9 @@ def StereoDisparityContainer():
                 plugin='stereo_image_proc::DisparityNode',
                 namespace='stereo',
                 parameters=[{
-                    'speckle_size': 500
+                    'speckle_size': 500,
+                    'approximate_sync': True,
+                    'approximate_sync_tolerance_period': 0.05
                 }]
             ),
             # Point cloud 
@@ -77,7 +79,8 @@ def StereoDisparityContainer():
                 plugin='stereo_image_proc::PointCloudNode',
                 namespace='stereo',
                 parameters=[{
-                    'use_color': True
+                    'use_color': True,
+                    'approximate_sync': True,
                 }],
                 remappings=[
                     ('left/image_rect_color', 'left/image_rect'),
