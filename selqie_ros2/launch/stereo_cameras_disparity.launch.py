@@ -30,69 +30,64 @@ def ComposableStereoCameraNode():
             'right_camera_name': 'narrow_stereo/right',
         }],
     )
-
-def StereoDisparityContainer():
-    return ComposableNodeContainer(
-        name='stereo_disparity_container',
-        package='rclcpp_components',
-        executable='component_container_mt',
+    
+def ComposableRectifyNode(camera_name):
+    return ComposableNode(
+        package='image_proc',
+        plugin='image_proc::RectifyNode',
+        name='rectify_mono',
+        namespace='stereo/' + camera_name,
+        remappings=[
+            ('image', 'image_raw'),
+            ('image_rect', 'image_rect')
+        ],
+    )
+    
+def ComposableDisparityNode():
+    return ComposableNode(
+        package='stereo_image_proc',
+        plugin='stereo_image_proc::DisparityNode',
         namespace='stereo',
-        composable_node_descriptions= [
-            # Stereo camera node
-            ComposableStereoCameraNode(),
-            # Image rectification for the left camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::RectifyNode',
-                name='rectify_mono',
-                namespace='stereo/left',
-                remappings=[
-                    ('image', 'image_raw'),
-                    ('image_rect', 'image_rect')
-                ],
-            ),
-            # Image rectification for the right camera
-            ComposableNode(
-                package='image_proc',
-                plugin='image_proc::RectifyNode',
-                name='rectify_mono',
-                namespace='stereo/right',
-                remappings=[
-                    ('image', 'image_raw'),
-                    ('image_rect', 'image_rect')
-                ],
-            ),
-            # Disparity Map
-            ComposableNode(
-                package='stereo_image_proc',
-                plugin='stereo_image_proc::DisparityNode',
-                namespace='stereo',
-                parameters=[{
-                    'speckle_size': 500,
-                    'approximate_sync': True,
-                    'approximate_sync_tolerance_period': 0.05
-                }]
-            ),
-            # Point cloud 
-            ComposableNode(
-                package='stereo_image_proc',
-                plugin='stereo_image_proc::PointCloudNode',
-                namespace='stereo',
-                parameters=[{
-                    'use_color': True,
-                    'approximate_sync': True,
-                }],
-                remappings=[
-                    ('left/image_rect_color', 'left/image_rect'),
-                    ('right/image_rect_color', 'right/image_rect')
-                ]
-            ),
+        parameters=[{
+            'speckle_size': 500,
+            'approximate_sync': True,
+            'approximate_sync_tolerance_period': 0.05
+        }]
+    )
+    
+def ComposablePointCloudNode():
+    return ComposableNode(
+        package='stereo_image_proc',
+        plugin='stereo_image_proc::PointCloudNode',
+        namespace='stereo',
+        parameters=[{
+            'use_color': True,
+            'approximate_sync': True,
+        }],
+        remappings=[
+            ('left/image_rect_color', 'left/image_rect'),
+            ('right/image_rect_color', 'right/image_rect')
         ]
     )
 
-
 def generate_launch_description():
     return LaunchDescription([
-        #   Stereo Disparity container
-        StereoDisparityContainer(),
+        ComposableNodeContainer(
+            name='stereo_disparity_container',
+            package='rclcpp_components',
+            executable='component_container_mt',
+            namespace='stereo',
+            composable_node_descriptions= [
+                # Stereo camera node
+                ComposableStereoCameraNode(),
+                # Image rectification for the left camera
+                ComposableRectifyNode('left'),
+                # Image rectification for the right camera
+                ComposableRectifyNode('right'),
+                # Disparity Map
+                ComposableDisparityNode(),
+                # Point cloud 
+                ComposablePointCloudNode(),
+            ]
+        )
     ])
