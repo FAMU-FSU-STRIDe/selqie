@@ -20,6 +20,8 @@ def generate_launch_description():
         IncludeLaunchFile('tf.launch.py'),
         # IMU Launch File
         IncludeLaunchFile('imu.launch.py'),
+        # Bar100 Launch File
+        IncludeLaunchFile('bar100.launch.py'),
         # EKF Launch File
         IncludeLaunchFile('ekf.launch.py'),
         # Stereo Cameras Launch File
