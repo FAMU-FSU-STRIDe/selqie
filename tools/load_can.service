@@ -1,0 +1,18 @@
+# Installation:
+# $ sudo cp ~/selqie_ws/src/tools/load_can.service /etc/systemd/system/
+# $ sudo systemctl daemon-reload
+# $ sudo systemctl enable load_can.service
+# $ sudo sytemctl start load_can.service
+
+# Check it's running using $ ifconfig
+# Should show "can0" and "can1" interfaces as UP, RUNNING
+
+[Unit]
+Description=Load CAN Interfaces
+After=network.target
+
+[Service]
+ExecStart=/home/nvidia/selqie_ws/src/tools/loadcan_jetson.sh
+
+[Install]
+WantedBy=multi-user.target
