@@ -88,6 +88,8 @@ def generate_launch_description():
                 ComposableDisparityNode(),
                 # Point cloud 
                 ComposablePointCloudNode(),
-            ]
+            ],
+            output='screen',
+            prefix=['xterm -e gdb -ex run --args'],
         )
     ])

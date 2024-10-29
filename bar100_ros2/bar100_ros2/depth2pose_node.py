@@ -7,7 +7,7 @@ class Depth2PoseNode(Node):
     def __init__(self):
         super().__init__('depth2pose_node')
         
-        self.declare_parameter('frame_id', 'bar100_link')
+        self.declare_parameter('frame_id', 'odom')
         self.frame_id = self.get_parameter('frame_id').value
         
         self.declare_parameter('z_variance', 2.89)
