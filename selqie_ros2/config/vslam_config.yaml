@@ -22,8 +22,8 @@
     accel_random_walk : .00000306 # 1/sqrt(Hz)
     calibration_frequncy: 200.0 # def: 200.0
 
-    image_jitter_threshold_ms: 34.0 # def: 34.0
-    imu_jitter_threshold_ms: 100.0 # default is 10
+    image_jitter_threshold_ms: 40.0 # def: 34.0
+    imu_jitter_threshold_ms: 10.0 # default is 10
 
     img_mask_top: 0
     img_mask_bottom: 0
@@ -33,7 +33,7 @@
     map_frame: 'map'
     odom_frame: 'odom'
     base_frame: 'base_link'
-    # camera_optical_frames: ['camera_left', 'camera_right']
+    camera_optical_frames: ['camera_left', 'camera_right']
     imu_frame: 'imu_link'
 
     image_buffer_size: 100 # def: 100

@@ -17,6 +17,7 @@ namespace stereo_usb_cam
         sensor_msgs::msg::CameraInfo _left_camera_info, _right_camera_info;
         image_transport::CameraPublisher _left_camera_pub, _right_camera_pub;
         rclcpp::TimerBase::SharedPtr _timer;
+        std::string _encoding;
 
         void timer_callback()
         {
@@ -47,15 +48,21 @@ namespace stereo_usb_cam
                 return;
             }
 
+            if (_encoding == "rgb8")
+            {
+                cv::cvtColor(left_frame, left_frame, cv::COLOR_BGR2RGB);
+                cv::cvtColor(right_frame, right_frame, cv::COLOR_BGR2RGB);
+            }
+
             const auto delta_frame_time = _right_capture.get(cv::CAP_PROP_POS_MSEC) - _left_capture.get(cv::CAP_PROP_POS_MSEC);
             const auto right_timestamp = left_timestamp + rclcpp::Duration(0, delta_frame_time * 1e6);
 
-            const auto left_image = cv_bridge::CvImage(_left_header, "bgr8", left_frame).toImageMsg();
+            const auto left_image = cv_bridge::CvImage(_left_header, _encoding, left_frame).toImageMsg();
             left_image->header.stamp = left_timestamp;
             _left_camera_info.header.stamp = left_timestamp;
             _left_camera_pub.publish(left_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_left_camera_info));
 
-            const auto right_image = cv_bridge::CvImage(_right_header, "bgr8", right_frame).toImageMsg();
+            const auto right_image = cv_bridge::CvImage(_right_header, _encoding, right_frame).toImageMsg();
             right_image->header.stamp = right_timestamp;
             _right_camera_info.header.stamp = right_timestamp;
             _right_camera_pub.publish(right_image, std::make_shared<sensor_msgs::msg::CameraInfo>(_right_camera_info));
@@ -73,6 +80,10 @@ namespace stereo_usb_cam
 
             this->declare_parameter("framerate", 30.0);
             const double framerate = this->get_parameter("framerate").as_double();
+
+            this->declare_parameter("encoding", "bgr8");
+            _encoding = this->get_parameter("encoding").as_string();
+
 
             this->declare_parameter("left_video_device", "/dev/video0");
             const std::string left_video_device = this->get_parameter("left_video_device").as_string();

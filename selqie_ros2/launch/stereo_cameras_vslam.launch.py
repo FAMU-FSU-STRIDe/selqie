@@ -6,10 +6,20 @@ import os
 from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
+LAUNCH_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'launch')
 
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
 SLAM_CONFIG_FILE = os.path.join(CONFIG_FOLDER, 'vslam_config.yaml')
+
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+def IncludeLaunchFile(name : str):
+    return IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(LAUNCH_FOLDER, name)
+        )
+    )
 
 def ComposableStereoCameraNode():
     return ComposableNode(
@@ -21,6 +31,7 @@ def ComposableStereoCameraNode():
             'width': 640,
             'height': 480,
             'framerate': 30.0,
+            'encoding': 'rgb8',
             'left_video_device': '/dev/video4',
             'right_video_device': '/dev/video0',
             'left_frame_id': 'camera_left',
@@ -34,48 +45,42 @@ def ComposableStereoCameraNode():
 
 def ComposableRectifyNode(camera_name):
     return ComposableNode(
-        package='isaac_ros_image_proc',
-        plugin='nvidia::isaac_ros::image_proc::RectifyNode',
-        name='rectify_' + camera_name,
+        package='image_proc',
+        plugin='image_proc::RectifyNode',
+        name='rectify_mono',
         namespace='stereo/' + camera_name,
         remappings=[
-            ('crop/image', 'image_rect'),
-            ('crop/camera_info', 'camera_info_rect')
+            ('image', 'image_raw'),
+            ('image_rect', 'image_rect')
         ],
-        parameters=[{
-            'output_width': 640,
-            'output_height': 480,
-        }]
     )
-
-def ComposableDisparityNode():
-    return ComposableNode(
-        package='isaac_ros_stereo_image_proc',
-        plugin='nvidia::isaac_ros::stereo_image_proc::DisparityNode',
-        name='disparity',
-        namespace='stereo',
-        parameters=[{
-            'max_disparity': 64.0,
-            # 'confidence_threshold': 1,
-            'backends': 'CUDA',
-            'num_passes': 3,
-        }]
-    )
-
-def ComposablePointCloudNode():
-    return ComposableNode(
-        package='isaac_ros_stereo_image_proc',
-        plugin='nvidia::isaac_ros::stereo_image_proc::PointCloudNode',
-        name='point_cloud',
-        namespace='stereo',
-        parameters=[{
-            'use_color': True,
-        }],
-        remappings=[
-            ('left/image_rect_color', 'left/image_rect'),
-            ('right/image_rect_color', 'right/image_rect'),
-        ]
-    )
+    
+# def ComposableDisparityNode():
+#     return ComposableNode(
+#         package='stereo_image_proc',
+#         plugin='stereo_image_proc::DisparityNode',
+#         namespace='stereo',
+#         parameters=[{
+#             'speckle_size': 500,
+#             'approximate_sync': True,
+#             'approximate_sync_tolerance_period': 0.05
+#         }]
+#     )
+    
+# def ComposablePointCloudNode():
+#     return ComposableNode(
+#         package='stereo_image_proc',
+#         plugin='stereo_image_proc::PointCloudNode',
+#         namespace='stereo',
+#         parameters=[{
+#             'use_color': True,
+#             'approximate_sync': True,
+#         }],
+#         remappings=[
+#             ('left/image_rect_color', 'left/image_rect'),
+#             ('right/image_rect_color', 'right/image_rect')
+#         ]
+#     )
 
 def ComposableVSLAMNode():
     return ComposableNode(
@@ -107,11 +112,13 @@ def generate_launch_description():
                 # Rectify right camera node
                 ComposableRectifyNode('right'),
                 # Disparity node
-                ComposableDisparityNode(),
+                # ComposableDisparityNode(),
                 # Point cloud node
-                ComposablePointCloudNode(),
+                # ComposablePointCloudNode(),
                 # Visual SLAM node
                 ComposableVSLAMNode(),
             ]
-        )
+        ),
+        IncludeLaunchFile('tf.launch.py'),
+        IncludeLaunchFile('visualization.launch.py'),
     ])

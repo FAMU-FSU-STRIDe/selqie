@@ -90,6 +90,6 @@ def generate_launch_description():
                 ComposablePointCloudNode(),
             ],
             output='screen',
-            prefix=['xterm -e gdb -ex run --args'],
+            # prefix=['xterm -e gdb -ex run --args'],
         )
     ])

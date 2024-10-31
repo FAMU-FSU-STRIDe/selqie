@@ -28,7 +28,7 @@ def ComposableStereoCameraNode():
             'right_camera_info_url': RIGHT_CAMERA_INFO_URL,
             'left_camera_name': 'narrow_stereo/left',
             'right_camera_name': 'narrow_stereo/right',
-        }],
+        }]
     )
 
 def ComposableRectifyNode(camera_name):
@@ -58,7 +58,7 @@ def ComposableDisparityNode():
             # 'confidence_threshold': 1,
             'backends': 'CUDA',
             'num_passes': 3,
-        }]
+        }],
     )
 
 def ComposablePointCloudNode():
