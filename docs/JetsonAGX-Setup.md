@@ -34,7 +34,11 @@
 sudo apt update && sudo apt upgrade
 ```
 
-### 2. Install SELQIE Repository
+### 2. Add SSH Key
+1. [Generate new SSH Key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+2. [Add SSH Key to Github](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+
+### 3. Install SELQIE Repository
 ```
 ```
 
