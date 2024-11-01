@@ -18,7 +18,7 @@
    - Press the Power button (left) and press the Reset button (right), all while holding down the Recovery button (middle)
 3. Connect Jetson to Host Machine by a USB-C cable
 4. Select Jetson AGX Orin 64GB Board in SDK Manager
-5. Select to install all Jetson SDK components
+5. Do not select any OpenCV components
 6. Wait for Download and Install to finish
    - Some configuration prompts will appear during the installation
    ```
@@ -53,5 +53,19 @@ git clone git@github.com:FAMU-FSU-STRIDe/selqie src
 
 ### 5. Run Installation Bash Script
 ```
-cd ~/selqie_ws/src/tools && sudo ./install.sh
+cd ~/selqie_ws/src/tools && ./install.sh
 ```
+
+- When adding new software, make sure to add the installation commands to this script
+
+### Troubleshooting
+I ran into an issue with OpenCV, where versions 4.5 and 4.8 were installed causing conflicts. This gave errors when trying to run the camera disparity nodes.
+
+Solution:
+```
+sudo apt purge *libopencv*
+sudo apt remove opencv-licenses
+sudo apt install libopencv-dev=4.5.*
+sudo apt-mark hold libopencv-dev
+```
+Then re-run the install script
