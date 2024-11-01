@@ -34,22 +34,24 @@
 sudo apt update && sudo apt upgrade
 ```
 
-### 2. Add SSH Key
+### 2. Install Firefox
+```
+sudo apt install firefox
+```
+- *Note:* This takes a long time to install
+- Open this page in firefox on the Jetson for convenience
+
+### 3. Generate SSH Key
 1. [Generate new SSH Key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
 2. [Add SSH Key to Github](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
-### 3. Install SELQIE Repository
+### 4. Install SELQIE Repository
 ```
+mkdir ~/selqie_ws
+git clone git@github.com:FAMU-FSU-STRIDe/selqie src
 ```
 
-### 3. Run Installation Bash Script
-- Install System Dependencies
-- Install ROS Humble
-- Install ROS Dependencies
-- Install MuJoCo
-- Install OSQP
-- Install SBMPO
-- Setup CAN Boot Service
-- Setup IMU Microstrain Rules
-- Setup GPIO Configuration
-- Reboot
+### 5. Run Installation Bash Script
+```
+cd ~/selqie_ws/src/tools && sudo ./install.sh
+```
