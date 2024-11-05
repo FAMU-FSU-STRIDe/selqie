@@ -10,6 +10,7 @@ Panels:
         - /Odometry1/Shape1
         - /Right Image1
         - /Right Image1/Topic1
+        - /GridMap1
       Splitter Ratio: 0.5261569619178772
     Tree Height: 591
   - Class: rviz_common/Selection
@@ -186,6 +187,32 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Class: grid_map_rviz_plugin/GridMap
+      Color: 200; 200; 200
+      Color Layer: elevation
+      Color Transformer: GridMapLayer
+      Enabled: true
+      Height Layer: elevation
+      Height Transformer: GridMapLayer
+      History Length: 1
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 10
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: GridMap
+      Show Grid Lines: false
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map/raw
+      Use Rainbow: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -232,7 +259,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 4.1171088218688965
+      Distance: 7.647627830505371
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -247,10 +274,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4349997341632843
+      Pitch: 0.20499970018863678
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.4966068267822266
+      Yaw: 3.9616193771362305
     Saved: ~
 Window Geometry:
   Displays:
