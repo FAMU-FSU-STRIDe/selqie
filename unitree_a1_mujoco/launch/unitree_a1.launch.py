@@ -143,7 +143,7 @@ def generate_launch_description():
         BodyTrajectoryNode(),
         FootholdPlannerNode(),
         SwingLegNode(),
-        WalkingPlannerNode(),
-        TestGridMapNode(),
-        RVIZ2Node()
+        # WalkingPlannerNode(),
+        # TestGridMapNode(),
+        # RVIZ2Node()
     ])
