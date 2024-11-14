@@ -9,6 +9,20 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(pcl_ros REQUIRED)
+
+add_executable(ground_plane_detection_node src/ground_plane_detection_node.cpp)
+ament_target_dependencies(ground_plane_detection_node rclcpp sensor_msgs pcl_ros)
+
+install(TARGETS
+  ground_plane_detection_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
