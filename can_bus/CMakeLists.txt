@@ -21,11 +21,6 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# install launch files
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
-)
-
 # build testing
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

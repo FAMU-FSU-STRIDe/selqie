@@ -33,9 +33,6 @@ install(TARGETS
 )
 
 # install launch and models files
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
-)
 install(DIRECTORY models/
   DESTINATION share/${PROJECT_NAME}/models
 )
