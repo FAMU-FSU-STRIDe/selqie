@@ -87,8 +87,8 @@ public:
         this->declare_parameter("time_limit_us", int(_search_params.time_limit_us));
         this->get_parameter("time_limit_us", _search_params.time_limit_us);
 
-        this->declare_parameter("sample_time", _search_params.sample_time);
-        this->get_parameter("sample_time", _search_params.sample_time);
+        this->declare_parameter("sample_time", _model_params.dt);
+        this->get_parameter("sample_time", _model_params.dt);
 
         std::vector<double> grid_res;
         this->declare_parameter("grid_resolution", grid_res);

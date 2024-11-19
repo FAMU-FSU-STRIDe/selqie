@@ -12,6 +12,7 @@ inline static float wrap(const float x)
 
 struct WalkingModelParams
 {
+    float dt = 0.1;
     std::vector<float> max_velocities = {1.0, 1.0, 1.0};
     float goal_threshold = 1.0;
 };
@@ -42,7 +43,7 @@ public:
         _params = params;
     }
 
-    State next_state(const State &x, const Control &u, const float dt) override
+    State next_state(const State &x, const Control &u) override
     {
         const float x1 = x[0];
         const float y1 = x[1];
@@ -52,16 +53,16 @@ public:
         const float vy = u[1];
         const float omega = u[2];
 
-        const float theta2 = wrap(theta1 + omega * dt);
-        const float x2 = x1 + vx * std::cos(theta2) * dt - vy * std::sin(theta2) * dt;
-        const float y2 = y1 + vx * std::sin(theta2) * dt + vy * std::cos(theta2) * dt;
+        const float theta2 = wrap(theta1 + omega * _params.dt);
+        const float x2 = x1 + vx * std::cos(theta2) * _params.dt - vy * std::sin(theta2) * _params.dt;
+        const float y2 = y1 + vx * std::sin(theta2) * _params.dt + vy * std::cos(theta2) * _params.dt;
 
         return {x2, y2, theta2};
     }
 
-    float cost(const State &state1, const State &, const Control &, const float dt) override
+    float cost(const State &state1, const State &, const Control &) override
     {
-        double cost = dt;
+        double cost = _params.dt;
         if (_is_map_set)
         {
             grid_map::Position pos(state1[0], state1[1]);
