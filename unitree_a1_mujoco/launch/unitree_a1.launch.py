@@ -1,9 +1,8 @@
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
-mujoco_scene_file = get_package_share_directory('mujoco_ros2') + '/models/unitree_a1/scene.xml'
+mujoco_scene_file = get_package_share_directory('unitree_a1_mujoco') + '/model/scene.xml'
 mujoco_frame_rate = 60.0
 
 default_leg_position_left = [0.0, 0.08505, -0.27]
