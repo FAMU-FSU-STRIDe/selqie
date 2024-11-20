@@ -26,7 +26,7 @@
             <freejoint/>
 
             <!-- Body -->
-            <inertial pos="0 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
+            <inertial pos="0 0 0" mass="18.8" diaginertia="0.1137 0.8974 0.9781"/>
             <geom type="box" size="0.165 0.075 0.05" material="aluminum"/>
             <geom type="cylinder" size="0.05 0.165" pos="0 0.075 0" euler="0 1.5708 0" material="aluminum"/>
             <geom type="cylinder" size="0.05 0.165" pos="0 -0.075 0" euler="0 1.5708 0" material="aluminum"/>

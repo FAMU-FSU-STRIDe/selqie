@@ -36,12 +36,17 @@ add_executable(swing_leg_node src/swing_leg_node.cpp)
 ament_target_dependencies(swing_leg_node rclcpp robot_msgs)
 target_link_libraries(swing_leg_node Eigen3::Eigen)
 
+add_executable(legged_mpc_2d_node src/legged_mpc_2d_node.cpp)
+ament_target_dependencies(legged_mpc_2d_node rclcpp robot_msgs)
+target_link_libraries(legged_mpc_2d_node Eigen3::Eigen osqp::osqp)
+
 # install targets
 install(TARGETS
   legged_mpc_node
   body_trajectory_node
   foothold_planner_node
   swing_leg_node
+  legged_mpc_2d_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

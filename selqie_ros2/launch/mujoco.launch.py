@@ -4,6 +4,7 @@ from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'selqie_ros2'
+CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 MODEL_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'model')
 
 def MuJoCoNode():
@@ -51,6 +52,43 @@ def LegTrajectoryPublisherNode(name : str):
         ]
     )
 
+def LeggedMPCNode():
+    return Node(
+        package='legged_mpc',
+        executable='legged_mpc_2d_node',
+        name='legged_mpc',
+        output='screen',
+        # prefix='xterm -e gdb -ex run --args',
+        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
+    )
+
+def BodyTrajectoryNode():
+    return Node(
+        package='legged_mpc',
+        executable='body_trajectory_node',
+        name='body_trajectory',
+        output='screen',
+        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
+    )
+
+def FootholdPlannerNode():
+    return Node(
+        package='legged_mpc',
+        executable='foothold_planner_node',
+        name='foothold_planner',
+        output='screen',
+        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
+    )
+    
+def SwingLegNode():
+    return Node(
+        package='legged_mpc',
+        executable='swing_leg_node',
+        name='swing_leg_trajectory',
+        output='screen',
+        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
+    )
+
 def generate_launch_description():
     return LaunchDescription([
         MuJoCoNode(),
@@ -61,5 +99,9 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('FL'),
         LegTrajectoryPublisherNode('RL'),
         LegTrajectoryPublisherNode('RR'),
-        LegTrajectoryPublisherNode('FR')
+        LegTrajectoryPublisherNode('FR'),
+        LeggedMPCNode(),
+        BodyTrajectoryNode(),
+        FootholdPlannerNode(),
+        SwingLegNode()
     ])
