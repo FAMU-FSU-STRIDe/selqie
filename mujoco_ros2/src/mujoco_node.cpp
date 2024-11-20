@@ -142,12 +142,15 @@ public:
         _estimate_pub->publish(estimate_msg);
     }
 
-    void controlMotor(const mjModel *, mjData *data)
+    void controlMotor(const mjModel *model, mjData *data)
     {
         std::lock_guard<std::mutex> lock(MuJoCoData.mutex);
 
-        const mjtNum pos_est = data->qpos[_id + MUJOCO_Q_OFFSET];
-        const mjtNum vel_est = data->qvel[_id + MUJOCO_V_OFFSET];
+        const int joint_id = model->actuator_trnid[_id * 2];
+        const int qpos_adr = model->jnt_qposadr[joint_id];
+        const int qvel_adr = model->jnt_dofadr[joint_id];
+        const mjtNum pos_est = data->qpos[qpos_adr];
+        const mjtNum vel_est = data->qvel[qvel_adr];
         const mjtNum torq_est = data->ctrl[_id];
 
         switch (_state.control_mode)

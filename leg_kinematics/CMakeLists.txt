@@ -27,6 +27,11 @@ add_executable(unitree_a1_leg_node src/unitree_a1_leg_node.cpp)
 ament_target_dependencies(unitree_a1_leg_node rclcpp robot_msgs)
 target_link_libraries(unitree_a1_leg_node Eigen3::Eigen)
 
+# add library
+add_executable(rr2d_node src/rr2d_node.cpp)
+ament_target_dependencies(rr2d_node rclcpp robot_msgs)
+target_link_libraries(rr2d_node Eigen3::Eigen)
+
 # add executable
 add_executable(leg_trajectory_publisher_node src/leg_trajectory_publisher_node.cpp)
 ament_target_dependencies(leg_trajectory_publisher_node rclcpp robot_msgs)
@@ -35,6 +40,7 @@ ament_target_dependencies(leg_trajectory_publisher_node rclcpp robot_msgs)
 install(TARGETS
   fivebar2d_node
   unitree_a1_leg_node
+  rr2d_node
   leg_trajectory_publisher_node
   DESTINATION lib/${PROJECT_NAME}
 )
