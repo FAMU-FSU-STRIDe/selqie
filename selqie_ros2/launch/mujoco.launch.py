@@ -52,5 +52,11 @@ def generate_launch_description():
     return LaunchDescription([
         MuJoCoNode(),
         FiveBar2DNode('FL', 0, 1, False),
+        FiveBar2DNode('RL', 2, 3, False),
+        FiveBar2DNode('RR', 4, 5, True),
+        FiveBar2DNode('FR', 6, 7, True),
         LegTrajectoryPublisherNode('FL'),
+        LegTrajectoryPublisherNode('RL'),
+        LegTrajectoryPublisherNode('RR'),
+        LegTrajectoryPublisherNode('FR')
     ])

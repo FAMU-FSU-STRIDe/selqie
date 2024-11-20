@@ -11,8 +11,8 @@ from robot_utils.utils.ros_util_functions import *
 from robot_utils.utils.motor_util_functions import *
 from robot_utils.utils.leg_util_functions import *
 
-NUM_MOTORS = 2
-LEG_NAMES = ['FL']
+NUM_MOTORS = 8
+LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
 STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
 TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('robot_utils'), 'trajectories')
 
