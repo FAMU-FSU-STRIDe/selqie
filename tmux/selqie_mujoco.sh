@@ -26,7 +26,7 @@ tmux send-keys "source ${ROS2_WS}/install/setup.bash" C-m
 
 # Send the ros2 run command to the top-right pane (pane 1)
 tmux select-pane -t 2
-tmux send-keys "source ${ROS2_WS}/install/setup.bash; ros2 run robot_utils selqie_mujoco_util" C-m
+tmux send-keys "source ${ROS2_WS}/install/setup.bash; ros2 run robot_utils selqie_util" C-m
 
 # Now source the tmux configuration file to enable bindings and mouse support
 tmux source-file $SCRIPT_DIR/.tmux.conf

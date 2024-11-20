@@ -25,7 +25,7 @@ setup(
         'console_scripts': [
             'starq_util = robot_utils.starq_util:main',
             'unitree_a1_util = robot_utils.unitree_a1_util:main',
-            'selqie_mujoco_util = robot_utils.selqie_mujoco_util:main',
+            'selqie_util = robot_utils.selqie_util:main',
             'imu_util = robot_utils.imu_util:main',
         ],
     },

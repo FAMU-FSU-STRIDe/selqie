@@ -15,7 +15,10 @@ def MuJoCoNode():
         parameters=[{
             'model_path': os.path.join(MODEL_FOLDER, 'scene.xml'),
             'frame_rate': 60.0
-        }]
+        }],
+        remappings=[(f'motor{i}/command', f'odrive{i}/command') for i in range(8)] + 
+                   [(f'motor{i}/estimate', f'odrive{i}/estimate') for i in range(8)] + 
+                   [(f'motor{i}/config', f'odrive{i}/config') for i in range(8)]
     )
 
 def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
@@ -30,10 +33,10 @@ def FiveBar2DNode(name : str, id0 : int, id1 : int, flip_y : bool):
             ('leg/command', f'leg{name}/command'),
             ('leg/estimate', f'leg{name}/estimate'),
             ('leg/trajectory', f'leg{name}/trajectory'),
-            ('motor0/command', f'motor{id0}/command'),
-            ('motor0/estimate', f'motor{id0}/estimate'),
-            ('motor1/command', f'motor{id1}/command'),
-            ('motor1/estimate', f'motor{id1}/estimate')
+            ('motor0/command', f'odrive{id0}/command'),
+            ('motor0/estimate', f'odrive{id0}/estimate'),
+            ('motor1/command', f'odrive{id1}/command'),
+            ('motor1/estimate', f'odrive{id1}/estimate')
         ]
     )
 
@@ -51,10 +54,10 @@ def LegTrajectoryPublisherNode(name : str):
 def generate_launch_description():
     return LaunchDescription([
         MuJoCoNode(),
-        FiveBar2DNode('FL', 0, 1, False),
-        FiveBar2DNode('RL', 2, 3, False),
-        FiveBar2DNode('RR', 4, 5, True),
-        FiveBar2DNode('FR', 6, 7, True),
+        FiveBar2DNode('FL', 0, 1, True),
+        FiveBar2DNode('RL', 2, 3, True),
+        FiveBar2DNode('RR', 4, 5, False),
+        FiveBar2DNode('FR', 6, 7, False),
         LegTrajectoryPublisherNode('FL'),
         LegTrajectoryPublisherNode('RL'),
         LegTrajectoryPublisherNode('RR'),

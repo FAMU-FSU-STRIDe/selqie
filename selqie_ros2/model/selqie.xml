@@ -39,7 +39,7 @@
 
             <!-- Front Left Thigh A Frame -->
             <body pos="0.3 0.1255 0" euler="0 0 0">
-                <joint name="motor0" axis="0 1 0"/>
+                <joint name="motor0" axis="0 -1 0"/>
                 <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
@@ -62,7 +62,7 @@
 
             <!-- Front Left Thigh B Frame -->
             <body pos="0.3 0.136 0" euler="0 3.1415926 0">
-                <joint name="motor1" axis="0 -1 0"/>
+                <joint name="motor1" axis="0 1 0"/>
                 <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
@@ -85,7 +85,7 @@
 
             <!-- Rear Left Thigh A Frame -->
             <body pos="-0.3 0.1255 0" euler="0 0 0">
-                <joint name="motor2" axis="0 1 0"/>
+                <joint name="motor2" axis="0 -1 0"/>
                 <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
@@ -108,7 +108,7 @@
 
             <!-- Rear Left Thigh B Frame -->
             <body pos="-0.3 0.136 0" euler="0 3.1415926 0">
-                <joint name="motor3" axis="0 -1 0"/>
+                <joint name="motor3" axis="0 1 0"/>
                 <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
@@ -131,7 +131,7 @@
 
             <!-- Rear Right Thigh A Frame -->
             <body pos="-0.3 -0.1255 0" euler="0 0 0">
-                <joint name="motor4" axis="0 -1 0"/>
+                <joint name="motor4" axis="0 1 0"/>
                 <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
@@ -154,7 +154,7 @@
 
             <!-- Rear Right Thigh B Frame -->
             <body pos="-0.3 -0.136 0" euler="0 3.1415926 0">
-                <joint name="motor5" axis="0 1 0"/>
+                <joint name="motor5" axis="0 -1 0"/>
                 <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
@@ -177,7 +177,7 @@
 
             <!-- Front Right Thigh A Frame -->
             <body pos="0.3 -0.1255 0" euler="0 0 0">
-                <joint name="motor6" axis="0 -1 0"/>
+                <joint name="motor6" axis="0 1 0"/>
                 <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
@@ -200,7 +200,7 @@
 
             <!-- Front Right Thigh B Frame -->
             <body pos="0.3 -0.136 0" euler="0 3.1415926 0">
-                <joint name="motor7" axis="0 1 0"/>
+                <joint name="motor7" axis="0 -1 0"/>
                 <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
                 <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
                 <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
