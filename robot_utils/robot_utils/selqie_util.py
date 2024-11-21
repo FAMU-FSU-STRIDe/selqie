@@ -23,6 +23,7 @@ ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/
                         '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',]
 STAND_HEIGHT = 0.18914
 DEFAULT_WALK_FREQUENCY = 2.5
+DEFAULT_GAINS = [20.0, 0.25, 0.0]
 
 class SELQIERobotNode(Node):
     def __init__(self):
@@ -160,6 +161,7 @@ class STARQTerminal(Cmd):
         """
         Stand the robot
         """
+        set_motor_gains(self.robot.motor_config_publishers, DEFAULT_GAINS)
         set_leg_states(self.robot.leg_command_publishers, MotorCommand.CONTROL_MODE_POSITION, DEFAULT_LEG_POSITION)
 
     def do_set_leg_position(self, line):
