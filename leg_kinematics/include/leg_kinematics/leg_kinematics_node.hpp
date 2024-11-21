@@ -173,12 +173,12 @@ public:
         const Matrix3f jacobian = _model->getJacobian(motor_positions);
         const Vector3f foot_position = _model->getForwardKinematics(motor_positions);
         const Vector3f foot_velocity = jacobian * latestMotorVelocities();
-        const Vector3f foot_torque = jacobian.transpose() * latestMotorTorques();
+        const Vector3f foot_force = jacobian.transpose().inverse() * latestMotorTorques();
 
         auto msg = std::make_unique<LegEstimate>();
         msg->pos_estimate = toVector3(foot_position);
         msg->vel_estimate = toVector3(foot_velocity);
-        msg->force_estimate = toVector3(foot_torque);
+        msg->force_estimate = toVector3(foot_force);
 
         _leg_estimate_pub->publish(std::move(msg));
     }
