@@ -5,11 +5,17 @@
     <compiler angle="radian" autolimits="true"/>
 
     <!-- Parameters (in SI Units) -->
-    <option timestep="0.002"/>
-    <option gravity="0 0 -9.81"/>
-    <option density="0" viscosity="0"/> <!-- Fluid dynamics -->
-    <option integrator="Euler"/> <!-- Euler, RK4, implicit, implicitfast -->
+    <option timestep="0.001"/>
+    <option integrator="implicit"/> <!-- Euler, RK4, implicit, implicitfast -->
     <option solver="Newton"/> <!-- PGS, CG, Newton -->
+    <!-- Air -->
+    <!-- 
+    <option gravity="0 0 -9.81"/>
+    <option density="1.2" viscosity="0.00002"/> 
+    -->
+    <!-- Water -->
+    <option gravity="0 0 -1.15"/>
+    <option density="1000" viscosity="0.0009"/>
 
     <!-- Assets -->
     <asset>
@@ -30,193 +36,204 @@
             <geom type="box" size="0.165 0.075 0.05" material="aluminum"/>
             <geom type="cylinder" size="0.05 0.165" pos="0 0.075 0" euler="0 1.5708 0" material="aluminum"/>
             <geom type="cylinder" size="0.05 0.165" pos="0 -0.075 0" euler="0 1.5708 0" material="aluminum"/>
-            
-            <!-- Motor Boxes -->
-            <geom type="box" size="0.075 0.05 0.05" pos="0.27 0.075 0" material="aluminum"/> <!-- FL -->
-            <geom type="box" size="0.075 0.05 0.05" pos="-0.27 0.075 0" material="aluminum"/> <!-- RL -->
-            <geom type="box" size="0.075 0.05 0.05" pos="-0.27 -0.075 0" material="aluminum"/> <!-- RR -->
-            <geom type="box" size="0.075 0.05 0.05" pos="0.27 -0.075 0" material="aluminum"/> <!-- FR -->
 
-            <!-- Front Left Thigh A Frame -->
-            <body pos="0.3 0.1255 0" euler="0 0 0">
-                <joint name="motor0" axis="0 -1 0"/>
-                <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
+            <!-- Front Left Motor Box -->
+            <body pos="0.27 0.075 0" euler="0 0 0">
+                <geom type="box" size="0.075 0.05 0.05" material="aluminum"/>
 
-                <!-- Front Left Calf A Frame-->
-                <body pos="0.066 0.0105 0" euler="0 2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
+                <!-- Front Left Thigh A Frame -->
+                <body pos="0.03 0.0505 0" euler="0 0 0">
+                    <joint name="motor0" axis="0 -1 0"/>
+                    <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
 
-                    <!-- Front Left Toe A Frame -->
-                    <body name="toeFLA" pos="0.15 -0.0005 0" euler="0 0 0">
-                        <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                    <!-- Front Left Calf A Frame-->
+                    <body pos="0.066 0.0105 0" euler="0 2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
+
+                        <!-- Front Left Toe A Frame -->
+                        <body name="toeFLA" pos="0.15 -0.0005 0" euler="0 0 0">
+                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
+                    </body>
+                </body>
+
+                <!-- Front Left Thigh B Frame -->
+                <body pos="0.03 0.061 0" euler="0 3.1415926 0">
+                    <joint name="motor1" axis="0 1 0"/>
+                    <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
+
+                    <!-- Front Left Calf B Frame-->
+                    <body pos="0.066 -0.0005 0" euler="0 -2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
+
+                        <!-- Front Left Toe B Frame -->
+                        <body name="toeFLB" pos="0.15 0.0005 0" euler="0 0 0">
+                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
                     </body>
                 </body>
             </body>
 
-            <!-- Front Left Thigh B Frame -->
-            <body pos="0.3 0.136 0" euler="0 3.1415926 0">
-                <joint name="motor1" axis="0 1 0"/>
-                <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
+            <!-- Rear Left Motor Box -->
+            <body pos="-0.27 0.075 0" euler="0 0 0">
+                <geom type="box" size="0.075 0.05 0.05" material="aluminum"/>
+                <!-- Rear Left Thigh A Frame -->
+                <body pos="-0.03 0.0505 0" euler="0 0 0">
+                    <joint name="motor2" axis="0 -1 0"/>
+                    <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
 
-                <!-- Front Left Calf B Frame-->
-                <body pos="0.066 -0.0005 0" euler="0 -2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
+                    <!-- Rear Left Calf A Frame-->
+                    <body pos="0.066 0.0105 0" euler="0 2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
 
-                    <!-- Front Left Toe B Frame -->
-                    <body name="toeFLB" pos="0.15 0.0005 0" euler="0 0 0">
-                        <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                        <!-- Rear Left Toe A Frame -->
+                        <body name="toeRLA" pos="0.15 -0.0005 0" euler="0 0 0">
+                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
+                    </body>
+                </body>
+
+                <!-- Rear Left Thigh B Frame -->
+                <body pos="-0.03 0.061 0" euler="0 3.1415926 0">
+                    <joint name="motor3" axis="0 1 0"/>
+                    <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
+
+                    <!-- Rear Left Calf B Frame-->
+                    <body pos="0.066 -0.0005 0" euler="0 -2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
+
+                        <!-- Rear Left Toe B Frame -->
+                        <body name="toeRLB" pos="0.15 0.0005 0" euler="0 0 0">
+                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
                     </body>
                 </body>
             </body>
 
-            <!-- Rear Left Thigh A Frame -->
-            <body pos="-0.3 0.1255 0" euler="0 0 0">
-                <joint name="motor2" axis="0 -1 0"/>
-                <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
+            <!-- Rear Right Motor Box -->
+            <body pos="-0.27 -0.075 0" euler="0 0 0">
+                <geom type="box" size="0.075 0.05 0.05" material="aluminum"/>
+                <!-- Rear Right Thigh A Frame -->
+                <body pos="-0.03 -0.0505 0" euler="0 0 0">
+                    <joint name="motor4" axis="0 1 0"/>
+                    <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
 
-                <!-- Rear Left Calf A Frame-->
-                <body pos="0.066 0.0105 0" euler="0 2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
+                    <!-- Rear Right Calf A Frame-->
+                    <body pos="0.066 -0.0105 0" euler="0 2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
 
-                    <!-- Rear Left Toe A Frame -->
-                    <body name="toeRLA" pos="0.15 -0.0005 0" euler="0 0 0">
-                        <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                        <!-- Rear Right Toe A Frame -->
+                        <body name="toeRRA" pos="0.15 0.0005 0" euler="0 0 0">
+                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
+                    </body>
+                </body>
+
+                <!-- Rear Right Thigh B Frame -->
+                <body pos="-0.03 -0.061 0" euler="0 3.1415926 0">
+                    <joint name="motor5" axis="0 -1 0"/>
+                    <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
+
+                    <!-- Rear Right Calf B Frame-->
+                    <body pos="0.066 0.0005 0" euler="0 -2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
+
+                        <!-- Rear Right Toe B Frame -->
+                        <body name="toeRRB" pos="0.15 -0.0005 0" euler="0 0 0">
+                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
                     </body>
                 </body>
             </body>
 
-            <!-- Rear Left Thigh B Frame -->
-            <body pos="-0.3 0.136 0" euler="0 3.1415926 0">
-                <joint name="motor3" axis="0 1 0"/>
-                <inertial pos="0.033 0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 0.005 0" euler="1.5708 0 0" material="pla"/>
+            <!-- Front Right Motor Box -->
+            <body pos="0.27 -0.075 0" euler="0 0 0">
+                <geom type="box" size="0.075 0.05 0.05" material="aluminum"/>
+                <!-- Front Right Thigh A Frame -->
+                <body pos="0.03 -0.0505 0" euler="0 0 0">
+                    <joint name="motor6" axis="0 1 0"/>
+                    <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
 
-                <!-- Rear Left Calf B Frame-->
-                <body pos="0.066 -0.0005 0" euler="0 -2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
+                    <!-- Front Right Calf A Frame-->
+                    <body pos="0.066 -0.0105 0" euler="0 2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
 
-                    <!-- Rear Left Toe B Frame -->
-                    <body name="toeRLB" pos="0.15 0.0005 0" euler="0 0 0">
-                        <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                        <!-- Front Right Toe A Frame -->
+                        <body name="toeFRA" pos="0.15 0.0005 0" euler="0 0 0">
+                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
                     </body>
                 </body>
-            </body>
 
-            <!-- Rear Right Thigh A Frame -->
-            <body pos="-0.3 -0.1255 0" euler="0 0 0">
-                <joint name="motor4" axis="0 1 0"/>
-                <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
+                <!-- Front Right Thigh B Frame -->
+                <body pos="0.03 -0.061 0" euler="0 3.1415926 0">
+                    <joint name="motor7" axis="0 -1 0"/>
+                    <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
+                    <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
+                    <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
 
-                <!-- Rear Right Calf A Frame-->
-                <body pos="0.066 -0.0105 0" euler="0 2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
+                    <!-- Front Right Calf B Frame-->
+                    <body pos="0.066 0.0005 0" euler="0 -2.026395 0">
+                        <joint axis="0 1 0"/>
+                        <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                        <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
+                        <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
 
-                    <!-- Rear Right Toe A Frame -->
-                    <body name="toeRRA" pos="0.15 0.0005 0" euler="0 0 0">
-                        <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
-                    </body>
-                </body>
-            </body>
-
-            <!-- Rear Right Thigh B Frame -->
-            <body pos="-0.3 -0.136 0" euler="0 3.1415926 0">
-                <joint name="motor5" axis="0 -1 0"/>
-                <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
-
-                <!-- Rear Right Calf B Frame-->
-                <body pos="0.066 0.0005 0" euler="0 -2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
-
-                    <!-- Rear Right Toe B Frame -->
-                    <body name="toeRRB" pos="0.15 -0.0005 0" euler="0 0 0">
-                        <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
-                    </body>
-                </body>
-            </body>
-
-            <!-- Front Right Thigh A Frame -->
-            <body pos="0.3 -0.1255 0" euler="0 0 0">
-                <joint name="motor6" axis="0 1 0"/>
-                <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
-
-                <!-- Front Right Calf A Frame-->
-                <body pos="0.066 -0.0105 0" euler="0 2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 -0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 -0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 -0.0025 0" material="pla"/>
-
-                    <!-- Front Right Toe A Frame -->
-                    <body name="toeFRA" pos="0.15 0.0005 0" euler="0 0 0">
-                        <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
-                    </body>
-                </body>
-            </body>
-
-            <!-- Front Right Thigh B Frame -->
-            <body pos="0.3 -0.136 0" euler="0 3.1415926 0">
-                <joint name="motor7" axis="0 -1 0"/>
-                <inertial pos="0.033 -0.005 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0 -0.005 0" euler="1.5708 0 0" material="pla"/>
-                <geom type="box" size="0.033 0.005 0.0075" pos="0.033 -0.005 0" material="pla"/>
-                <geom type="cylinder" size="0.0075 0.005" pos="0.066 -0.005 0" euler="1.5708 0 0" material="pla"/>
-
-                <!-- Front Right Calf B Frame-->
-                <body pos="0.066 0.0005 0" euler="0 -2.026395 0">
-                    <joint axis="0 1 0"/>
-                    <inertial pos="0.075 0.0025 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                    <geom type="cylinder" size="0.0075 0.0025" pos="0 0.0025 0" euler="1.5708 0 0" material="pla"/>
-                    <geom type="box" size="0.075 0.0025 0.0075" pos="0.075 0.0025 0" material="pla"/>
-
-                    <!-- Front Right Toe B Frame -->
-                    <body name="toeFRB" pos="0.15 -0.0005 0" euler="0 0 0">
-                        <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
-                        <geom type="cylinder" size="0.015 0.00275" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                        <!-- Front Right Toe B Frame -->
+                        <body name="toeFRB" pos="0.15 -0.0005 0" euler="0 0 0">
+                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.005 0.005 0.005"/>
+                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                        </body>
                     </body>
                 </body>
             </body>
@@ -233,14 +250,14 @@
 
     <!-- Actuators -->
     <actuator>
-        <motor joint="motor0" ctrlrange="-10 10"/>
-        <motor joint="motor1" ctrlrange="-10 10"/>
-        <motor joint="motor2" ctrlrange="-10 10"/>
-        <motor joint="motor3" ctrlrange="-10 10"/>
-        <motor joint="motor4" ctrlrange="-10 10"/>
-        <motor joint="motor5" ctrlrange="-10 10"/>
-        <motor joint="motor6" ctrlrange="-10 10"/>
-        <motor joint="motor7" ctrlrange="-10 10"/>
+        <motor joint="motor0" ctrlrange="-100 100"/>
+        <motor joint="motor1" ctrlrange="-100 100"/>
+        <motor joint="motor2" ctrlrange="-100 100"/>
+        <motor joint="motor3" ctrlrange="-100 100"/>
+        <motor joint="motor4" ctrlrange="-100 100"/>
+        <motor joint="motor5" ctrlrange="-100 100"/>
+        <motor joint="motor6" ctrlrange="-100 100"/>
+        <motor joint="motor7" ctrlrange="-100 100"/>
     </actuator>
 
 </mujoco>
