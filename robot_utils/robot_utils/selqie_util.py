@@ -81,6 +81,9 @@ class SELQIERobotNode(Node):
         if not wait_for_subs(self.motor_config_publishers):
             print("Failed to connect to Motor config")
 
+        set_motor_gains(self.motor_config_publishers, DEFAULT_GAINS)
+        set_leg_states(self.leg_command_publishers, MotorCommand.CONTROL_MODE_POSITION, DEFAULT_LEG_POSITION)
+
 class STARQTerminal(Cmd):
     intro = 'Welcome to the SELQIE terminal. Type help or ? to list commands.\n'
     prompt = 'SELQIE> '

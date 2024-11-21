@@ -8,8 +8,8 @@
     <option timestep="0.001"/>
     <option integrator="implicit"/> <!-- Euler, RK4, implicit, implicitfast -->
     <option solver="Newton"/> <!-- PGS, CG, Newton -->
-    <option gravity="0 0 -9.81"/>
-    <!-- <option density="1000" viscosity="0.0009"/> -->
+    <option gravity="0 0 -1.15"/>
+    <option density="1000" viscosity="0.0009"/>
 
     <!-- Assets -->
     <asset>
@@ -240,10 +240,10 @@
     </worldbody>
 
     <equality>
-        <connect body1="toeFLA" body2="toeFLB" anchor="0 0 0"/>
-        <connect body1="toeRLA" body2="toeRLB" anchor="0 0 0"/>
-        <connect body1="toeRRA" body2="toeRRB" anchor="0 0 0"/>
-        <connect body1="toeFRA" body2="toeFRB" anchor="0 0 0"/>
+        <connect body1="toeFLA" body2="toeFLB" anchor="0 0 0" solref="0.005 1" solimp="1 1 1 0 1"/>
+        <connect body1="toeRLA" body2="toeRLB" anchor="0 0 0" solref="0.005 1" solimp="1 1 1 0 1"/>
+        <connect body1="toeRRA" body2="toeRRB" anchor="0 0 0" solref="0.005 1" solimp="1 1 1 0 1"/>
+        <connect body1="toeFRA" body2="toeFRB" anchor="0 0 0" solref="0.005 1" solimp="1 1 1 0 1"/>
     </equality>
 
     <!-- Actuators -->

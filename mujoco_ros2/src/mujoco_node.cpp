@@ -157,6 +157,11 @@ public:
         {
         case MotorCommand::CONTROL_MODE_POSITION:
         {
+            if (std::isnan(_state.pos_cmd) || std::isnan(_state.vel_cmd) || std::isnan(_state.torq_cmd))
+            {
+                break;
+            }
+
             const mjtNum pos_err = _state.pos_cmd - pos_est;
             const mjtNum vel_err = _state.vel_cmd - vel_est;
 
@@ -170,6 +175,11 @@ public:
         }
         case MotorCommand::CONTROL_MODE_VELOCITY:
         {
+            if (std::isnan(_state.vel_cmd) || std::isnan(_state.torq_cmd))
+            {
+                break;
+            }
+
             const mjtNum vel_err = _state.vel_cmd - vel_est;
 
             const mjtNum kp = _state.kp;
@@ -179,6 +189,11 @@ public:
         }
         case MotorCommand::CONTROL_MODE_TORQUE:
         {
+            if (std::isnan(_state.torq_cmd))
+            {
+                break;
+            }
+
             data->ctrl[_id] = _state.torq_cmd;
             break;
         }

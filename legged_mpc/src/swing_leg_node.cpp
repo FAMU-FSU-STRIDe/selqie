@@ -76,8 +76,7 @@ private:
         const double stance_duration = foothold_state.duty_factor * foothold_state.duration;
         const double swing_duration = foothold_state.duration - stance_duration;
 
-        const std::size_t node_span = static_cast<std::size_t>(std::round(swing_duration / _dt));
-        assert(node_span < N);
+        const std::size_t node_span = std::min(static_cast<std::size_t>(std::round(swing_duration / _dt)), N);
 
         assert(foothold_state.stance.size() == _num_legs);
         assert(foothold_state.footholds.size() == _num_legs);
