@@ -48,11 +48,7 @@ public:
             return;
         }
 
-        if (!std::is_sorted(msg->timing.begin(), msg->timing.end()))
-        {
-            RCLCPP_ERROR(this->get_logger(), "Trajectory timing is not sorted");
-            return;
-        }
+        std::sort(msg->timing.begin(), msg->timing.end());
 
         std::lock_guard<std::mutex> lock(_mutex);
         _traj = msg;
