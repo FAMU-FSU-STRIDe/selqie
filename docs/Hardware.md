@@ -76,5 +76,3 @@ Instructions on how to enable CAN on the Jetson.
 2. Go to the `tools` folder: $`cd ~/selqie_ws/src/tools`
 3. Run the command: $`sudo ./loadcan_jetson.sh` \
 *Note: This is run automatically on boot. See `tools/load_can.service` for more information*
-
-### [CAN Documentation + Troubleshooting](CanBus.md)
