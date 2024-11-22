@@ -57,7 +57,10 @@ def run_leg_trajectory(traj_publishers : list, trajectories : list, num_loops : 
     print(f"Running trajectory for {num_loops} loops at {frequency} Hz")
     for i in range(num_loops):
         print(f"  Loop {i+1}/{num_loops}")
-        for i in range(len(traj_publishers)):
-            traj_publishers[i].publish(trajectories[i])
+        for j in range(len(traj_publishers)):
+            if len(trajectories) == 1:
+                traj_publishers[j].publish(trajectories[0])
+            else:
+                traj_publishers[j].publish(trajectories[j])
         time.sleep(1.0 / frequency)
     print("Finished trajectory")

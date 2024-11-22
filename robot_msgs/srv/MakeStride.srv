@@ -1,0 +1,9 @@
+int32 num_points
+float64 frequency
+float64 stance_length
+float64 leg_length
+float64 step_height
+float64 duty_factor
+float64 offset
+---
+robot_msgs/LegTrajectory trajectory

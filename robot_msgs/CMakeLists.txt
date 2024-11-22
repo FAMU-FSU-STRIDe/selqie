@@ -26,6 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/FootholdTrajectory.msg"
   "msg/FootholdState.msg"
   "msg/StancePattern.msg"
+  "srv/MakeStride.srv"
   DEPENDENCIES std_msgs geometry_msgs nav_msgs
 )
 

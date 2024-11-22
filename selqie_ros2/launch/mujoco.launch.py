@@ -54,42 +54,12 @@ def LegTrajectoryPublisherNode(name : str):
             'use_sim_time': True
         }]
     )
-
-def LeggedMPCNode():
-    return Node(
-        package='legged_mpc',
-        executable='legged_mpc_2d_node',
-        name='legged_mpc',
-        output='screen',
-        # prefix='xterm -e gdb -ex run --args',
-        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
-    )
-
-def BodyTrajectoryNode():
-    return Node(
-        package='legged_mpc',
-        executable='body_trajectory_node',
-        name='body_trajectory',
-        output='screen',
-        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
-    )
-
-def FootholdPlannerNode():
-    return Node(
-        package='legged_mpc',
-        executable='foothold_planner_node',
-        name='foothold_planner',
-        output='screen',
-        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
-    )
     
-def SwingLegNode():
+def StrideMakerNode():
     return Node(
-        package='legged_mpc',
-        executable='swing_leg_node',
-        name='swing_leg_trajectory',
-        output='screen',
-        parameters=[os.path.join(CONFIG_FOLDER, 'legged_mpc_config.yaml')]
+        package='stride_maker',
+        executable='stride_maker_node',
+        name='stride_maker_node',
     )
 
 def generate_launch_description():
@@ -103,8 +73,5 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('RL'),
         LegTrajectoryPublisherNode('RR'),
         LegTrajectoryPublisherNode('FR'),
-        LeggedMPCNode(),
-        BodyTrajectoryNode(),
-        FootholdPlannerNode(),
-        SwingLegNode()
+        StrideMakerNode(),
     ])

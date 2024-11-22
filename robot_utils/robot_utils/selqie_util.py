@@ -8,10 +8,10 @@ import subprocess
 from ament_index_python.packages import get_package_share_directory
 from nav_msgs.msg import Odometry
 from robot_msgs.msg import *
+from robot_msgs.srv import *
 from robot_utils.utils.ros_util_functions import *
 from robot_utils.utils.motor_util_functions import *
 from robot_utils.utils.leg_util_functions import *
-from robot_utils.utils.gait_util_functions import *
 
 NUM_MOTORS = 8
 LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
@@ -64,15 +64,12 @@ class SELQIERobotNode(Node):
         for i in range(NUM_MOTORS):
             motor_info_callback = lambda msg, i=i: self.motor_infos.__setitem__(i, msg)
             self.motor_info_subscribers.append(self.create_subscription(ODriveInfo, f'odrive{i}/info', motor_info_callback, qos_fast()))
-
-        self.cmd_pose_pub = self.create_publisher(Pose, 'cmd_pose', qos_reliable())
-        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
         
         self.odom = Odometry()
         odom_callback = lambda msg: setattr(self, 'odom', msg)
         self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
-
-        self.stance_pattern_pub = self.create_publisher(StancePattern, 'stance_pattern', qos_reliable())
+        
+        self.make_stride_service = self.create_client(MakeStride, 'make_stride')
 
         if not wait_for_subs(self.leg_command_publishers):
             print("Failed to connect to Leg command")
@@ -278,80 +275,53 @@ class STARQTerminal(Cmd):
         self.rosbag_process.terminate()
         self.rosbag_process.wait()
         self.rosbag_process = None
-
-    def do_cmd_vel(self, line):
+        
+    def do_run_stride(self, line):
         """
-        Command velocity to the motors
-        Usage: cmd_vel <vel_x> <vel_y> <vel_z>
+        Run a stride trajectory
+        Usage: run_stride <leg_name> <num_loops> <frequency> <stance_length> <leg_length> <step_height> <duty_factor> <offset=0.0>
+        Note: Use leg name '*' to set position for all legs
         """
         args = line.split()
-        if len(args) != 3:
+        if len(args) < 7:
             print("Invalid number of arguments")
             return
         
-        try:
-            vel = [float(args[0]), float(args[1]), float(args[2])]
-        except ValueError:
-            print("Invalid velocity value")
-            return
-        
-        set_cmd_vel(self.robot.cmd_vel_pub, vel)
-
-    def do_cmd_pose(self, line):
-        """
-        Command velocity to the motors
-        Usage: cmd_pose <pos_x> <pos_y> <pos_z> <rot_x> <rot_y> <rot_z>
-        """
-        args = line.split()
-        if len(args) != 6:
-            print("Invalid number of arguments")
-            return
-
-        try:
-            pose = [float(args[0]), float(args[1]), float(args[2])]
-            rot = [float(args[3]), float(args[4]), float(args[5])]
-        except ValueError:
-            print("Invalid position or rotation values")
-            return
-        
-        set_cmd_pose(self.robot.cmd_pose_pub, pose, rot)
-
-    def do_stop_mpc(self, line):
-        """
-        Stop the MPC controller
-        """
-        set_cmd_pose(self.robot.cmd_pose_pub, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
-
-    def do_stand(self, line):
-        """
-        Stand the robot using MPC
-        """
-        pose, rot = get_pose(self.robot.odom.pose.pose)
-        pose[2] = STAND_HEIGHT
-        rot[0:2] = [0.0, 0.0]
-        set_cmd_pose(self.robot.cmd_pose_pub, pose, rot)
-        set_stand_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock())
-        
-    def do_walk(self, line):
-        """
-        Walk the robot using MPC
-        Usage: walk <frequency (optional)>
-        """
-        args = line.split()
-        if len(args) > 1:
-            print("Invalid number of arguments")
-            return
-        elif len(args) == 0:
-            frequency = DEFAULT_WALK_FREQUENCY
+        leg = args[0]
+        if leg == "*":
+            traj_publishers = self.robot.leg_trajectory_publishers
+        elif leg in LEG_NAMES:
+            traj_publishers = [self.robot.leg_trajectory_publishers[LEG_NAMES.index(leg)]]
         else:
-            try:
-                frequency = float(args[0])
-            except ValueError:
-                print("Invalid frequency value")
-                return
+            print("Invalid leg name")
+            return
+    
+        try:
+            num_loops = int(args[1])
+            frequency = float(args[2])
+            stance_length = float(args[3])
+            leg_length = float(args[4])
+            step_height = float(args[5])
+            duty_factor = float(args[6])
+            offset = 0.0
+            if len(args) > 7:
+                offset = float(args[7])
+        except ValueError:
+            print("Invalid position values")
+            return
         
-        set_cmd_vel(self.robot.cmd_vel_pub, [0.0, 0.0, 0.0])
-        set_walk_stance_pattern(self.robot.stance_pattern_pub, self.robot.get_clock(), frequency)
+        req = MakeStride.Request()
+        req.num_points = 100
+        req.frequency = frequency
+        req.stance_length = stance_length
+        req.leg_length = leg_length
+        req.step_height = step_height
+        req.duty_factor = duty_factor
+        req.offset = offset
+        
+        traj = self.robot.make_stride_service.call(req).trajectory
+        run_leg_trajectory(traj_publishers, [traj], num_loops, frequency)
+    
 
 def main():
     rclpy.init()
