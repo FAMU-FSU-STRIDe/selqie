@@ -7,8 +7,8 @@ class Bar100Node(Node):
     def __init__(self):
         super().__init__('bar100_node')
 
-        self.declare_parameter('i2c-bus', 1)
-        i2c_bus = self.get_parameter('i2c-bus').value
+        self.declare_parameter('i2c_bus', 1)
+        i2c_bus = self.get_parameter('i2c_bus').value
 
         self.declare_parameter('frequency', 20.0)
         frequency = self.get_parameter('frequency').value

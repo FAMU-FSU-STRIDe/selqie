@@ -8,7 +8,7 @@ def Bar100Node():
         name='bar100_node',
         output='screen',
         parameters=[{
-            'i2c-bus': 7,
+            'i2c_bus': 7,
             'frequency': 20.0,
             'fluid_density': 997.0474,
             'gravity': 9.80665,
