@@ -61,6 +61,14 @@ def StrideMakerNode():
         executable='stride_maker_node',
         name='stride_maker_node',
     )
+    
+def Walk2DNode():
+    return Node(
+        package='stride_maker',
+        executable='walk2d_node',
+        name='walk2d_node',
+        parameters=[os.path.join(CONFIG_FOLDER, 'walk2d_config.yaml')]
+    )
 
 def generate_launch_description():
     return LaunchDescription([
@@ -74,4 +82,5 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('RR'),
         LegTrajectoryPublisherNode('FR'),
         StrideMakerNode(),
+        Walk2DNode()
     ])

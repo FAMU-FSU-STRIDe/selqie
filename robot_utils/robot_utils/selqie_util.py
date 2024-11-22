@@ -70,6 +70,8 @@ class SELQIERobotNode(Node):
         self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
         
         self.make_stride_service = self.create_client(MakeStride, 'make_stride')
+        
+        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
 
         if not wait_for_subs(self.leg_command_publishers):
             print("Failed to connect to Leg command")
@@ -321,6 +323,28 @@ class STARQTerminal(Cmd):
         
         traj = self.robot.make_stride_service.call(req).trajectory
         run_leg_trajectory(traj_publishers, [traj], num_loops, frequency)
+        
+    def do_cmd_vel(self, line):
+        """
+        Publish a Twist message to cmd_vel
+        Usage: cmd_vel <vel_x> <omega_z>
+        """
+        args = line.split()
+        if len(args) != 2:
+            print("Invalid number of arguments")
+            return
+        
+        try:
+            linear_x = float(args[0])
+            angular_z = float(args[1])
+        except ValueError:
+            print("Invalid values")
+            return
+        
+        twist = Twist()
+        twist.linear.x = linear_x
+        twist.angular.z = angular_z
+        self.robot.cmd_vel_pub.publish(twist)
     
 
 def main():

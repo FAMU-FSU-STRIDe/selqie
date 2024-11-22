@@ -13,8 +13,12 @@ find_package(robot_msgs REQUIRED)
 add_executable(stride_maker_node src/stride_maker_node.cpp)
 ament_target_dependencies(stride_maker_node rclcpp robot_msgs)
 
+add_executable(walk2d_node src/walk2d_node.cpp)
+ament_target_dependencies(walk2d_node rclcpp robot_msgs)
+
 install(TARGETS
   stride_maker_node
+  walk2d_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
