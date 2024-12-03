@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'mpc_tracking_orientation = robot_experiments.mpc_tracking_orientation:main',
             'mpc_tracking_position = robot_experiments.mpc_tracking_position:main',
+            'walk_stride_tracking = robot_experiments.walk_stride_tracking:main',
         ],
     },
 )
