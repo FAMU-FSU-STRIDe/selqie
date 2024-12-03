@@ -67,19 +67,19 @@ private:
 
         const auto traj_FL = make_walk_stride(_stride_resolution, frequency, _duty_factor,
                                               _center_shift, stance_length_left, _body_height,
-                                              _step_height, 0.0);
+                                              _step_height, 0.25);
 
         const auto traj_RL = make_walk_stride(_stride_resolution, frequency, _duty_factor,
                                               _center_shift, stance_length_left, _body_height,
-                                              _step_height, 0.5);
+                                              _step_height, 0.75);
 
         const auto traj_RR = make_walk_stride(_stride_resolution, frequency, _duty_factor,
                                               _center_shift, stance_length_right, _body_height,
-                                              _step_height, 0.0);
+                                              _step_height, 0.25);
 
         const auto traj_FR = make_walk_stride(_stride_resolution, frequency, _duty_factor,
                                               _center_shift, stance_length_right, _body_height,
-                                              _step_height, 0.5);
+                                              _step_height, 0.75);
 
         std::lock_guard<std::mutex> lock(_mutex);
         _trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
