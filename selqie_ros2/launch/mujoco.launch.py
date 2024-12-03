@@ -55,13 +55,6 @@ def LegTrajectoryPublisherNode(name : str):
         }]
     )
     
-def StrideMakerNode():
-    return Node(
-        package='stride_maker',
-        executable='stride_maker_node',
-        name='stride_maker_node',
-    )
-    
 def Walk2DNode():
     return Node(
         package='stride_maker',
@@ -81,6 +74,5 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('RL'),
         LegTrajectoryPublisherNode('RR'),
         LegTrajectoryPublisherNode('FR'),
-        StrideMakerNode(),
         Walk2DNode()
     ])

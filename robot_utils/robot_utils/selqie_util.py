@@ -8,7 +8,6 @@ import subprocess
 from ament_index_python.packages import get_package_share_directory
 from nav_msgs.msg import Odometry
 from robot_msgs.msg import *
-from robot_msgs.srv import *
 from robot_utils.utils.ros_util_functions import *
 from robot_utils.utils.motor_util_functions import *
 from robot_utils.utils.leg_util_functions import *
@@ -68,8 +67,6 @@ class SELQIERobotNode(Node):
         self.odom = Odometry()
         odom_callback = lambda msg: setattr(self, 'odom', msg)
         self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
-        
-        self.make_stride_service = self.create_client(MakeStride, 'make_stride')
         
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
 
@@ -277,52 +274,6 @@ class STARQTerminal(Cmd):
         self.rosbag_process.terminate()
         self.rosbag_process.wait()
         self.rosbag_process = None
-        
-    def do_run_stride(self, line):
-        """
-        Run a stride trajectory
-        Usage: run_stride <leg_name> <num_loops> <frequency> <stance_length> <leg_length> <step_height> <duty_factor> <offset=0.0>
-        Note: Use leg name '*' to set position for all legs
-        """
-        args = line.split()
-        if len(args) < 7:
-            print("Invalid number of arguments")
-            return
-        
-        leg = args[0]
-        if leg == "*":
-            traj_publishers = self.robot.leg_trajectory_publishers
-        elif leg in LEG_NAMES:
-            traj_publishers = [self.robot.leg_trajectory_publishers[LEG_NAMES.index(leg)]]
-        else:
-            print("Invalid leg name")
-            return
-    
-        try:
-            num_loops = int(args[1])
-            frequency = float(args[2])
-            stance_length = float(args[3])
-            leg_length = float(args[4])
-            step_height = float(args[5])
-            duty_factor = float(args[6])
-            offset = 0.0
-            if len(args) > 7:
-                offset = float(args[7])
-        except ValueError:
-            print("Invalid position values")
-            return
-        
-        req = MakeStride.Request()
-        req.num_points = 100
-        req.frequency = frequency
-        req.stance_length = stance_length
-        req.leg_length = leg_length
-        req.step_height = step_height
-        req.duty_factor = duty_factor
-        req.offset = offset
-        
-        traj = self.robot.make_stride_service.call(req).trajectory
-        run_leg_trajectory(traj_publishers, [traj], num_loops, frequency)
         
     def do_cmd_vel(self, line):
         """

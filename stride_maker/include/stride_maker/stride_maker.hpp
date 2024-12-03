@@ -1,0 +1,55 @@
+#pragma once
+
+#include <math.h>
+#include <robot_msgs/msg/leg_trajectory.hpp>
+
+robot_msgs::msg::LegTrajectory make_walk_stride(const int num_points, const double frequency, const double duty_factor,
+                                                const double center_shift, const double stance_length, const double body_height,
+                                                const double step_height, const double offset = 0)
+{
+
+    robot_msgs::msg::LegTrajectory leg_trajectory;
+    leg_trajectory.timing.reserve(num_points);
+    leg_trajectory.commands.reserve(num_points);
+
+    const int points_per_half = num_points / 2;
+    const double duration = 1.0 / frequency;
+    const int offset_index = offset * num_points;
+    const double touchdown_x = 0.5 * stance_length * (1.0 + center_shift);
+    const double takeoff_x = touchdown_x - stance_length;
+    const double x0 = 0.5 * (takeoff_x + touchdown_x);
+    const double dx = stance_length / points_per_half;
+    const double stance_duration = duration * duty_factor;
+    const double stance_dt = stance_duration / points_per_half;
+    const double swing_duration = duration * (1.0 - duty_factor);
+    const double swing_dt = swing_duration / points_per_half;
+
+    double t = 0.0;
+    robot_msgs::msg::LegCommand leg_command;
+    leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+    for (int k = 0; k < num_points; k++)
+    {
+        leg_trajectory.timing.push_back(t);
+
+        const int i = (k + offset_index) % num_points;
+        const int p = i % points_per_half;
+        const int q = i / points_per_half;
+        if (q == 0)
+        {
+            t += stance_dt;
+            leg_command.pos_setpoint.x = touchdown_x - p * dx;
+            leg_command.pos_setpoint.z = -body_height;
+            leg_trajectory.commands.push_back(leg_command);
+        }
+        else
+        {
+            t += swing_dt;
+            const double x = takeoff_x + p * dx;
+            leg_command.pos_setpoint.x = x;
+            leg_command.pos_setpoint.z = -body_height + step_height * std::sqrt(1.0 - std::pow((x - x0) / (0.5 * stance_length), 2));
+            leg_trajectory.commands.push_back(leg_command);
+        }
+    }
+
+    return leg_trajectory;
+}

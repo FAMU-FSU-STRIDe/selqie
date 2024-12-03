@@ -53,8 +53,8 @@
 
                         <!-- Front Left Toe A Frame -->
                         <body name="toeFLA" pos="0.15 -0.0005 0" euler="0 0 0">
-                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
@@ -76,8 +76,8 @@
 
                         <!-- Front Left Toe B Frame -->
                         <body name="toeFLB" pos="0.15 0.0005 0" euler="0 0 0">
-                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 -0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 -0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
@@ -104,8 +104,8 @@
 
                         <!-- Rear Left Toe A Frame -->
                         <body name="toeRLA" pos="0.15 -0.0005 0" euler="0 0 0">
-                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
@@ -127,8 +127,8 @@
 
                         <!-- Rear Left Toe B Frame -->
                         <body name="toeRLB" pos="0.15 0.0005 0" euler="0 0 0">
-                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 -0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 -0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
@@ -155,8 +155,8 @@
 
                         <!-- Rear Right Toe A Frame -->
                         <body name="toeRRA" pos="0.15 0.0005 0" euler="0 0 0">
-                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 -0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 -0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
@@ -178,8 +178,8 @@
 
                         <!-- Rear Right Toe B Frame -->
                         <body name="toeRRB" pos="0.15 -0.0005 0" euler="0 0 0">
-                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
@@ -206,8 +206,8 @@
 
                         <!-- Front Right Toe A Frame -->
                         <body name="toeFRA" pos="0.15 0.0005 0" euler="0 0 0">
-                            <inertial pos="0 -0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 -0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 -0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 -0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
@@ -229,8 +229,8 @@
 
                         <!-- Front Right Toe B Frame -->
                         <body name="toeFRB" pos="0.15 -0.0005 0" euler="0 0 0">
-                            <inertial pos="0 0.003 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
-                            <geom type="cylinder" size="0.015 0.0025" pos="0 0.003 0" euler="1.5708 0 0" material="pla"/>
+                            <inertial pos="0 0.0055 0" mass="0.05" diaginertia="0.00005 0.00005 0.00005"/>
+                            <geom type="cylinder" size="0.015 0.005" pos="0 0.0055 0" euler="1.5708 0 0" material="pla"/>
                         </body>
                     </body>
                 </body>
