@@ -17,7 +17,6 @@ private:
     std::vector<rclcpp::Publisher<robot_msgs::msg::LegTrajectory>::SharedPtr> _leg_traj_pubs;
 
     std::vector<double> _hip_positions;
-    double _min_radius = 1.0;
     double _robot_width = 1.0;
     double _body_height = 0.2;
     double _center_shift = 0.0;
@@ -30,22 +29,39 @@ private:
     std::vector<robot_msgs::msg::LegTrajectory> _trajectories;
     double _frequency = 10.0;
 
+    void map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
+    {
+        // mapping obtained from walk stride sweep experiment
+        const double a = 64 * des_v * des_v - 192 * des_v * des_w - 80 * des_v + 144 * des_w * des_w - 120 * des_w + 25;
+        if (a < 0)
+        {
+            cmd_v = std::numeric_limits<double>::quiet_NaN();
+            cmd_w = std::numeric_limits<double>::quiet_NaN();
+            return;
+        }
+
+        const double sqrta = sqrt(a);
+        cmd_v = 0.5 * des_v - 0.75 * des_w - 0.0625 * sqrta + 0.3125;
+        cmd_w = 4.0 * des_w + (-8.0 * des_v - sqrta + 5.0) / 3.0;
+    }
+
     void cmd_vel(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
-        const double vel_x = msg->linear.x;
-        const double omega_z = msg->angular.z;
+        double vel_x;
+        double omega_z;
+        map_des2cmd(msg->linear.x, msg->angular.z, vel_x, omega_z);
+
+        if (std::isnan(vel_x) || std::isnan(omega_z))
+        {
+            RCLCPP_WARN(this->get_logger(), "Invalid velocity command.");
+            return;
+        }
 
         if (vel_x == 0.0 && omega_z == 0.0)
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _trajectories.clear();
             _frequency = 10.0;
-            return;
-        }
-
-        if (std::abs(vel_x / omega_z) < _min_radius)
-        {
-            RCLCPP_WARN(this->get_logger(), "The turning radius is smaller than the minimum radius.");
             return;
         }
 
@@ -124,9 +140,6 @@ public:
         this->declare_parameter("hip_positions", _hip_positions);
         this->get_parameter("hip_positions", _hip_positions);
         assert(_hip_positions.size() == 2 * leg_names.size());
-
-        this->declare_parameter("min_radius", _min_radius);
-        this->get_parameter("min_radius", _min_radius);
 
         this->declare_parameter("robot_width", _robot_width);
         this->get_parameter("robot_width", _robot_width);

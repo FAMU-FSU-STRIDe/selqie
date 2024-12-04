@@ -2,7 +2,6 @@
   ros__parameters:
     leg_names: ['FL', 'RL', 'RR', 'FR']
     hip_positions: [1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0]
-    min_radius: 0.0
     robot_width: 0.25
     body_height: 0.175
     center_shift: -0.5

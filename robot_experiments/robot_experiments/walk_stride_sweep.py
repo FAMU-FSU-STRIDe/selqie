@@ -17,7 +17,7 @@ class SELQIERobotNode(Node):
         self.declare_parameter('angular_velocities', [-2.0, -1.0, -0.5, -0.25, 0.0, 0.25, 0.5, 1.0, 2.0])
         self.angular_velocities = self.get_parameter('angular_velocities').value
         
-        self.declare_parameter('sample_time', 1.0)
+        self.declare_parameter('sample_time', 30.0)
         self.sample_time = self.get_parameter('sample_time').value
 
         self.num_samples = len(self.linear_velocities) * len(self.angular_velocities)

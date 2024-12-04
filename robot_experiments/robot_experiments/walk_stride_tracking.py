@@ -16,13 +16,13 @@ class SELQIERobotNode(Node):
         
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
         
-        self.declare_parameter('linear_velocity', 0.25)
+        self.declare_parameter('linear_velocity', 0.15)
         self.linear_velocity = self.get_parameter('linear_velocity').value
         
-        self.declare_parameter('angular_velocity', 0.5)
+        self.declare_parameter('angular_velocity', 0.1)
         self.angular_velocity = self.get_parameter('angular_velocity').value
         
-        self.declare_parameter('duration', 120.0)
+        self.declare_parameter('duration', 60.0)
         self.duration = self.get_parameter('duration').value
         
         wait_for_subs([self.cmd_vel_pub])
