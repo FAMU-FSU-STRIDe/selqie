@@ -35,7 +35,7 @@ private:
         const double vel_x = msg->linear.x;
         const double omega_z = msg->angular.z;
 
-        if (std::abs(vel_x) < 1e-6)
+        if (vel_x == 0.0 && omega_z == 0.0)
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _trajectories.clear();
@@ -56,12 +56,12 @@ private:
         double stance_length_left, stance_length_right;
         if (std::abs(vel_left) > std::abs(vel_right))
         {
-            stance_length_left = _max_stance_length;
+            stance_length_left = vel_left > 0 ? _max_stance_length : -_max_stance_length;
             stance_length_right = vel_right * _duty_factor / frequency;
         }
         else
         {
-            stance_length_right = _max_stance_length;
+            stance_length_right = vel_right > 0 ? _max_stance_length : -_max_stance_length;
             stance_length_left = vel_left * _duty_factor / frequency;
         }
 

@@ -18,7 +18,6 @@ robot_msgs::msg::LegTrajectory make_walk_stride(const int num_points, const doub
     const double touchdown_x = 0.5 * stance_length * (1.0 + center_shift);
     const double takeoff_x = touchdown_x - stance_length;
     const double x0 = 0.5 * (takeoff_x + touchdown_x);
-    const double dx = stance_length / points_per_half;
     const double stance_duration = duration * duty_factor;
     const double stance_dt = stance_duration / points_per_half;
     const double swing_duration = duration * (1.0 - duty_factor);
@@ -34,19 +33,19 @@ robot_msgs::msg::LegTrajectory make_walk_stride(const int num_points, const doub
         const int i = (k + offset_index) % num_points;
         const int p = i % points_per_half;
         const int q = i / points_per_half;
+        const double f = static_cast<double>(p) / points_per_half;
         if (q == 0)
         {
             t += stance_dt;
-            leg_command.pos_setpoint.x = touchdown_x - p * dx;
+            leg_command.pos_setpoint.x = touchdown_x - f * stance_length;
             leg_command.pos_setpoint.z = -body_height;
             leg_trajectory.commands.push_back(leg_command);
         }
         else
         {
             t += swing_dt;
-            const double x = takeoff_x + p * dx;
-            leg_command.pos_setpoint.x = x;
-            leg_command.pos_setpoint.z = -body_height + step_height * std::sqrt(1.0 - std::pow((x - x0) / (0.5 * stance_length), 2));
+            leg_command.pos_setpoint.x = x0 - 0.5 * stance_length * std::cos(M_PI * f);
+            leg_command.pos_setpoint.z = -body_height + step_height * std::sin(M_PI * f);
             leg_trajectory.commands.push_back(leg_command);
         }
     }
