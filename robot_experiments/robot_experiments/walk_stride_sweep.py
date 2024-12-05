@@ -47,6 +47,8 @@ class SELQIERobotNode(Node):
         
         if self.current_sample >= self.num_samples:
 
+            self.cmd_vel_pub.publish(Twist())
+
             plt.figure()
             plt.subplot(2, 1, 1)
             plt.title('Linear Velocity Actual vs Commanded')

@@ -44,6 +44,9 @@ class SELQIERobotNode(Node):
     def timer_callback(self):
         
         if self.t >= self.duration:
+            
+            self.cmd_vel_pub.publish(Twist())
+
             plt.figure()
             plt.plot(self.x, self.y, label='Trajectory')
             plt.xlabel('X')
