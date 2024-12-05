@@ -15,14 +15,6 @@ private:
     GaitPlanningParams _params;
 
 public:
-    enum GaitType : uint8_t
-    {
-        WALK,
-        SWIM,
-        JUMP,
-        SINK
-    };
-
     GaitPlanningModel()
     {
         _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>());

@@ -8,6 +8,7 @@ using namespace sbmpo;
 enum StateIndex : uint8_t
 {
     TIME,
+    Q,
     X,
     Y,
     Z,
@@ -17,26 +18,62 @@ enum StateIndex : uint8_t
 // Control vector indices
 enum ControlIndex : uint8_t
 {
-    dX,
-    dY,
-    dZ,
+    Wz,
+    Vx,
+    Vz,
     NEW_GAIT
+};
+
+enum GaitType : uint8_t
+{
+    WALK,
+    SWIM,
+    JUMP,
+    SINK
 };
 
 struct GaitDynamicsOptions
 {
+    float sample_time = 1.0F;
+    int sample_resolution = 10;
     float cost_of_transport = 1.0F;
+    float jumping_loadup_time = 0.5F;
 };
 
 // Interface class for gait dynamics models
 class GaitDynamics
 {
+protected:
+    GaitDynamicsOptions _options;
+
 public:
-    virtual State getNextState(const State &state, const Control &control) = 0;
+    GaitDynamics(const GaitDynamicsOptions &options) : _options(options) {}
 
-    virtual float getCost(const State &state1, const State &state2, const Control &control) = 0;
+    virtual State getNextState(const State &state, const Control &control)
+    {
+        const float dt = _options.sample_time / _options.sample_resolution;
+        State next_state = state;
+        for (int i = 0; i < _options.sample_resolution; i++)
+        {
+            next_state[TIME] += dt;
+            next_state[Q] += control[Wz] * dt;
+            next_state[X] += control[Vx] * std::cos(state[Q]) * dt;
+            next_state[Y] += control[Vx] * std::sin(state[Q]) * dt;
+            next_state[Z] += control[Vz] * dt;
+            next_state[GAIT] = control[NEW_GAIT];
+        }
+        return next_state;
+    }
 
-    virtual bool isValid(const State &state) = 0;
+    virtual float getCost(const State &state1, const State &state2, const Control &control)
+    {
+        return _options.cost_of_transport * _options.sample_time;
+    }
+
+    virtual bool isValid(const State &state)
+    {
+        return true;
+    }
 
     virtual std::vector<Control> getControls(const State &state) = 0;
 };
@@ -45,51 +82,96 @@ public:
 class WalkingDynamics : public GaitDynamics
 {
 public:
-    WalkingDynamics() {}
+    WalkingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
-    State getNextState(const State &state, const Control &control) override
+    std::vector<Control> getControls(const State &state) override
     {
-        State next_state = state;
-        next_state[X] += control[dX];
-        next_state[Y] += control[dY];
-        next_state[Z] += control[dZ];
-        next_state[GAIT] = control[NEW_GAIT];
-        return next_state;
+        return {{+0.20, +0.05, 0.0, WALK},
+                {+0.20, 0.000, 0.0, WALK},
+                {+0.20, -0.05, 0.0, WALK},
+                {+0.10, +0.10, 0.0, WALK},
+                {+0.10, +0.05, 0.0, WALK},
+                {+0.10, 0.000, 0.0, WALK},
+                {+0.10, -0.05, 0.0, WALK},
+                {+0.10, -0.10, 0.0, WALK},
+                {+0.05, +0.25, 0.0, WALK},
+                {+0.05, +0.10, 0.0, WALK},
+                {+0.05, -0.10, 0.0, WALK},
+                {+0.05, -0.25, 0.0, WALK},
+                {0.000, +0.25, 0.0, WALK},
+                {0.000, +0.10, 0.0, WALK},
+                {0.000, +0.05, 0.0, WALK},
+                {0.000, -0.05, 0.0, WALK},
+                {0.000, -0.10, 0.0, WALK},
+                {0.000, -0.25, 0.0, WALK},
+                {-0.05, +0.25, 0.0, WALK},
+                {-0.05, +0.10, 0.0, WALK},
+                {-0.05, -0.10, 0.0, WALK},
+                {-0.05, -0.25, 0.0, WALK},
+                {-0.10, +0.10, 0.0, WALK},
+                {-0.10, +0.05, 0.0, WALK},
+                {-0.10, 0.000, 0.0, WALK},
+                {-0.10, -0.05, 0.0, WALK},
+                {-0.10, -0.10, 0.0, WALK},
+                {-0.20, +0.05, 0.0, WALK},
+                {-0.20, 0.000, 0.0, WALK},
+                {-0.20, -0.05, 0.0, WALK},
+                {0.000, 0.000, 0.0, JUMP}};
     }
-
-    float getCost(const State &state1, const State &state2, const Control &control) override {}
-
-    bool isValid(const State &state) override {}
-
-    std::vector<Control> getControls(const State &state) override {}
 };
 
 // Swimming dynamics model
 class SwimmingDynamics : public GaitDynamics
 {
 public:
-    SwimmingDynamics() {}
+    SwimmingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
-    State getNextState(const State &state, const Control &control) override {}
+    bool isValid(const State &state)
+    {
+        return state[Z] > 0.0;
+    }
 
-    float getCost(const State &state1, const State &state2, const Control &control) override {}
-
-    bool isValid(const State &state) override {}
-
-    std::vector<Control> getControls(const State &state) override {}
+    std::vector<Control> getControls(const State &state) override
+    {
+        return {{+0.05, +0.10, 0.000, SWIM},
+                {+0.05, 0.000, 0.000, SWIM},
+                {+0.05, -0.10, 0.000, SWIM},
+                {0.000, +0.10, 0.000, SWIM},
+                {0.000, +0.05, 0.000, SWIM},
+                {0.000, -0.05, 0.000, SWIM},
+                {0.000, -0.10, 0.000, SWIM},
+                {-0.05, +0.10, 0.000, SWIM},
+                {-0.05, 0.000, 0.000, SWIM},
+                {-0.05, -0.10, 0.000, SWIM},
+                {0.000, +0.10, +0.05, SWIM},
+                {0.000, +0.05, +0.05, SWIM},
+                {0.000, -0.05, +0.05, SWIM},
+                {0.000, -0.10, +0.05, SWIM},
+                {0.000, +0.10, -0.05, SWIM},
+                {0.000, +0.05, -0.05, SWIM},
+                {0.000, -0.05, -0.05, SWIM},
+                {0.000, -0.10, -0.05, SWIM},
+                {0.000, 0.000, 0.000, SINK}};
+    }
 };
 
 // Jumping dynamics model
 class JumpingDynamics : public GaitDynamics
 {
 public:
-    JumpingDynamics() {}
+    JumpingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
-    State getNextState(const State &state, const Control &control) override {}
+    State getNextState(const State &state, const Control &control) override
+    {
+        State next_state = state;
+        next_state[TIME] += _options.sample_time + _options.jumping_loadup_time;
+        next_state[X] += control[Vx] * _options.sample_time;
+        next_state[Z] += control[Vz] * _options.sample_time;
+        next_state[GAIT] = static_cast<float>(SWIM);
+        return next_state;
+    }
 
     float getCost(const State &state1, const State &state2, const Control &control) override {}
-
-    bool isValid(const State &state) override {}
 
     std::vector<Control> getControls(const State &state) override {}
 };
@@ -98,7 +180,7 @@ public:
 class SinkingDynamics : public GaitDynamics
 {
 public:
-    SinkingDynamics() {}
+    SinkingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
     State getNextState(const State &state, const Control &control) override {}
 
