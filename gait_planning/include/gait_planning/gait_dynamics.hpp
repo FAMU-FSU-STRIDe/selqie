@@ -38,6 +38,7 @@ struct GaitDynamicsOptions
     int sample_resolution = 10;
     float cost_of_transport = 1.0F;
     float jumping_loadup_time = 0.5F;
+    float sinking_speed = 0.25F;
 };
 
 // Interface class for gait dynamics models
@@ -65,13 +66,14 @@ public:
         return next_state;
     }
 
-    virtual float getCost(const State &state1, const State &state2, const Control &control)
+    virtual float getCost(const State &, const State &, const Control &)
     {
         return _options.cost_of_transport * _options.sample_time;
     }
 
     virtual bool isValid(const State &state)
     {
+        (void)state;
         return true;
     }
 
@@ -84,7 +86,7 @@ class WalkingDynamics : public GaitDynamics
 public:
     WalkingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
-    std::vector<Control> getControls(const State &state) override
+    std::vector<Control> getControls(const State &) override
     {
         return {{+0.20, +0.05, 0.0, WALK},
                 {+0.20, 0.000, 0.0, WALK},
@@ -128,10 +130,10 @@ public:
 
     bool isValid(const State &state)
     {
-        return state[Z] > 0.0;
+        return GaitDynamics::isValid(state) && state[Z] > 0.0;
     }
 
-    std::vector<Control> getControls(const State &state) override
+    std::vector<Control> getControls(const State &) override
     {
         return {{+0.05, +0.10, 0.000, SWIM},
                 {+0.05, 0.000, 0.000, SWIM},
@@ -167,13 +169,18 @@ public:
         next_state[TIME] += _options.sample_time + _options.jumping_loadup_time;
         next_state[X] += control[Vx] * _options.sample_time;
         next_state[Z] += control[Vz] * _options.sample_time;
-        next_state[GAIT] = static_cast<float>(SWIM);
+        next_state[GAIT] = control[NEW_GAIT];
         return next_state;
     }
 
-    float getCost(const State &state1, const State &state2, const Control &control) override {}
-
-    std::vector<Control> getControls(const State &state) override {}
+    std::vector<Control> getControls(const State &) override 
+    {
+        return {
+            {0.0, +0.10, +0.40, SWIM},
+            {0.0, +0.05, +0.45, SWIM},
+            {0.0, 0.000, +0.50, SWIM},
+        };
+    }
 };
 
 // Sinking dynamics model
@@ -182,11 +189,19 @@ class SinkingDynamics : public GaitDynamics
 public:
     SinkingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
-    State getNextState(const State &state, const Control &control) override {}
+    State getNextState(const State &state, const Control &control) override 
+    {
+        State next_state = state;
+        next_state[TIME] += state[Z] / _options.sinking_speed;
+        next_state[Z] = 0.0;
+        next_state[GAIT] = control[NEW_GAIT];
+        return next_state;
+    }
 
-    float getCost(const State &state1, const State &state2, const Control &control) override {}
-
-    bool isValid(const State &state) override {}
-
-    std::vector<Control> getControls(const State &state) override {}
+    std::vector<Control> getControls(const State &) override 
+    {
+        return {
+            {0.0, 0.0, 0.0, WALK}
+        };
+    }
 };
