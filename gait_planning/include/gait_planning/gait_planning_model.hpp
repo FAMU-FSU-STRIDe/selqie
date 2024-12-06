@@ -17,10 +17,11 @@ private:
 public:
     GaitPlanningModel()
     {
-        _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>());
-        _gait_dynamics.emplace_back(std::make_unique<SwimmingDynamics>());
-        _gait_dynamics.emplace_back(std::make_unique<JumpingDynamics>());
-        _gait_dynamics.emplace_back(std::make_unique<SinkingDynamics>());
+        GaitDynamicsOptions options;
+        _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>(options));
+        _gait_dynamics.emplace_back(std::make_unique<SwimmingDynamics>(options));
+        _gait_dynamics.emplace_back(std::make_unique<JumpingDynamics>(options));
+        _gait_dynamics.emplace_back(std::make_unique<SinkingDynamics>(options));
     }
 
     /*
