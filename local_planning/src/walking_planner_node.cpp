@@ -24,7 +24,8 @@ static inline rclcpp::QoS qos_reliable()
 class WalkingPlannerNode : public rclcpp::Node
 {
 private:
-    std::unique_ptr<SBMPO<WalkingModel>> _sbmpo;
+    std::unique_ptr<SBMPO> _sbmpo;
+    std::shared_ptr<WalkingModel> _model;
     SearchParameters _search_params;
     WalkingModelParams _model_params;
     double _stand_height = 0.25;
@@ -55,7 +56,7 @@ private:
     {
         grid_map::GridMap map;
         grid_map::GridMapRosConverter::fromMessage(*msg, map);
-        _sbmpo->model()->set_map(map);
+        _model->set_map(map);
     }
 
     void generateActions()
@@ -116,8 +117,8 @@ public:
         this->declare_parameter("solve_frequency", solve_frequency);
         this->get_parameter("solve_frequency", solve_frequency);
 
-        _sbmpo = std::make_unique<SBMPO<WalkingModel>>();
-        _sbmpo->model()->set_params(_model_params);
+        _model = std::make_shared<WalkingModel>(_model_params);
+        _sbmpo = std::make_unique<SBMPO>(_model);
         generateActions();
 
         _sub_odom = this->create_subscription<nav_msgs::msg::Odometry>(

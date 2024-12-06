@@ -25,6 +25,9 @@ private:
     bool _is_map_set = false;
 
 public:
+    WalkingModel(const WalkingModelParams &params)
+        : _params(params) {}
+
     void set_map(const grid_map::GridMap &map)
     {
         if (map.exists("cost"))
@@ -36,11 +39,6 @@ public:
         {
             _is_map_set = false;
         }
-    }
-
-    void set_params(const WalkingModelParams &params)
-    {
-        _params = params;
     }
 
     State next_state(const State &x, const Control &u) override
