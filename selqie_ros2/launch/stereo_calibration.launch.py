@@ -8,8 +8,8 @@ def CameraCalibrationNode():
         name="camera_calibration",
         output='screen',
         arguments=[
-            '--size', '12x9',
-            '--square', '0.020',
+            '--size', '32x22',
+            '--square', '0.025',
             '--approximate', '0.05',
         ],
         remappings=[
