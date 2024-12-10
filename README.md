@@ -4,6 +4,8 @@
 | --------------------- | ------------------------ |
 | Jonathan Tyler Boylan | jtylerboylan@outlook.com |
 
+<img src="./docs/figures/SoftwareStackNetwork.png"/>
+
 ## Documentation
 
 1. [Hardware Links for SELQIE](./docs/Hardware.md)
