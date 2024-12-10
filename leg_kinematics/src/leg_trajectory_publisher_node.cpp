@@ -75,7 +75,7 @@ public:
 
             if (idx >= traj.timing.size() || traj.commands.empty())
             {
-                rclcpp::sleep_for(std::chrono::milliseconds(10));
+                this->get_clock()->sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
@@ -83,7 +83,7 @@ public:
             const auto cdiff = (this->now() - cstart).to_chrono<std::chrono::nanoseconds>();
             if (delay > cdiff)
             {
-                rclcpp::sleep_for(delay - cdiff);
+                this->get_clock()->sleep_for(delay - cdiff);
             }
 
             _leg_command_pub->publish(traj.commands[idx++]);

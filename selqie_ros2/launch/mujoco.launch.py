@@ -60,7 +60,9 @@ def Walk2DNode():
         package='stride_maker',
         executable='walk2d_node',
         name='walk2d_node',
-        parameters=[os.path.join(CONFIG_FOLDER, 'walk2d_config.yaml')]
+        parameters=[os.path.join(CONFIG_FOLDER, 'walk2d_config.yaml'), {
+            'use_sim_time': True
+        }],
     )
 
 def generate_launch_description():

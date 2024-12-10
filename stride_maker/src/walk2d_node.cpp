@@ -106,17 +106,17 @@ private:
     {
         while (rclcpp::ok())
         {
-            std::chrono::milliseconds duration;
+            double frequency;
             std::vector<robot_msgs::msg::LegTrajectory> trajectories;
             {
                 std::lock_guard<std::mutex> lock(_mutex);
                 trajectories = _trajectories;
-                duration = std::chrono::milliseconds(static_cast<int>(1000.0 / _frequency));
+                frequency = _frequency;
             }
 
             if (trajectories.empty())
             {
-                rclcpp::sleep_for(std::chrono::milliseconds(100));
+                this->get_clock()->sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
@@ -126,7 +126,7 @@ private:
                 _leg_traj_pubs[i]->publish(trajectories[i]);
             }
 
-            rclcpp::sleep_for(duration);
+            this->get_clock()->sleep_for(std::chrono::milliseconds(static_cast<long>(1000.0 / frequency)));
         }
     }
 
