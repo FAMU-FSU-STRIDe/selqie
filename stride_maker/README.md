@@ -1,5 +1,4 @@
 # Stride Maker Notes
-12/6/2024
 
 ## Stride Generation
 - File: include/stride_maker/stride_maker.hpp

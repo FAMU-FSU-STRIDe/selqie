@@ -1,5 +1,4 @@
 # Gait Planning Notes
-12/7/2024
 
 - Using SBMPO to generate gait plans
 - 4 different gait types:
