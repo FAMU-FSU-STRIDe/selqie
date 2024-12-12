@@ -14,12 +14,8 @@ find_package(pcl_ros REQUIRED)
 add_executable(ground_plane_detection_node src/ground_plane_detection_node.cpp)
 ament_target_dependencies(ground_plane_detection_node rclcpp sensor_msgs pcl_ros)
 
-add_executable(complinalg_final_project src/complinalg_final_project.cpp)
-ament_target_dependencies(complinalg_final_project pcl_ros)
-
 install(TARGETS
   ground_plane_detection_node
-  complinalg_final_project
   DESTINATION lib/${PROJECT_NAME}
 )
 
