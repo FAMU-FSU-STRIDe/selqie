@@ -15,9 +15,10 @@ private:
     GaitPlanningParams _params;
 
 public:
-    GaitPlanningModel()
+    GaitPlanningModel(const GaitPlanningParams &params) : _params(params)
     {
         GaitDynamicsOptions options;
+        _gait_dynamics.emplace_back(nullptr);
         _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>(options));
         _gait_dynamics.emplace_back(std::make_unique<SwimmingDynamics>(options));
         _gait_dynamics.emplace_back(std::make_unique<JumpingDynamics>(options));

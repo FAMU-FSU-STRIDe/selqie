@@ -26,6 +26,7 @@ enum ControlIndex : uint8_t
 
 enum GaitType : uint8_t
 {
+    NONE,
     WALK,
     SWIM,
     JUMP,
