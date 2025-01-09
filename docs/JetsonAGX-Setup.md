@@ -46,7 +46,7 @@ sudo apt update && sudo apt upgrade
 ### 4. Install SELQIE Repository
 ```
 mkdir ~/selqie_ws
-git clone git@github.com:FAMU-FSU-STRIDe/selqie src
+git clone git@github.com:FAMU-FSU-STRIDe/selqie ~/selqie_ws/src
 ```
 
 ### 5. Run Installation Bash Script

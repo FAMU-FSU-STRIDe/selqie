@@ -12,11 +12,6 @@ case $arg in
     DEVEL_FLAG=true
     shift
     ;;
-  *)
-    echo "Unknown flag: $arg"
-    echo "Usage: $0 [-d|--devel]"
-    exit 1
-    ;;
 esac
 
 if [ "$DEVEL_FLAG" = true ]; then
