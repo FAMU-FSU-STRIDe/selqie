@@ -27,7 +27,7 @@ else
 fi
 
 # OpenCV bug fix
-if [ "$DEVEL_FLAG" = false ]; then
+if [ "$DEVEL_FLAG" = false ] && ! sudo apt-mark showhold | grep -q libopencv-dev; then
     sudo apt purge -y *libopencv*
     sudo apt remove -y opencv-licenses
     sudo apt install -y libopencv-dev=4.5.*
