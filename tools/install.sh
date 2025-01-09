@@ -19,6 +19,19 @@ case $arg in
     ;;
 esac
 
+if [ "$DEVEL_FLAG" = true ]; then
+    echo "Installing on development computer (Ubuntu 22.04)"
+else
+    echo "Installing on Jetson AGX Orin (Jetpack 6.1)"
+fi
+
+# OpenCV bug fix
+if [ "$DEVEL_FLAG" = false ]; then
+    sudo apt purge *libopencv*
+    sudo apt remove opencv-licenses
+    sudo apt install libopencv-dev=4.5.*
+    sudo apt-mark hold libopencv-dev
+fi
 
 # Update the system
 sudo apt update && sudo apt upgrade -y

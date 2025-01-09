@@ -18,7 +18,7 @@
    - Press the Power button (left) and press the Reset button (right), all while holding down the Recovery button (middle)
 3. Connect Jetson to Host Machine by a USB-C cable
 4. Select Jetson AGX Orin 64GB Board in SDK Manager
-5. Select all additional SDKS, except for Computer Vision *(OpenCV issue)*
+5. Select all additional SDKS
 6. Wait for Download and Install to finish
    - Some configuration prompts will appear during the installation
    ```
