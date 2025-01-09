@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Location of SELQIE workspace
+SELQIE_WS=${HOME}/selqie_ws
+
+# ROS2 Distro
+ROS2_DISTRO="humble"
+
 # Exit on failure
 set -e
 
@@ -22,9 +28,9 @@ fi
 
 # OpenCV bug fix
 if [ "$DEVEL_FLAG" = false ]; then
-    sudo apt purge *libopencv*
-    sudo apt remove opencv-licenses
-    sudo apt install libopencv-dev=4.5.*
+    sudo apt purge -y *libopencv*
+    sudo apt remove -y opencv-licenses
+    sudo apt install -y libopencv-dev=4.5.*
     sudo apt-mark hold libopencv-dev
 fi
 
@@ -46,11 +52,10 @@ if [ "$DEVEL_FLAG" = true ]; then
 fi
 
 # Install ROS2 Humble
-ROS2_DISTRO="humble"
 sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 sudo apt update && sudo apt upgrade -y
-sudo apt install ros-${ROS2_DISTRO}-desktop
+sudo apt install -y ros-${ROS2_DISTRO}-desktop
 
 # Install ROS2 dependencies
 pip3 install setuptools==58.1.0
@@ -101,7 +106,6 @@ if [ "$DEVEL_FLAG" = false ]; then
 fi
 
 # Build the project
-SELQIE_WS=${HOME}/selqie_ws
 source /opt/ros/${ROS2_DISTRO}/setup.bash && cd ${SELQIE_WS} && colcon build --symlink-install
 
 # Source ROS2 in bashrc
