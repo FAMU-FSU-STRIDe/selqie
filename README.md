@@ -222,13 +222,7 @@ sudo /opt/nvidia/jetson-io/config-by-function.py -o dt can0 can1
 ### Terminal Mux
 - MuJoCo: `./src/tmux/unitree_a1.sh`
 
-# Other Documentation
-
-1. [Hardware Links for SELQIE](./docs/Hardware.md)
-2. [Jetson AGX Flashing and Software Setup](./docs/JetsonAGX-Setup.md)
-
 ## Tools
-
 1. [Configure an ODrive](./tools/configure_odrive.py)
 2. [Flash the SELQIE Jetson](./tools/install.sh)
 3. [Start the Jetson CAN Interfaces](./tools/loadcan_jetson.sh)

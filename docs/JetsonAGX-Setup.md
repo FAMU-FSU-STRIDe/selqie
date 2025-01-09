@@ -18,30 +18,28 @@
    - Press the Power button (left) and press the Reset button (right), all while holding down the Recovery button (middle)
 3. Connect Jetson to Host Machine by a USB-C cable
 4. Select Jetson AGX Orin 64GB Board in SDK Manager
-5. Do not select any OpenCV components
+5. Select all additional SDKS, except for Computer Vision *(OpenCV issue)*
 6. Wait for Download and Install to finish
    - Some configuration prompts will appear during the installation
    ```
    Username: selqie
    Password: *Lab password*
    ```
-7. When complete, attach monitor to Jetson and perform software installation steps
+7. When complete, connect the Jetson to the network via Ethernet or WiFi and note the IP address
 
 ## Install Software
 
-### 1. Update and Upgrade
+### 1. SSH into the Jetson
+```
+ssh selqie@<ip address>
+```
+
+### 2. Update and Upgrade
 ```
 sudo apt update && sudo apt upgrade
 ```
 
-### 2. Install Firefox
-```
-sudo apt install firefox
-```
-- *Note:* This takes a long time to install
-- Open this page in firefox on the Jetson for convenience
-
-### 3. Generate SSH Key
+### 3. Generate SSH Key on the Jetson
 1. [Generate new SSH Key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
 2. [Add SSH Key to Github](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
