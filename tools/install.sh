@@ -44,8 +44,7 @@ sudo apt update
 sudo apt install -y  \
     curl wget gpg apt-transport-https gdb \
     python3-pip python3-smbus \
-    libsocketcan-dev can-utils libeigen3-dev \
-    libx11-dev xorg libglfw3 libglfw3-dev
+    libsocketcan-dev can-utils libeigen3-dev
 if [ "$DEVEL_FLAG" = true ]; then
     # MuJoCo dependencies (Development Only)
     sudo apt install -y libx11-dev xorg libglfw3 libglfw3-dev
