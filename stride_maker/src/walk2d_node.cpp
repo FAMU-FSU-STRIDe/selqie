@@ -2,8 +2,10 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include "stride_maker/stride_maker.hpp"
 
-#include <thread>
-#include <mutex>
+static inline rclcpp::QoS qos_fast()
+{
+    return rclcpp::QoS(rclcpp::KeepLast(10)).best_effort();
+}
 
 static inline rclcpp::QoS qos_reliable()
 {
@@ -14,7 +16,8 @@ class Walk2DNode : public rclcpp::Node
 {
 private:
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr _cmd_vel_sub;
-    std::vector<rclcpp::Publisher<robot_msgs::msg::LegTrajectory>::SharedPtr> _leg_traj_pubs;
+    std::vector<rclcpp::Publisher<robot_msgs::msg::LegCommand>::SharedPtr> _leg_cmd_pubs;
+    rclcpp::TimerBase::SharedPtr _timer;
 
     std::vector<double> _hip_positions;
     double _robot_width = 1.0;
@@ -25,9 +28,9 @@ private:
     double _duty_factor = 0.5;
     double _max_stance_length = 0.15;
 
-    std::mutex _mutex;
+    std::size_t _idx = 0;
     std::vector<robot_msgs::msg::LegTrajectory> _trajectories;
-    double _frequency = 10.0;
+    rclcpp::Time _start_time;
 
     void map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
     {
@@ -45,7 +48,7 @@ private:
         cmd_w = 4.0 * des_w + (-8.0 * des_v - sqrta + 5.0) / 3.0;
     }
 
-    void cmd_vel(const geometry_msgs::msg::Twist::SharedPtr msg)
+    void updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
         double vel_x;
         double omega_z;
@@ -59,9 +62,7 @@ private:
 
         if (vel_x == 0.0 && omega_z == 0.0)
         {
-            std::lock_guard<std::mutex> lock(_mutex);
             _trajectories.clear();
-            _frequency = 10.0;
             return;
         }
 
@@ -97,36 +98,36 @@ private:
                                               _center_shift, stance_length_right, _body_height,
                                               _step_height, 0.75);
 
-        std::lock_guard<std::mutex> lock(_mutex);
+        _idx = 0;
         _trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
-        _frequency = frequency;
+        _start_time = this->now();
     }
 
-    void run_walk()
+    void publishLegCommand()
     {
-        while (rclcpp::ok())
+        if (_trajectories.empty())
         {
-            double frequency;
-            std::vector<robot_msgs::msg::LegTrajectory> trajectories;
-            {
-                std::lock_guard<std::mutex> lock(_mutex);
-                trajectories = _trajectories;
-                frequency = _frequency;
-            }
+            return;
+        }
 
-            if (trajectories.empty())
-            {
-                this->get_clock()->sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
+        assert(_trajectories.size() == _leg_cmd_pubs.size());
 
-            assert(trajectories.size() == _leg_traj_pubs.size());
-            for (size_t i = 0; i < _leg_traj_pubs.size(); i++)
-            {
-                _leg_traj_pubs[i]->publish(trajectories[i]);
-            }
+        if (_idx >= _trajectories[0].timing.size())
+        {
+            _idx = 0;
+            _start_time = this->now();
+        }
 
-            this->get_clock()->sleep_for(std::chrono::milliseconds(static_cast<long>(1000.0 / frequency)));
+        const auto cdiff = (this->now() - _start_time).to_chrono<std::chrono::milliseconds>();
+        const auto delay = std::chrono::milliseconds(time_t(_trajectories[0].timing[_idx] * 1E3));
+        if (delay <= cdiff)
+        {
+            for (size_t i = 0; i < _leg_cmd_pubs.size(); i++)
+            {
+                assert(_idx < _trajectories[i].commands.size());
+                _leg_cmd_pubs[i]->publish(_trajectories[i].commands[_idx]);
+            }
+            _idx++;
         }
     }
 
@@ -162,15 +163,16 @@ public:
         this->declare_parameter("max_stance_length", _max_stance_length);
         this->get_parameter("max_stance_length", _max_stance_length);
 
-        _cmd_vel_sub = this->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", qos_reliable(), std::bind(&Walk2DNode::cmd_vel, this, std::placeholders::_1));
+        _cmd_vel_sub = this->create_subscription<geometry_msgs::msg::Twist>(
+            "cmd_vel", qos_reliable(), std::bind(&Walk2DNode::updateCmdVel, this, std::placeholders::_1));
 
         for (const auto &leg_name : leg_names)
         {
-            _leg_traj_pubs.push_back(this->create_publisher<robot_msgs::msg::LegTrajectory>("leg" + leg_name + "/trajectory", qos_reliable()));
+            _leg_cmd_pubs.push_back(this->create_publisher<robot_msgs::msg::LegCommand>(
+                "leg" + leg_name + "/command", qos_fast()));
         }
 
-        std::thread thread(&Walk2DNode::run_walk, this);
-        thread.detach();
+        _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&Walk2DNode::publishLegCommand, this));
 
         RCLCPP_INFO(this->get_logger(), "Walk2D Node Initialized.");
     }
