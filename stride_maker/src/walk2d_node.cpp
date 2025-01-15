@@ -28,7 +28,7 @@ private:
     double _duty_factor = 0.5;
     double _max_stance_length = 0.15;
 
-    std::size_t _idx = 0;
+    std::size_t _idx = std::numeric_limits<std::size_t>::max();
     std::vector<robot_msgs::msg::LegTrajectory> _trajectories;
     rclcpp::Time _start_time;
 
@@ -43,7 +43,7 @@ private:
             return;
         }
 
-        const double sqrta = sqrt(a);
+        const double sqrta = std::sqrt(a);
         cmd_v = 0.5 * des_v - 0.75 * des_w - 0.0625 * sqrta + 0.3125;
         cmd_w = 4.0 * des_w + (-8.0 * des_v - sqrta + 5.0) / 3.0;
     }
@@ -98,9 +98,7 @@ private:
                                               _center_shift, stance_length_right, _body_height,
                                               _step_height, 0.75);
 
-        _idx = 0;
         _trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
-        _start_time = this->now();
     }
 
     void publishLegCommand()
