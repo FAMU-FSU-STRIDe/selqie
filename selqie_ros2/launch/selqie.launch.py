@@ -21,6 +21,7 @@ def generate_launch_description():
         IncludeLaunchFile('bar100.launch.py'),
         IncludeLaunchFile('lights.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
+        IncludeLaunchFile('ekf.launch.py'),
         IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
-        IncludeLaunchFile('visualization.launch.py'),
+        # IncludeLaunchFile('visualization.launch.py'),
     ])
