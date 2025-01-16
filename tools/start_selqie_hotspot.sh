@@ -18,7 +18,7 @@ CON_NAME="Hotspot"
 command -v nmcli > /dev/null 2>&1 || die "nmcli not found. Please install NetworkManager."
 
 # Check if Wi-Fi device is available
-WIFI_DEVICE=$(nmcli device status | grep wifi | awk '{print $1}')
+WIFI_DEVICE=$(nmcli device status | grep wifi | awk 'NR==1 {print $1}')
 if [ -z "$WIFI_DEVICE" ]; then
     die "No Wi-Fi device found. Ensure your Wi-Fi adapter is enabled."
 fi
