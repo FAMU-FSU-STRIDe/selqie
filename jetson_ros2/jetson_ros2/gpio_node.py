@@ -36,6 +36,8 @@ class GPIONode(Node):
             self.pwm = GPIO.PWM(self.gpio_pin, self.frequency)
             self.pwm.start(self.initial_value)
             
+        self.get_logger().info("Jetson GPIO Node initialized.")
+            
 
     def on_cleanup(self):
         if self.is_pwm:
@@ -43,6 +45,8 @@ class GPIONode(Node):
         elif self.is_output:
             GPIO.output(self.gpio_pin, GPIO.LOW)
         GPIO.cleanup()
+        
+        self.get_logger().info("Jetson GPIO Node shut down.")
 
     def timer_callback(self):
         val = GPIO.input(self.gpio_pin)
@@ -56,10 +60,13 @@ class GPIONode(Node):
             if val > 100:
                 val = 100
             self.pwm.ChangeDutyCycle(val)
+            self.get_logger().info(f"Set PWM duty cycle on {self.gpio_pin} to {val}%")
         elif val == 0:
             GPIO.output(self.gpio_pin, GPIO.LOW)
+            self.get_logger().info(f"Set GPIO pin {self.gpio_pin} to LOW")
         else:
             GPIO.output(self.gpio_pin, GPIO.HIGH)
+            self.get_logger().info(f"Set GPIO pin {self.gpio_pin} to HIGH")
 
 def main(args=None):
     rclpy.init(args=args)
