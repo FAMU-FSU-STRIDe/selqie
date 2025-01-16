@@ -42,7 +42,7 @@ sudo apt install -y software-properties-common
 sudo add-apt-repository universe -y
 sudo apt update
 sudo apt install -y  \
-    curl wget gpg apt-transport-https gdb \
+    curl wget gpg apt-transport-https gdb tmux \
     python3-pip python3-smbus \
     libsocketcan-dev can-utils libeigen3-dev
 if [ "$DEVEL_FLAG" = true ]; then

@@ -53,6 +53,8 @@ class GPIONode(Node):
     def subscriber_callback(self, msg):
         val = msg.data
         if self.is_pwm:
+            if val > 100:
+                val = 100
             self.pwm.ChangeDutyCycle(val)
         elif val == 0:
             GPIO.output(self.gpio_pin, GPIO.LOW)
