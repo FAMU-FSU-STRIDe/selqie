@@ -1,8 +1,8 @@
 clear
 close all
 
-stats = sbmpo_stats("/tmp/csv/stats.csv");
-[paths, nodes] = sbmpo_results("/tmp/csv/nodes.csv");
+stats = sbmpo_stats("/tmp/sbmpo_stats.csv");
+[paths, nodes] = sbmpo_results("/tmp/sbmpo_nodes.csv");
 
 goal_r = 0.1;
 start_state = [0; 0; 0];
