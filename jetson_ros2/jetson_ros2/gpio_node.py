@@ -1,7 +1,7 @@
 import Jetson.GPIO as GPIO
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt8
+from std_msgs.msg import Float32
 
 class GPIONode(Node):
     def __init__(self):
@@ -26,10 +26,10 @@ class GPIONode(Node):
 
         if self.is_output or self.is_pwm:
             GPIO.setup(self.gpio_pin, GPIO.OUT, initial=self.initial_value)
-            self.subscriber = self.create_subscription(UInt8, 'gpio/out', self.subscriber_callback, 10)
+            self.subscriber = self.create_subscription(Float32, 'gpio/out', self.subscriber_callback, 10)
         else:
             GPIO.setup(self.gpio_pin, GPIO.IN)
-            self.publisher = self.create_publisher(UInt8, 'gpio/in', 10)
+            self.publisher = self.create_publisher(Float32, 'gpio/in', 10)
             self.timer = self.create_timer(1.0 / self.frequency, self.timer_callback)
             
         if self.is_pwm:
@@ -50,15 +50,15 @@ class GPIONode(Node):
 
     def timer_callback(self):
         val = GPIO.input(self.gpio_pin)
-        msg = UInt8()
+        msg = Float32()
         msg.data = val
         self.publisher.publish(msg)
 
-    def subscriber_callback(self, msg):
+    def subscriber_callback(self, msg : Float32):
         val = msg.data
         if self.is_pwm:
-            if val > 100:
-                val = 100
+            if val > 100.0:
+                val = 100.0
             self.pwm.ChangeDutyCycle(val)
             self.get_logger().info(f"Set PWM duty cycle on {self.gpio_pin} to {val}%")
         elif val == 0:
