@@ -62,9 +62,9 @@ odrv0.axis0.motor.motor_thermistor.config.r_ref = 5000
 odrv0.axis0.motor.motor_thermistor.config.beta = 3977
 odrv0.axis0.motor.motor_thermistor.config.t_ref = 25
 
-
 print("Running motor calibration...")
 odrv0.axis0.requested_state = AXIS_STATE_MOTOR_CALIBRATION
+time.sleep(0.5)
 while odrv0.axis0.current_state != AXIS_STATE_IDLE:
 	time.sleep(0.1)
 
@@ -95,6 +95,7 @@ odrv0 = odrive.find_any()
 
 print("Running encoder calibration...")
 odrv0.axis0.requested_state = AXIS_STATE_ENCODER_OFFSET_CALIBRATION
+time.sleep(0.5)
 while odrv0.axis0.current_state != AXIS_STATE_IDLE:
 	time.sleep(0.1)
 	
