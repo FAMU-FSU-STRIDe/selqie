@@ -7,6 +7,7 @@ import subprocess
 
 from ament_index_python.packages import get_package_share_directory
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist, Pose, PoseStamped
 from robot_msgs.msg import *
 from robot_utils.utils.ros_util_functions import *
 from robot_utils.utils.motor_util_functions import *
@@ -69,6 +70,8 @@ class SELQIERobotNode(Node):
         self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
         
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
+
+        self.goal_pub = self.create_publisher(PoseStamped, 'goal_pose', qos_reliable())
 
         if not wait_for_subs(self.leg_command_publishers):
             print("Failed to connect to Leg command")
@@ -296,6 +299,32 @@ class STARQTerminal(Cmd):
         twist.linear.x = linear_x
         twist.angular.z = angular_z
         self.robot.cmd_vel_pub.publish(twist)
+
+    def do_set_goal(self, line):
+        """
+        Set the goal position for the robot
+        Usage: set_goal <x> <y> <theta>
+        """
+        args = line.split()
+        if len(args) != 3:
+            print("Invalid number of arguments")
+            return
+        
+        try:
+            x = float(args[0])
+            y = float(args[1])
+            theta = float(args[2])
+        except ValueError:
+            print("Invalid values")
+            return
+        
+        pose = PoseStamped()
+        pose.header.frame_id = "odom"
+        pose.header.stamp = self.robot.get_clock().now().to_msg()
+        pose.pose.position.x = x
+        pose.pose.position.y = y
+        pose.pose.orientation = euler_to_quaternion([0.0, 0.0, theta])
+        self.robot.goal_pub.publish(pose)
     
 
 def main():

@@ -65,6 +65,22 @@ def Walk2DNode():
         }],
     )
 
+def WalkingPlannerNode():
+    return Node(
+        package='local_planning',
+        executable='walking_planner_node',
+        name='walking_planner_node',
+    )
+
+def RVIZ2Node():
+    return Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', os.path.join(CONFIG_FOLDER, 'rviz_config.rviz')]
+    )
+
 def generate_launch_description():
     return LaunchDescription([
         MuJoCoNode(),
@@ -76,5 +92,7 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('RL'),
         LegTrajectoryPublisherNode('RR'),
         LegTrajectoryPublisherNode('FR'),
-        Walk2DNode()
+        Walk2DNode(),
+        WalkingPlannerNode(),
+        RVIZ2Node()
     ])

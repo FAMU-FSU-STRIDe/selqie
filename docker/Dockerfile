@@ -39,7 +39,7 @@ RUN mkdir -p ${OSQP_PATH}/build && cd ${OSQP_PATH}/build && \
 
 # Install SBMPO
 ENV SBMPO_PATH=${HOME}/.SBMPO
-RUN git clone https://github.com/JTylerBoylan/sbmpo ${SBMPO_PATH}
+RUN git clone --depth=1 https://github.com/JTylerBoylan/sbmpo ${SBMPO_PATH}
 RUN mkdir -p ${SBMPO_PATH}/build && cd ${SBMPO_PATH}/build && \
         cmake .. -DCMAKE_BUILD_TYPE=Release && \
         make && make install

@@ -15,9 +15,11 @@ float wrap_angle(float angle)
 
 struct WalkingPlannerParams
 {
-    float horizon_time = 0.25;
+    float horizon_time = 0.5;
     int integration_steps = 5;
-    float goal_threshold = 0.5;
+    float goal_threshold = 0.25;
+    float heuristic_vel_factor = 2.0;
+    float heuristic_omega_factor = 10.0;
 };
 
 class WalkingPlannerModel : public sbmpo::Model
@@ -30,15 +32,13 @@ public:
     {
         X,
         Y,
-        THETA,
-        VEL,
-        OMEGA
+        THETA
     };
 
     enum Controls
     {
-        ACC,
-        ALPHA
+        VEL,
+        OMEGA
     };
 
     WalkingPlannerModel(const WalkingPlannerParams &params) : params(params) {}
@@ -53,11 +53,9 @@ public:
         const float time_increment = params.horizon_time / static_cast<double>(params.integration_steps);
         for (int i = 0; i < params.integration_steps; i++)
         {
-            next_state[OMEGA] += control[ALPHA] * time_increment;
-            next_state[VEL] += control[ACC] * time_increment;
-            next_state[THETA] += next_state[OMEGA] * time_increment;
-            next_state[X] += next_state[VEL] * std::cos(next_state[THETA]) * time_increment;
-            next_state[Y] += next_state[VEL] * std::sin(next_state[THETA]) * time_increment;
+            next_state[THETA] += control[OMEGA] * time_increment;
+            next_state[X] += control[VEL] * std::cos(next_state[THETA]) * time_increment;
+            next_state[Y] += control[VEL] * std::sin(next_state[THETA]) * time_increment;
         }
         next_state[THETA] = wrap_angle(next_state[THETA]);
         return next_state;
@@ -68,11 +66,9 @@ public:
         What am I trying to minimize?
         i.e Distance, Time, Energy
     */
-    float cost(const State &state1, const State &state2, const Control &) override
+    float cost(const State &, const State &, const Control &) override
     {
-        const float dx = state2[X] - state1[X];
-        const float dy = state2[Y] - state1[Y];
-        return std::sqrt(dx * dx + dy * dy);
+        return params.horizon_time;
     }
 
     /*
@@ -85,7 +81,9 @@ public:
         const float dx = goal[X] - state[X];
         const float dy = goal[Y] - state[Y];
         const float dtheta = wrap_angle(goal[THETA] - state[THETA]);
-        return std::sqrt(dx * dx + dy * dy) + std::abs(dtheta);
+        const float heur_vel = std::sqrt(dx * dx + dy * dy) * params.heuristic_vel_factor;
+        const float heur_oemga = std::abs(dtheta) * params.heuristic_omega_factor;
+        return heur_vel + heur_oemga;
     }
 
     /*
@@ -100,13 +98,9 @@ public:
         Does this state meet the model constraints?
         i.e Boundary constraints, Obstacles, State limits
     */
-    bool is_valid(const State &state) override
+    bool is_valid(const State &) override
     {
-        // velocity domain
-        const float v = std::abs(state[VEL]);
-        const float w = std::abs(state[OMEGA]);
-        const float a = 64.f * v * v - 192.f * v * w - 80.f * v + 144.f * w * w - 120.f * w + 25.f;
-        return a >= 0.0;
+        return true;
     }
 
     /*
