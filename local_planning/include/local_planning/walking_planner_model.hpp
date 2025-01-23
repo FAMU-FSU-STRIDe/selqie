@@ -66,9 +66,10 @@ public:
         What am I trying to minimize?
         i.e Distance, Time, Energy
     */
-    float cost(const State &, const State &, const Control &) override
+    float cost(const State &, const State &, const Control &control) override
     {
-        return params.horizon_time;
+        const float reverse_cost_factor = control[VEL] < 0 ? 2.0 : 1.0;
+        return params.horizon_time * reverse_cost_factor;
     }
 
     /*
@@ -82,8 +83,8 @@ public:
         const float dy = goal[Y] - state[Y];
         const float dtheta = wrap_angle(goal[THETA] - state[THETA]);
         const float heur_vel = std::sqrt(dx * dx + dy * dy) * params.heuristic_vel_factor;
-        const float heur_oemga = std::abs(dtheta) * params.heuristic_omega_factor;
-        return heur_vel + heur_oemga;
+        const float heur_omega = 0; // std::abs(dtheta) * params.heuristic_omega_factor;
+        return heur_vel + heur_omega;
     }
 
     /*

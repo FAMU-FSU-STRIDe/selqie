@@ -99,6 +99,9 @@ private:
 public:
     WalkingPlanner() : Node("walking_planner_node")
     {
+        this->declare_parameter("solve_frequency", 1.0);
+        const double solve_frequency = this->get_parameter("solve_frequency").as_double();
+
         this->declare_parameter("publish_all", false);
         this->get_parameter("publish_all", _publish_all);
 
@@ -117,7 +120,7 @@ public:
         this->declare_parameter("heuristic_omega_factor", 10.0);
         this->get_parameter("heuristic_omega_factor", _model_params.heuristic_omega_factor);
 
-        this->declare_parameter("max_iterations", 100000);
+        this->declare_parameter("max_iterations", 500000);
         this->get_parameter("max_iterations", _sbmpo_params.max_iterations);
 
         this->declare_parameter("max_generations", 1000);
@@ -151,7 +154,8 @@ public:
         if (_publish_all)
             _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("walk/states", 10);
 
-        _timer = this->create_wall_timer(std::chrono::milliseconds(1000), std::bind(&WalkingPlanner::solve, this));
+        _timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / solve_frequency)),
+                                         std::bind(&WalkingPlanner::solve, this));
 
         RCLCPP_INFO(this->get_logger(), "Walking Planner Node Initialized");
     }

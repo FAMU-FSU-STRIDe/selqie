@@ -70,6 +70,12 @@ def WalkingPlannerNode():
         package='local_planning',
         executable='walking_planner_node',
         name='walking_planner_node',
+        parameters=[{
+            'use_sim_time': True,
+            'solve_frequency': 3.0,
+            'max_iterations': 500000,
+            'publish_all': True
+        }]
     )
 
 def RVIZ2Node():

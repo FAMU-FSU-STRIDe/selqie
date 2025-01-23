@@ -29,7 +29,7 @@ private:
     double _max_stance_length = 0.15;
 
     std::size_t _idx = std::numeric_limits<std::size_t>::max();
-    std::vector<robot_msgs::msg::LegTrajectory> _trajectories;
+    std::vector<robot_msgs::msg::LegTrajectory> _trajectories, _next_trajectories;
     rclcpp::Time _start_time;
 
     void map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
@@ -62,7 +62,7 @@ private:
 
         if (vel_x == 0.0 && omega_z == 0.0)
         {
-            _trajectories.clear();
+            _next_trajectories.clear();
             return;
         }
 
@@ -98,13 +98,14 @@ private:
                                               _center_shift, stance_length_right, _body_height,
                                               _step_height, 0.75);
 
-        _trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
+        _next_trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
     }
 
     void publishLegCommand()
     {
         if (_trajectories.empty())
         {
+            _trajectories = _next_trajectories;
             return;
         }
 
@@ -112,6 +113,7 @@ private:
 
         if (_idx >= _trajectories[0].timing.size())
         {
+            _trajectories = _next_trajectories;
             _idx = 0;
             _start_time = this->now();
         }
