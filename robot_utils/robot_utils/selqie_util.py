@@ -7,7 +7,8 @@ import subprocess
 
 from ament_index_python.packages import get_package_share_directory
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist, Pose, PoseStamped
+from std_msgs.msg import Float32
+from geometry_msgs.msg import Twist, PoseStamped
 from robot_msgs.msg import *
 from robot_utils.utils.ros_util_functions import *
 from robot_utils.utils.motor_util_functions import *
@@ -68,6 +69,8 @@ class SELQIERobotNode(Node):
         self.odom = Odometry()
         odom_callback = lambda msg: setattr(self, 'odom', msg)
         self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
+        
+        self.light_pwm_pub = self.create_publisher(Float32, 'light/pwm', qos_reliable())
         
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
 
@@ -277,6 +280,31 @@ class STARQTerminal(Cmd):
         self.rosbag_process.terminate()
         self.rosbag_process.wait()
         self.rosbag_process = None
+        
+    def do_set_light_brightness(self, line):
+        """
+        Set the brightness of the light
+        Usage: set_light_brightness <brightness>
+        """
+        args = line.split()
+        if len(args) != 1:
+            print("Invalid number of arguments")
+            return
+        
+        try:
+            brightness = float(args[0])
+        except ValueError:
+            print("Invalid brightness value")
+            return
+        
+        if brightness < 0.0 or brightness > 100.0:
+            print("Brightness value must be between 0 and 100")
+            return
+        
+        duty_factor = (1100.0 + 8.0 * brightness) / 200.0
+        msg = Float32()
+        msg.data = duty_factor
+        self.robot.light_pwm_pub.publish(msg)
         
     def do_cmd_vel(self, line):
         """
