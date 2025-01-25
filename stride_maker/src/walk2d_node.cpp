@@ -1,4 +1,5 @@
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include "stride_maker/stride_maker.hpp"
 
@@ -15,10 +16,12 @@ static inline rclcpp::QoS qos_reliable()
 class Walk2DNode : public rclcpp::Node
 {
 private:
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_name_sub;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr _cmd_vel_sub;
     std::vector<rclcpp::Publisher<robot_msgs::msg::LegCommand>::SharedPtr> _leg_cmd_pubs;
     rclcpp::TimerBase::SharedPtr _timer;
 
+    std::string _gait_name = "walk";
     std::vector<double> _hip_positions;
     double _robot_width = 1.0;
     double _body_height = 0.2;
@@ -28,9 +31,17 @@ private:
     double _duty_factor = 0.5;
     double _max_stance_length = 0.15;
 
+    std::string _current_gait;
     std::size_t _idx = std::numeric_limits<std::size_t>::max();
     std::vector<robot_msgs::msg::LegTrajectory> _trajectories, _next_trajectories;
     rclcpp::Time _start_time;
+
+    void updateGait(const std_msgs::msg::String::SharedPtr msg)
+    {
+        _current_gait = msg->data;
+        _trajectories.clear();
+        _next_trajectories.clear();
+    }
 
     void map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
     {
@@ -50,6 +61,11 @@ private:
 
     void updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
+        if (_current_gait != _gait_name)
+        {
+            return;
+        }
+
         double vel_x;
         double omega_z;
         map_des2cmd(msg->linear.x, msg->angular.z, vel_x, omega_z);
@@ -134,6 +150,9 @@ private:
 public:
     Walk2DNode() : Node("walk2d_node")
     {
+        this->declare_parameter("gait_name", _gait_name);
+        this->get_parameter("gait_name", _gait_name);
+
         std::vector<std::string> leg_names = {"FL", "RL", "RR", "FR"};
         this->declare_parameter("leg_names", leg_names);
         this->get_parameter("leg_names", leg_names);
@@ -162,6 +181,9 @@ public:
 
         this->declare_parameter("max_stance_length", _max_stance_length);
         this->get_parameter("max_stance_length", _max_stance_length);
+
+        _gait_name_sub = this->create_subscription<std_msgs::msg::String>(
+            "gait", qos_reliable(), std::bind(&Walk2DNode::updateGait, this, std::placeholders::_1));
 
         _cmd_vel_sub = this->create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", qos_reliable(), std::bind(&Walk2DNode::updateCmdVel, this, std::placeholders::_1));

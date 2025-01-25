@@ -16,6 +16,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   selqie_ros2/selqie_terminal.py
+  selqie_ros2/selqie_joystick.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

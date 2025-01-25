@@ -70,6 +70,10 @@ class STARQGaitJoystick(Node):
         for i in range(self.num_motors):
             self.odrive_config_pubs.append(self.create_publisher(ODriveConfig, f'odrive{i}/config', qos_reliable()))
 
+        self.leg_cmd_pubs = []
+        for l in self.leg_names:
+            self.leg_cmd_pubs.append(self.create_publisher(LegCommand, f'leg{l}/command', qos_reliable()))
+
         self.leg_traj_pubs = []
         for l in self.leg_names:
             self.leg_traj_pubs.append(self.create_publisher(LegTrajectory, f'leg{l}/trajectory', qos_reliable()))
@@ -131,13 +135,13 @@ class STARQGaitJoystick(Node):
             # LB : Stand
             self.curr_traj = None
             set_motor_gains(self.odrive_config_pubs, STANDING_GAINS)
-            set_leg_states(self.leg_traj_pubs, MotorCommand.CONTROL_MODE_POSITION, STANDING_LEG_POSITION)
+            set_leg_states(self.leg_cmd_pubs, MotorCommand.CONTROL_MODE_POSITION, STANDING_LEG_POSITION)
             self.get_logger().info('Standing...')
         elif msg.buttons[5] == 1 and self.last_msg.buttons[5] == 0:
             # RB : Land
             self.curr_traj = None
             set_motor_gains(self.odrive_config_pubs, LANDING_GAINS)
-            set_leg_states(self.leg_traj_pubs, MotorCommand.CONTROL_MODE_POSITION, LANDING_LEG_POSITION)
+            set_leg_states(self.leg_cmd_pubs, MotorCommand.CONTROL_MODE_POSITION, LANDING_LEG_POSITION)
             self.get_logger().info('Landing...')
         elif msg.buttons[6] == 1 and self.last_msg.buttons[6] == 0:
             # LT
