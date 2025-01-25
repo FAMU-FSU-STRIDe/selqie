@@ -1,51 +1,75 @@
 import os
+import math
+from threading import Thread, Event
+import subprocess
+from datetime import datetime
+
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from ament_index_python.packages import get_package_share_directory
-from threading import Thread, Event
-import subprocess
 
 from std_msgs.msg import String, Float32
+from geometry_msgs.msg import Twist, PoseStamped, Quaternion
 from nav_msgs.msg import Odometry
-from robot_msgs.msg import *
-from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image
+from robot_msgs.msg import *
 
-NUM_MOTORS = 8
-LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
-DEFAULT_LEG_POSITION = [0.0, 0.0, -0.18914]
-TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('selqie_ros2'), 'trajectories')
-ROSBAG_RECORD_TOPICS = ['/legFR/command', '/legFL/command', '/legRR/command', '/legRL/command',
-                        '/legFR/estimate', '/legFL/estimate', '/legRR/estimate', '/legRL/estimate',
-                        '/odrive0/info', '/odrive1/info', '/odrive2/info', '/odrive3/info',
-                        '/odrive4/info', '/odrive5/info', '/odrive6/info', '/odrive7/info',]
-DEFAULT_GAINS = [20.0, 0.25, 0.0]
-
-def qos_fast():
+def QOS_FAST() -> QoSProfile:
+    """Get a QoSProfile with best-effort reliability and a depth of 10."""
     return QoSProfile(
         reliability=QoSReliabilityPolicy.BEST_EFFORT,
         depth=10
     )
 
-def qos_reliable():
+def QOS_RELIABLE() -> QoSProfile:
+    """Get a QoSProfile with reliable reliability and a depth of 10."""
     return QoSProfile(
         reliability=QoSReliabilityPolicy.RELIABLE,
         depth=10
     )
 
+def QUAT2EUL(q : Quaternion) -> list[float]:
+    """Convert a Quaternion message to Euler angles."""
+    q0, q1, q2, q3 = q.w, q.x, q.y, q.z
+    roll = math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1 * q1 + q2 * q2))
+    pitch = math.asin(2.0 * (q0 * q2 - q3 * q1))
+    yaw = math.atan2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2 * q2 + q3 * q3))
+    return [roll, pitch, yaw]
+
+def EUL2QUAT(eul) -> Quaternion:
+    """Convert Euler angles to a Quaternion message."""
+    cy = math.cos(eul[2] * 0.5)
+    sy = math.sin(eul[2] * 0.5)
+    cp = math.cos(eul[1] * 0.5)
+    sp = math.sin(eul[1] * 0.5)
+    cr = math.cos(eul[0] * 0.5)
+    sr = math.sin(eul[0] * 0.5)
+    q = Quaternion()
+    q.w = cy * cp * cr + sy * sp * sr
+    q.x = cy * cp * sr - sy * sp * cr
+    q.y = sy * cp * sr + cy * sp * cr
+    q.z = sy * cp * cr - cy * sp * sr
+    return q
+
 class SELQIE(Node):
-    def __init__(self, name="robot"):
+    """The main class for the SELQIE robot ROS2 interface."""
+
+    ######################
+    ### Initialization ###
+    ######################
+
+    def __init__(self, name="selqie"):
         super().__init__(name)
         self._stop_event = Event()
 
+        # Initialize the publishers and subscribers
         self._init_motors()
         self._init_legs()
         self._init_localization()
         self._init_control()
         self._init_vision()
-
-        self.rosbag_process = None
+        self._init_recording()
 
         # Start ROS spinning in a background thread
         self._spin_thread = Thread(target=self._spin)
@@ -53,69 +77,88 @@ class SELQIE(Node):
 
     def _init_motors(self):
         """Initialize the motor publishers and subscribers."""
-        self.motor_command_publishers = []
-        for i in range(NUM_MOTORS):
-            self.motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', qos_fast()))
+        self.NUM_MOTORS = 8
+        self.DEFAULT_MOTOR_GAINS = [20.0, 0.25, 0.0]
 
-        self.motor_config_publishers = []
-        for i in range(NUM_MOTORS):
-            self.motor_config_publishers.append(self.create_publisher(ODriveConfig, f'odrive{i}/config', qos_reliable()))
+        self._motor_command_publishers = []
+        for i in range(self.NUM_MOTORS):
+            self._motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', QOS_FAST()))
 
-        self.motor_estimates = [MotorEstimate() for _ in range(NUM_MOTORS)]
-        self.motor_estimate_subscribers = []
-        for i in range(NUM_MOTORS):
-            motor_estimate_callback = lambda msg, i=i: self.motor_estimates.__setitem__(i, msg)
-            self.motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'odrive{i}/estimate', motor_estimate_callback, qos_fast()))
+        self._motor_config_publishers = []
+        for i in range(self.NUM_MOTORS):
+            self._motor_config_publishers.append(self.create_publisher(ODriveConfig, f'odrive{i}/config', QOS_RELIABLE()))
 
-        self.motor_infos = [ODriveInfo() for _ in range(NUM_MOTORS)]
-        self.motor_info_subscribers = []
-        for i in range(NUM_MOTORS):
-            motor_info_callback = lambda msg, i=i: self.motor_infos.__setitem__(i, msg)
-            self.motor_info_subscribers.append(self.create_subscription(ODriveInfo, f'odrive{i}/info', motor_info_callback, qos_fast()))
+        self._motor_estimates = [MotorEstimate() for _ in range(self.NUM_MOTORS)]
+        self._motor_estimate_subscribers = []
+        for i in range(self.NUM_MOTORS):
+            motor_estimate_callback = lambda msg, i=i: self._motor_estimates.__setitem__(i, msg)
+            self._motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'odrive{i}/estimate', motor_estimate_callback, QOS_FAST()))
+
+        self._motor_infos = [ODriveInfo() for _ in range(self.NUM_MOTORS)]
+        self._motor_info_subscribers = []
+        for i in range(self.NUM_MOTORS):
+            motor_info_callback = lambda msg, i=i: self._motor_infos.__setitem__(i, msg)
+            self._motor_info_subscribers.append(self.create_subscription(ODriveInfo, f'odrive{i}/info', motor_info_callback, QOS_FAST()))
 
     def _init_legs(self):
         """Initialize the leg publishers and subscribers."""
-        self.leg_command_publishers = []
-        for i in range(len(LEG_NAMES)):
-            self.leg_command_publishers.append(self.create_publisher(LegCommand, f'leg{LEG_NAMES[i]}/command', qos_fast()))
+        self.LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
+        self.NUM_LEGS = len(self.LEG_NAMES)
+        self.DEFAULT_LEG_POSITION = [0.0, 0.0, -0.18914]
+        self.TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('selqie_ros2'), 'trajectories')
 
-        self.leg_estimates = [LegEstimate() for _ in range(len(LEG_NAMES))]
-        self.leg_estimate_subscribers = []
-        for i in range(len(LEG_NAMES)):
-            leg_estimate_callback = lambda msg, i=i: self.leg_estimates.__setitem__(i, msg)
-            self.leg_estimate_subscribers.append(self.create_subscription(LegEstimate, f'leg{LEG_NAMES[i]}/estimate', leg_estimate_callback, qos_fast()))
+        self._leg_command_publishers = []
+        for i in range(self.NUM_LEGS):
+            self._leg_command_publishers.append(self.create_publisher(LegCommand, f'leg{self.LEG_NAMES[i]}/command', QOS_FAST()))
 
-        self.leg_trajectory_publishers = []
-        for i in range(len(LEG_NAMES)):
-            self.leg_trajectory_publishers.append(self.create_publisher(LegTrajectory, f'leg{LEG_NAMES[i]}/trajectory', qos_reliable()))
+        self._leg_estimates = [LegEstimate() for _ in range(self.NUM_LEGS)]
+        self._leg_estimate_subscribers = []
+        for i in range(self.NUM_LEGS):
+            leg_estimate_callback = lambda msg, i=i: self._leg_estimates.__setitem__(i, msg)
+            self._leg_estimate_subscribers.append(self.create_subscription(LegEstimate, f'leg{self.LEG_NAMES[i]}/estimate', leg_estimate_callback, QOS_FAST()))
+
+        self._leg_trajectory_publishers = []
+        for i in range(self.NUM_LEGS):
+            self._leg_trajectory_publishers.append(self.create_publisher(LegTrajectory, f'leg{self.LEG_NAMES[i]}/trajectory', QOS_RELIABLE()))
 
     def _init_localization(self):
         """Initialize the odometry subscriber."""
-        self.odom = Odometry()
+        self._odom = Odometry()
         odom_callback = lambda msg: setattr(self, 'odom', msg)
-        self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
+        self._odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, QOS_RELIABLE())
 
     def _init_control(self):
         """Initialize the control publishers and subscribers."""
-        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
+        self._cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', QOS_RELIABLE())
 
-        self.gait_pub = self.create_publisher(String, 'gait', qos_reliable())
+        self._goal_pose_pub = self.create_publisher(PoseStamped, 'goal_pose', QOS_RELIABLE())
 
-        self.gait = String()
+        self._gait_pub = self.create_publisher(String, 'gait', QOS_RELIABLE())
+
+        self._gait = String()
         gait_callback = lambda msg: setattr(self, 'gait', msg)
-        self.gait_sub = self.create_subscription(String, 'gait', gait_callback, qos_reliable())
+        self._gait_sub = self.create_subscription(String, 'gait', gait_callback, QOS_RELIABLE())
 
     def _init_vision(self):
         """Initialize the camera and light publishers and subscribers."""
-        self.lights_pwm_pub = self.create_publisher(Float32, 'lights/pwm', qos_reliable())
+        self._lights_pwm_pub = self.create_publisher(Float32, 'lights/pwm', QOS_RELIABLE())
 
-        self.camera_left_image = Image()
+        self._camera_left_image = Image()
         camera_left_callback = lambda msg: setattr(self, 'camera_left_image', msg)
-        self.camera_left_sub = self.create_subscription(Image, 'stereo/left/image_raw', camera_left_callback, qos_fast())
+        self._camera_left_sub = self.create_subscription(Image, 'stereo/left/image_raw', camera_left_callback, QOS_FAST())
 
-        self.camera_right_image = Image()
+        self._camera_right_image = Image()
         camera_right_callback = lambda msg: setattr(self, 'camera_right_image', msg)
-        self.camera_right_sub = self.create_subscription(Image, 'stereo/right/image_raw', camera_right_callback, qos_fast())
+        self._camera_right_sub = self.create_subscription(Image, 'stereo/right/image_raw', camera_right_callback, QOS_FAST())
+
+    def _init_recording(self):
+        self.ROSBAG_RECORD_TOPICS = []
+        self.ROSBAG_SAVE_FOLDER = '/rosbags'
+        self._rosbag_process = None
+
+    ########################
+    ### ROS2 Spin Thread ###
+    ########################
 
     def _spin(self):
         """ROS2 spinning in a background thread."""
@@ -128,73 +171,242 @@ class SELQIE(Node):
         self._spin_thread.join()
         self.destroy_node()
 
-    def send_motor_config(self, motor_idx, config : ODriveConfig):
+    #######################
+    ### Motor Functions ###
+    #######################
+
+    def send_motor_config(self, motor_idx : int, config : ODriveConfig):
         """Send an ODriveConfig message to the motor."""
-        self.motor_config_publishers[motor_idx].publish(config)
+        if motor_idx < 0 or motor_idx >= self.NUM_MOTORS:
+            raise ValueError(f"Motor index {motor_idx} out of range")
+        self._motor_config_publishers[motor_idx].publish(config)
 
-    def send_motor_command(self, motor_idx, command : MotorCommand):
+    def set_motor_state(self, motor_idx : int, state : int):
+        """Set the state of the motor."""
+        config = ODriveConfig()
+        config.axis_state = state
+        self.send_motor_config(motor_idx, config)
+
+    def set_motor_idle(self, motor_idx : int):
+        """Set the motor to AXIS_STATE_IDLE."""
+        self.set_motor_state(motor_idx, ODriveConfig.AXIS_STATE_IDLE)
+    
+    def set_motor_ready(self, motor_idx : int):
+        """Set the motor to AXIS_STATE_CLOSED_LOOP_CONTROL."""
+        self.set_motor_state(motor_idx, ODriveConfig.AXIS_STATE_CLOSED_LOOP_CONTROL)
+
+    def set_motor_clear_errors(self, motor_idx : int):
+        """Clear the errors on the motor."""
+        config = ODriveConfig()
+        config.clear_errors = True
+        self.send_motor_config(motor_idx, config)
+    
+    def set_motor_gains(self, motor_idx : int, p_gain : float, v_gain : float, v_int_gain : float):
+        """Set the gains on the motor."""
+        config = ODriveConfig()
+        config.pos_gain = p_gain
+        config.vel_gain = v_gain
+        config.vel_int_gain = v_int_gain
+        self.send_motor_config(motor_idx, config)
+
+    def set_motor_gains_default(self, motor_idx : int):
+        """Set the default gains on the motor."""
+        self.set_motor_gains(motor_idx, *self.DEFAULT_MOTOR_GAINS)
+
+    def send_motor_command(self, motor_idx : int, command : MotorCommand):
         """Send a MotorCommand message to the motor."""
-        self.motor_command_publishers[motor_idx].publish(command)
+        if motor_idx < 0 or motor_idx >= self.NUM_MOTORS:
+            raise ValueError(f"Motor index {motor_idx} out of range")
+        self._motor_command_publishers[motor_idx].publish(command)
 
-    def get_motor_info(self, motor_idx) -> ODriveInfo:
+    def set_motor_position(self, motor_idx : int, pos : float):
+        """Set the position of the motor."""
+        command = MotorCommand()
+        command.control_mode = MotorCommand.CONTROL_MODE_POSITION
+        command.pos_setpoint = pos
+        self.send_motor_command(motor_idx, command)
+
+    def get_motor_info(self, motor_idx : int) -> ODriveInfo:
         """Get the latest ODriveInfo message from the motor."""
-        return self.motor_infos[motor_idx]
+        if motor_idx < 0 or motor_idx >= self.NUM_MOTORS:
+            raise ValueError(f"Motor index {motor_idx} out of range")
+        return self._motor_infos[motor_idx]
     
-    def get_motor_estimate(self, motor_idx) -> MotorEstimate:
+    def get_motor_error_name(self, motor_idx : int) -> str:
+        """Get the name of the error on the motor."""
+        motor_info = self.get_motor_info(motor_idx)
+        for attr_name in dir(ODriveInfo):
+            if attr_name.startswith("AXIS_ERROR_"):
+                error_value = getattr(ODriveInfo, attr_name)
+                if error_value == motor_info.axis_error:
+                    return attr_name
+        return f"MULTIPLE_ERRORS ({motor_info.axis_error})"
+    
+    def get_motor_estimate(self, motor_idx : int) -> MotorEstimate:
         """Get the latest MotorEstimate message from the motor."""
-        return self.motor_estimates[motor_idx]
+        if motor_idx < 0 or motor_idx >= self.NUM_MOTORS:
+            raise ValueError(f"Motor index {motor_idx} out of range")
+        return self._motor_estimates[motor_idx]
     
-    def send_leg_command(self, leg_idx, command : LegCommand):
-        """Send a LegCommand message to the leg."""
-        self.leg_command_publishers[leg_idx].publish(command)
+    #####################
+    ### Leg Functions ###
+    #####################
 
-    def get_leg_estimate(self, leg_idx) -> LegEstimate:
+    def send_leg_command(self, leg_idx : int, command : LegCommand):
+        """Send a LegCommand message to the leg."""
+        if leg_idx < 0 or leg_idx >= self.NUM_LEGS:
+            raise ValueError(f"Leg index {leg_idx} out of range")
+        self._leg_command_publishers[leg_idx].publish(command)
+
+    def set_leg_position(self, leg_idx : int, x : float, y : float, z : float):
+        """Set the position of the leg."""
+        command = LegCommand()
+        command.control_mode = LegCommand.CONTROL_MODE_POSITION
+        command.pos_setpoint.x = x
+        command.pos_setpoint.y = y
+        command.pos_setpoint.z = z
+        self.send_leg_command(leg_idx, command)
+
+    def set_leg_position_default(self, leg_idx : int):
+        """Set the leg to the default position."""
+        self.set_leg_position(leg_idx, *self.DEFAULT_LEG_POSITION)
+
+    def get_leg_estimate(self, leg_idx : int) -> LegEstimate:
         """Get the latest LegEstimate message from the leg."""
-        return self.leg_estimates[leg_idx]
+        if leg_idx < 0 or leg_idx >= self.NUM_LEGS:
+            raise ValueError(f"Leg index {leg_idx} out of range")
+        return self._leg_estimates[leg_idx]
     
-    def send_leg_trajectory(self, leg_idx, trajectory : LegTrajectory):
+    def send_leg_trajectory(self, leg_idx : int, trajectory : LegTrajectory):
         """Send a LegTrajectory message to the leg."""
-        self.leg_trajectory_publishers[leg_idx].publish(trajectory)
+        if leg_idx < 0 or leg_idx >= self.NUM_LEGS:
+            raise ValueError(f"Leg index {leg_idx} out of range")
+        self._leg_trajectory_publishers[leg_idx].publish(trajectory)
+    
+    def get_leg_trajectories_from_file(self, rel_file : str, frequency : float) -> list[LegTrajectory]:
+        """Get a list of LegTrajectory messages from a file."""
+        file = os.path.join(self.TRAJECTORIES_FOLDER, rel_file)
+        if not os.path.exists(file):
+            raise FileNotFoundError(f'File {file} does not exist')
+        leg_trajectories = [LegTrajectory() for _ in range(self.NUM_LEGS)]
+        with open(file) as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) != 13:
+                    raise ValueError(f'Invalid file line: {line}')
+                time = float(parts[0]) / 1000.0 / frequency
+                leg_id = int(parts[1])
+                msg = LegCommand()
+                msg.control_mode = int(parts[2])
+                msg.pos_setpoint.x = float(parts[4])
+                msg.pos_setpoint.y = float(parts[5])
+                msg.pos_setpoint.z = float(parts[6])
+                msg.vel_setpoint.x = float(parts[7])
+                msg.vel_setpoint.y = float(parts[8])
+                msg.vel_setpoint.z = float(parts[9])
+                msg.force_setpoint.x = float(parts[10])
+                msg.force_setpoint.y = float(parts[11])
+                msg.force_setpoint.z = float(parts[12])
+                if (leg_id > self.NUM_LEGS) or (leg_id < 0):
+                    raise ValueError(f'Expected leg ids between 0 and {self.NUM_LEGS - 1}')
+                leg_trajectories[leg_id].timing.append(time)
+                leg_trajectories[leg_id].commands.append(msg)
+        return leg_trajectories
+    
+    def run_leg_trajectories(self, trajectories : list[LegTrajectory]):
+        """Run a list of LegTrajectory messages."""
+        for i in range(len(trajectories)):
+            if trajectories[i] is not None:
+                self.send_leg_trajectory(i, trajectories[i])
+
+    ##############################
+    ### Localization Functions ###
+    ##############################
 
     def get_localization(self) -> Odometry:
         """Get the latest Odometry message."""
-        return self.odom
+        return self._odom
     
-    def send_control_velocity(self, cmd_vel : Twist):
+    #########################
+    ### Control Functions ###
+    #########################
+
+    def send_control_command_velocity(self, cmd_vel : Twist):
         """Send a Twist message to the cmd_vel topic."""
-        self.cmd_vel_pub.publish(cmd_vel)
+        self._cmd_vel_pub.publish(cmd_vel)
+
+    def set_control_command_velocity(self, linear_x : float, angular_z : float):
+        """Set the linear x and angular z velocities of the robot."""
+        cmd_vel = Twist()
+        cmd_vel.linear.x = linear_x
+        cmd_vel.angular.z = angular_z
+        self.send_control_command_velocity(cmd_vel)
+    
+    def send_control_goal_pose(self, goal_pose : PoseStamped):
+        """Send a PoseStamped message to the goal_pose topic."""
+        self._goal_pose_pub.publish(goal_pose)
+
+    def set_control_goal_pose(self, x : float, y : float, theta : float):
+        """Set the goal pose of the robot."""
+        goal_pose = PoseStamped()
+        goal_pose.pose.position.x = x
+        goal_pose.pose.position.y = y
+        goal_pose.pose.orientation.w = theta
+        self.send_control_goal_pose(goal_pose)
     
     def send_control_gait(self, gait : String):
         """Send a String message to the gait topic."""
-        self.gait_pub.publish(gait)
+        self._gait_pub.publish(gait)
 
     def get_control_gait(self) -> String:
         """Get the latest gait message."""
-        return self.gait
+        return self._gait
     
+    ########################
+    ### Vision Functions ###
+    ########################
+
     def send_vision_lights_pwm(self, pwm : Float32):
         """Send a Float32 message to the lights pwm topic."""
-        self.lights_pwm_pub.publish(pwm)
+        if pwm.data < 0.0 or pwm.data > 100.0:
+            raise ValueError(f"Invalid PWM value {pwm.data}")
+        self._lights_pwm_pub.publish(pwm)
+
+    def set_vision_lights_brightness(self, brightness : float):
+        """Set the brightness of the lights."""
+        pwm = Float32()
+        pwm.data = (1100.0 + 8.0 * brightness) / 200.0
+        self.send_vision_lights_pwm(pwm)
 
     def get_vision_camera_left(self) -> Image:
         """Get the latest image from the left camera."""
-        return self.camera_left_image
+        return self._camera_left_image
 
     def get_vision_camera_right(self) -> Image:
         """Get the latest image from the right camera."""
-        return self.camera_right_image
+        return self._camera_right_image
     
-    def is_recording(self) -> bool:
-        return self.rosbag_process is not None
+    ################################
+    ### Data Recording Functions ###
+    ################################
 
-    def start_recording(self, output_folder):
+    def is_recording(self) -> bool:
+        """Check if the rosbag recording process is running."""
+        return self._rosbag_process is not None
+
+    def start_recording(self):
+        """Start recording rosbag data to the specified output folder."""
         if self.is_recording():
             return
-        self.rosbag_process = subprocess.Popen(['ros2', 'bag', 'record', '-o', output_folder] + ROSBAG_RECORD_TOPICS, stdin=subprocess.DEVNULL)
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        self._rosbag_process = subprocess.Popen(['ros2', 'bag', 'record', '-o', 
+                                                 os.path.join(self.ROSBAG_SAVE_FOLDER, timestamp)] 
+                                                 + self.ROSBAG_RECORD_TOPICS, stdin=subprocess.DEVNULL)
 
     def stop_recording(self):
+        """Stop the rosbag recording process."""
         if not self.is_recording():
             return
-        self.rosbag_process.terminate()
-        self.rosbag_process.wait()
-        self.rosbag_process = None
+        self._rosbag_process.terminate()
+        self._rosbag_process.wait()
+        self._rosbag_process = None

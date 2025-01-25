@@ -7,10 +7,17 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclpy REQUIRED)
 
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})
+
+# Install Python executables
+install(PROGRAMS
+  selqie_ros2/selqie_terminal.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # install launch and models files
 install(DIRECTORY launch/
@@ -23,6 +30,10 @@ install(DIRECTORY config/
 
 install(DIRECTORY model/
   DESTINATION share/${PROJECT_NAME}/model
+)
+
+install(DIRECTORY trajectories/
+  DESTINATION share/${PROJECT_NAME}/trajectories
 )
 
 if(BUILD_TESTING)
