@@ -3,6 +3,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Imu
 import sys
 import time
+import math
 
 def main(args=None):
     rclpy.init(args=args)
@@ -10,10 +11,17 @@ def main(args=None):
     node = Node('test_imu_node')
     last_received_time = time.time()
     timeout_threshold = 2.0  # Timeout threshold in seconds (e.g., 2000 ms)
+    gravity_sum = 0.0
+    data_count = 0
 
     def imu_callback(msg: Imu):
         nonlocal last_received_time
         last_received_time = time.time()  # Update the last received time
+        
+        nonlocal gravity_sum, data_count
+        gravity_sum += math.sqrt(msg.linear_acceleration.x**2 + msg.linear_acceleration.y**2 + msg.linear_acceleration.z**2)
+        data_count += 1
+        
         
         # Clear the console and reset cursor position
         sys.stdout.write("\033[H\033[J")  # ANSI escape sequence to clear screen
@@ -33,6 +41,8 @@ def main(args=None):
         print(f'  x: {msg.linear_acceleration.x:.5f}')
         print(f'  y: {msg.linear_acceleration.y:.5f}')
         print(f'  z: {msg.linear_acceleration.z:.5f}')
+        print(' Average Gravity:')
+        print(f'  {gravity_sum / data_count:.5f}')
 
     def check_timeout():
         nonlocal last_received_time

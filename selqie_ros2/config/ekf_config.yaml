@@ -8,7 +8,7 @@
     world_frame: 'odom'
     publish_tf: true
 
-    imu0: 'imu/data'
+    imu0: 'imu/data' # imu_link frame
     imu0_config: [false, false, false,
                   true,  true,  true,
                   false, false, false,
@@ -18,9 +18,9 @@
     imu0_differential: false
     imu0_relative: false
     imu0_remove_gravitational_acceleration: true
-    gravitational_acceleration: 9.80665
+    gravitational_acceleration: 9.8454
 
-    pose0: 'bar100/pose'
+    pose0: 'bar100/pose' # odom frame
     pose0_config: [false, false, true,
                    false, false, false,
                    false, false, false,

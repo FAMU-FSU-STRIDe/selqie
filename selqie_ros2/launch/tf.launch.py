@@ -4,7 +4,7 @@ from launch_ros.actions import Node
 ROBOT_FRAME = 'base_link'
 
 IMU_POSITION = [0, 0, 0]
-IMU_ORIENTATION = [0, 0, 0]
+IMU_ORIENTATION = [3.14159, 0, 0]
 IMU_FRAME = 'imu_link'
 
 CAMERA_LINK_POSITION = [0.38, 0, 0.3345]
@@ -18,10 +18,6 @@ CAMERA_LEFT_FRAME = 'camera_left'
 CAMERA_RIGHT_POSITION = [0, -0.359, 0]
 CAMERA_RIGHT_ORIENTATION = [-1.5707, 0, -1.5707]
 CAMERA_RIGHT_FRAME = 'camera_right'
-
-BAR100_POSITION = [0, 0, 0.1]
-BAR100_ORIENTATION = [0, 0, 0]
-BAR100_FRAME = 'bar100_link'
 
 def StaticTransform(pos, ori, parent, child):
     return Node(
@@ -48,7 +44,5 @@ def generate_launch_description():
         # Camera Link to Camera Left
         StaticTransform(CAMERA_LEFT_POSITION, CAMERA_LEFT_ORIENTATION, CAMERA_LINK_FRAME, CAMERA_LEFT_FRAME),
         # Camera Link to Camera Right
-        StaticTransform(CAMERA_RIGHT_POSITION, CAMERA_RIGHT_ORIENTATION, CAMERA_LINK_FRAME, CAMERA_RIGHT_FRAME),
-        # Base Link to Bar100 Link
-        StaticTransform(BAR100_POSITION, BAR100_ORIENTATION, ROBOT_FRAME, BAR100_FRAME)
+        StaticTransform(CAMERA_RIGHT_POSITION, CAMERA_RIGHT_ORIENTATION, CAMERA_LINK_FRAME, CAMERA_RIGHT_FRAME)
     ])
