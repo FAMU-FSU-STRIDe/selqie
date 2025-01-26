@@ -12,7 +12,7 @@ from ament_index_python.packages import get_package_share_directory
 from std_msgs.msg import String, Float32
 from geometry_msgs.msg import Twist, PoseStamped, Quaternion
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, Imu
 from robot_msgs.msg import *
 
 def QOS_FAST() -> QoSProfile:
@@ -66,6 +66,7 @@ class SELQIE(Node):
         # Initialize the publishers and subscribers
         self._init_motors()
         self._init_legs()
+        self._init_sensors()
         self._init_localization()
         self._init_control()
         self._init_vision()
@@ -121,10 +122,24 @@ class SELQIE(Node):
         for i in range(self.NUM_LEGS):
             self._leg_trajectory_publishers.append(self.create_publisher(LegTrajectory, f'leg{self.LEG_NAMES[i]}/trajectory', QOS_RELIABLE()))
 
+    def _init_sensors(self):
+        """Initialize the sensor publishers and subscribers."""
+        self._imu = Imu()
+        imu_callback = lambda msg: setattr(self, '_imu', msg)
+        self._imu_sub = self.create_subscription(Imu, 'imu', imu_callback, QOS_RELIABLE())
+
+        self._depth = Float32()
+        depth_callback = lambda msg: setattr(self, '_depth', msg)
+        self._depth_sub = self.create_subscription(Float32, 'bar100/depth', depth_callback, QOS_RELIABLE())
+
+        self._water_temperature = Float32()
+        temperature_callback = lambda msg: setattr(self, '_water_temperature', msg)
+        self._temperature_sub = self.create_subscription(Float32, 'bar100/temperature', temperature_callback, QOS_RELIABLE())
+
     def _init_localization(self):
         """Initialize the odometry subscriber."""
         self._odom = Odometry()
-        odom_callback = lambda msg: setattr(self, 'odom', msg)
+        odom_callback = lambda msg: setattr(self, '_odom', msg)
         self._odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, QOS_RELIABLE())
 
     def _init_control(self):
@@ -136,7 +151,7 @@ class SELQIE(Node):
         self._gait_pub = self.create_publisher(String, 'gait', QOS_RELIABLE())
 
         self._gait = String()
-        gait_callback = lambda msg: setattr(self, 'gait', msg)
+        gait_callback = lambda msg: setattr(self, '_gait', msg)
         self._gait_sub = self.create_subscription(String, 'gait', gait_callback, QOS_RELIABLE())
 
     def _init_vision(self):
@@ -144,11 +159,11 @@ class SELQIE(Node):
         self._lights_pwm_pub = self.create_publisher(Float32, 'lights/pwm', QOS_RELIABLE())
 
         self._camera_left_image = Image()
-        camera_left_callback = lambda msg: setattr(self, 'camera_left_image', msg)
+        camera_left_callback = lambda msg: setattr(self, '_camera_left_image', msg)
         self._camera_left_sub = self.create_subscription(Image, 'stereo/left/image_raw', camera_left_callback, QOS_FAST())
 
         self._camera_right_image = Image()
-        camera_right_callback = lambda msg: setattr(self, 'camera_right_image', msg)
+        camera_right_callback = lambda msg: setattr(self, '_camera_right_image', msg)
         self._camera_right_sub = self.create_subscription(Image, 'stereo/right/image_raw', camera_right_callback, QOS_FAST())
 
     def _init_recording(self):
@@ -156,7 +171,7 @@ class SELQIE(Node):
                                      "odrive0/info", "odrive1/info", "odrive2/info", "odrive3/info", "odrive4/info", "odrive5/info", "odrive6/info", "odrive7/info",
                                      "legFL/command", "legRL/command", "legRR/command", "legFR/command",
                                      "stereo/left/image_raw", "stereo/right/image_raw",
-                                     "imu/data", "light/pwm", "bar100/depth", "bar100/temperature"]
+                                     "imu/data", "lights/pwm", "bar100/depth", "bar100/temperature"]
         self.ROSBAG_SAVE_FOLDER = '/home/selqie/rosbags'
         self._rosbag_process = None
 
@@ -322,6 +337,22 @@ class SELQIE(Node):
         for i in range(len(trajectories)):
             if trajectories[i] is not None:
                 self.send_leg_trajectory(i, trajectories[i])
+
+    ############################
+    ### Sensor Data Functions ##
+    ############################
+
+    def get_imu(self) -> Imu:
+        """Get the latest Imu message."""
+        return self._imu
+    
+    def get_depth(self) -> Float32:
+        """Get the latest depth message."""
+        return self._depth
+    
+    def get_water_temperature(self) -> Float32:
+        """Get the latest water temperature message."""
+        return self._water_temperature
 
     ##############################
     ### Localization Functions ###

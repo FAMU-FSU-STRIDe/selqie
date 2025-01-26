@@ -12,7 +12,7 @@ def LightsNode():
             'is_pwm': True,
         }],
         remappings=[
-            ('gpio/out', 'light/pwm'),
+            ('gpio/out', 'lights/pwm'),
         ]
     )
 
