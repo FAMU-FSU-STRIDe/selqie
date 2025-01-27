@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'test_imu = robot_tests.test_imu:main',
             'plot_imu_data = robot_tests.plot_imu_data:main',
+            'plot_depth_data = robot_tests.plot_depth_data:main',
         ],
     },
 )
