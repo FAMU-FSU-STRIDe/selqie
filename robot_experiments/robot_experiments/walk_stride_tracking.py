@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 from nav_msgs.msg import Odometry
 from robot_utils.utils.ros_util_functions import *
 import matplotlib.pyplot as plt
@@ -14,6 +15,7 @@ class SELQIERobotNode(Node):
         odom_callback = lambda msg: setattr(self, 'odom', msg)
         self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
         
+        self.gait_pub = self.create_publisher(String, 'gait', qos_reliable())
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
         
         self.declare_parameter('linear_velocity', 0.15)
@@ -22,10 +24,12 @@ class SELQIERobotNode(Node):
         self.declare_parameter('angular_velocity', 0.1)
         self.angular_velocity = self.get_parameter('angular_velocity').value
         
-        self.declare_parameter('duration', 60.0)
+        self.declare_parameter('duration', 65.0)
         self.duration = self.get_parameter('duration').value
         
-        wait_for_subs([self.cmd_vel_pub])
+        wait_for_subs([self.gait_pub, self.cmd_vel_pub])
+        
+        self.gait_pub.publish(String(data='walk'))
         
         twist = Twist()
         twist.linear.x = self.linear_velocity
@@ -45,7 +49,13 @@ class SELQIERobotNode(Node):
         
         if self.t >= self.duration:
             
-            self.cmd_vel_pub.publish(Twist())
+            self.gait_pub.publish(String())
+            
+            avg_vel_x = sum(self.vel_x) / len(self.vel_x)
+            print(f'Average Velocity: {avg_vel_x}')
+            
+            avg_yaw_rate = sum(self.yaw_rate) / len(self.yaw_rate)
+            print(f'Average Yaw Rate: {avg_yaw_rate}')
 
             plt.figure()
             plt.plot(self.x, self.y, label='Trajectory')
@@ -58,21 +68,17 @@ class SELQIERobotNode(Node):
             plt.subplot(2, 1, 1)
             plt.plot(self.time, self.vel_x, label='Actual Velocity')
             plt.plot([0 , self.duration], [self.linear_velocity, self.linear_velocity], label='Commanded Velocity')
+            plt.plot([0 , self.duration], [avg_vel_x, avg_vel_x], label='Average Velocity')
             plt.ylabel('Velocity')
             plt.legend()
             plt.subplot(2, 1, 2)
             plt.plot(self.time, self.yaw_rate, label='Actual Yaw Rate')
             plt.plot([0 , self.duration], [self.angular_velocity, self.angular_velocity], label='Commanded Yaw Rate')
+            plt.plot([0 , self.duration], [avg_yaw_rate, avg_yaw_rate], label='Average Yaw Rate')
             plt.xlabel('Time')
             plt.ylabel('Yaw Rate')
             plt.legend()
             plt.show()
-            
-            avg_vel_x = sum(self.vel_x) / len(self.vel_x)
-            print(f'Average Velocity: {avg_vel_x}')
-            
-            avg_yaw_rate = sum(self.yaw_rate) / len(self.yaw_rate)
-            print(f'Average Yaw Rate: {avg_yaw_rate}')
             
             rclpy.shutdown()
             

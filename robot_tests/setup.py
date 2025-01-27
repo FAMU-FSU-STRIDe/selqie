@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'test_imu = robot_tests.test_imu:main',
+            'plot_imu_data = robot_tests.plot_imu_data:main',
         ],
     },
 )
