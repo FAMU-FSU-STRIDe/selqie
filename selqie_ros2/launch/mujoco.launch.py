@@ -6,6 +6,16 @@ from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 MODEL_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'model')
+LAUNCH_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'launch')
+
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+def IncludeLaunchFile(name : str):
+    return IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(LAUNCH_FOLDER, name)
+        )
+    )
 
 def MuJoCoNode():
     return Node(
@@ -100,5 +110,6 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('FR'),
         Walk2DNode(),
         WalkingPlannerNode(),
-        RVIZ2Node()
+        RVIZ2Node(),
+        IncludeLaunchFile('tf.launch.py')
     ])

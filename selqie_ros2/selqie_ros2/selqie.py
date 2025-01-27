@@ -384,14 +384,22 @@ class SELQIE(Node):
     def set_control_goal_pose(self, x : float, y : float, theta : float):
         """Set the goal pose of the robot."""
         goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'map'
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
-        goal_pose.pose.orientation.w = theta
+        goal_pose.pose.orientation.z = math.sin(theta / 2.0)
+        goal_pose.pose.orientation.w = math.cos(theta / 2.0)
         self.send_control_goal_pose(goal_pose)
     
     def send_control_gait(self, gait : String):
         """Send a String message to the gait topic."""
         self._gait_pub.publish(gait)
+        
+    def set_control_gait(self, gait : str):
+        """Set the gait of the robot."""
+        msg = String()
+        msg.data = gait
+        self.send_control_gait(msg)
 
     def get_control_gait(self) -> String:
         """Get the latest gait message."""

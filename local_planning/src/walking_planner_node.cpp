@@ -117,7 +117,7 @@ public:
         this->declare_parameter("heuristic_vel_factor", 2.0);
         this->get_parameter("heuristic_vel_factor", _model_params.heuristic_vel_factor);
 
-        this->declare_parameter("heuristic_omega_factor", 10.0);
+        this->declare_parameter("heuristic_omega_factor", 1.0);
         this->get_parameter("heuristic_omega_factor", _model_params.heuristic_omega_factor);
 
         this->declare_parameter("max_iterations", 500000);

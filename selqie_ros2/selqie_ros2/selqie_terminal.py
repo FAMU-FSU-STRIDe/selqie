@@ -177,6 +177,21 @@ class SELQIETerminal(Cmd):
             print("Invalid brightness value")
             return
         
+    def do_set_gait(self, line : str):
+        """ Set the gait for the robot """
+        args = line.split()
+        if len(args) != 1:
+            print("Usage: set_gait <gait>")
+            return
+        try:
+            if args[0] == "none":
+                self._selqie.set_control_gait('')
+            else:
+                self._selqie.set_control_gait(args[0])
+        except ValueError:
+            print("Invalid gait")
+            return
+        
     def do_cmd_vel(self, line : str):
         """ Publish a Twist message to cmd_vel """
         args = line.split()

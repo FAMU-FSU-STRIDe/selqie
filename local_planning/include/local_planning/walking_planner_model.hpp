@@ -19,7 +19,7 @@ struct WalkingPlannerParams
     int integration_steps = 5;
     float goal_threshold = 0.25;
     float heuristic_vel_factor = 2.0;
-    float heuristic_omega_factor = 10.0;
+    float heuristic_omega_factor = 1.0;
 };
 
 class WalkingPlannerModel : public sbmpo::Model
@@ -83,7 +83,7 @@ public:
         const float dy = goal[Y] - state[Y];
         const float dtheta = wrap_angle(goal[THETA] - state[THETA]);
         const float heur_vel = std::sqrt(dx * dx + dy * dy) * params.heuristic_vel_factor;
-        const float heur_omega = 0; // std::abs(dtheta) * params.heuristic_omega_factor;
+        const float heur_omega = std::abs(dtheta) * params.heuristic_omega_factor;
         return heur_vel + heur_omega;
     }
 
