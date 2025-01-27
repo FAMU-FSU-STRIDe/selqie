@@ -4,12 +4,13 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
         - /Odometry1/Shape1
         - /Left Image1
         - /Right Image1/Topic1
+        - /Imu1/Axes properties1
+        - /Imu1/Acceleration properties1
       Splitter Ratio: 0.5261569619178772
     Tree Height: 643
   - Class: rviz_common/Selection
@@ -23,7 +24,6 @@ Panels:
   - Class: rviz_common/Views
     Expanded:
       - /Current View1
-      - /Current View1/Focal Point1
     Name: Views
     Splitter Ratio: 0.5
 Visualization Manager:
@@ -52,8 +52,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        bar100_link:
-          Value: true
         base_link:
           Value: true
         camera_left:
@@ -64,6 +62,8 @@ Visualization Manager:
           Value: true
         imu_link:
           Value: true
+        map:
+          Value: true
         odom:
           Value: true
       Marker Scale: 1
@@ -72,17 +72,16 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        odom:
-          base_link:
-            bar100_link:
-              {}
-            camera_link:
-              camera_left:
+        map:
+          odom:
+            base_link:
+              camera_link:
+                camera_left:
+                  {}
+                camera_right:
+                  {}
+              imu_link:
                 {}
-              camera_right:
-                {}
-            imu_link:
-              {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.009999999776482582
@@ -294,10 +293,38 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /goal_pose
       Value: true
+    - Acceleration properties:
+        Acc. vector alpha: 1
+        Acc. vector color: 255; 0; 0
+        Acc. vector scale: 0.10000000149011612
+        Derotate acceleration: true
+        Enable acceleration: true
+      Axes properties:
+        Axes scale: 0.10000000149011612
+        Enable axes: true
+      Box properties:
+        Box alpha: 1
+        Box color: 255; 0; 0
+        Enable box: false
+        x_scale: 1
+        y_scale: 1
+        z_scale: 1
+      Class: rviz_imu_plugin/Imu
+      Enabled: true
+      Name: Imu
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /imu/data
+      Value: true
+      fixed_frame_orientation: true
   Enabled: true
   Global Options:
     Background Color: 61; 56; 70
-    Fixed Frame: odom
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -340,25 +367,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 5.2339677810668945
+      Distance: 5
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.7753901481628418
-        Y: 1.7030861377716064
-        Z: 0.000202881550649181
+        X: 0
+        Y: 0
+        Z: 0
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.00020239129662513733
+      Pitch: 0.5
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.073166370391846
+      Yaw: 0
     Saved: ~
 Window Geometry:
   Displays:

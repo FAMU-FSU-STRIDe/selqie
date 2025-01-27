@@ -1,23 +1,31 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
-ROBOT_FRAME = 'base_link'
+MAP_FRAME = 'map'
 
+ODOM_FRAME = 'odom'
+INITIAL_ODOM_POSITION = [0, 0, 0]
+INITIAL_ODOM_ORIENTATION = [0, 0, 0]
+
+ROBOT_FRAME = 'base_link'
+INITIAL_ROBOT_POSITION = [0, 0, 0]
+INITIAL_ROBOT_ORIENTATION = [0, 0, 0]
+
+IMU_FRAME = 'imu_link'
 IMU_POSITION = [0, 0, 0]
 IMU_ORIENTATION = [3.14159, 0, 0]
-IMU_FRAME = 'imu_link'
 
+CAMERA_LINK_FRAME = 'camera_link'
 CAMERA_LINK_POSITION = [0.38, 0, 0.3345]
 CAMERA_LINK_ORIENTATION = [0, 0, 0]
-CAMERA_LINK_FRAME = 'camera_link'
 
+CAMERA_LEFT_FRAME = 'camera_left'
 CAMERA_LEFT_POSITION = [0, 0.359, 0]
 CAMERA_LEFT_ORIENTATION = [-1.5707, 0, -1.5707]
-CAMERA_LEFT_FRAME = 'camera_left'
 
+CAMERA_RIGHT_FRAME = 'camera_right'
 CAMERA_RIGHT_POSITION = [0, -0.359, 0]
 CAMERA_RIGHT_ORIENTATION = [-1.5707, 0, -1.5707]
-CAMERA_RIGHT_FRAME = 'camera_right'
 
 def StaticTransform(pos, ori, parent, child):
     return Node(
@@ -32,11 +40,18 @@ def StaticTransform(pos, ori, parent, child):
             '--yaw', str(ori[2]),
             '--frame-id', parent,
             '--child-frame-id', child
-        ]
+        ],
+        parameters=[{
+            'use_sim_time': True
+        }]
     )
 
 def generate_launch_description():
     return LaunchDescription([
+        # Odom to Map
+        StaticTransform(INITIAL_ODOM_POSITION, INITIAL_ODOM_ORIENTATION, MAP_FRAME, ODOM_FRAME),
+        # Base Link to Odom
+        StaticTransform(INITIAL_ROBOT_POSITION, INITIAL_ROBOT_ORIENTATION, ODOM_FRAME, ROBOT_FRAME),
         # Base Link to IMU Link
         StaticTransform(IMU_POSITION, IMU_ORIENTATION, ROBOT_FRAME, IMU_FRAME),
         # IMU to Camera Link

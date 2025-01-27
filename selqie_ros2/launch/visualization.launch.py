@@ -12,7 +12,10 @@ def RVIZ2Node():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', os.path.join(CONFIG_FOLDER, 'rviz_config.rviz')]
+        arguments=['-d', os.path.join(CONFIG_FOLDER, 'rviz_config.rviz')],
+        parameters=[{
+            'use_sim_time': True
+        }]
     )
 
 def generate_launch_description():

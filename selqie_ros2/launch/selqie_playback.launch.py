@@ -25,6 +25,17 @@ def Depth2PoseNode():
             'z_variance': 2.89,
         }],
     )
+    
+def IMUBiasCorrectionNode():
+    return Node(
+        package='selqie_localization',
+        executable='imu_bias_correction_node',
+        name='imu_bias_correction_node',
+        output='screen',
+        parameters=[{
+            'sample_size': 3000
+        }],
+    )
 
 def generate_launch_description():
     return LaunchDescription([
@@ -32,4 +43,5 @@ def generate_launch_description():
         IncludeLaunchFile('ekf.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
         # Depth2PoseNode(),
+        IMUBiasCorrectionNode(),
     ])
