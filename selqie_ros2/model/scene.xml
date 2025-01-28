@@ -27,6 +27,8 @@
     <geom name="obstacle4" type="cylinder" size="0.05 0.5" pos="1.0 2.0 0.5" material="obstacle"/>
     <geom name="obstacle5" type="cylinder" size="0.05 0.5" pos="2.5 1.5 0.5" material="obstacle"/>
     <geom name="obstacle6" type="cylinder" size="0.05 0.5" pos="1.5 2.5 0.5" material="obstacle"/>
+    <geom name="obstacle7" type="cylinder" size="0.05 0.5" pos="1.75 2.25 0.5" material="obstacle"/>
+    <geom name="obstacle8" type="cylinder" size="0.05 0.5" pos="1.75 1.0 0.5" material="obstacle"/>
 
   </worldbody>
 

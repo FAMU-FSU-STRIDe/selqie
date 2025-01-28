@@ -56,6 +56,8 @@ public:
             next_state[THETA] += control[OMEGA] * time_increment;
             next_state[X] += control[VEL] * std::cos(next_state[THETA]) * time_increment;
             next_state[Y] += control[VEL] * std::sin(next_state[THETA]) * time_increment;
+            if (!is_valid(next_state))
+                return state;
         }
         next_state[THETA] = wrap_angle(next_state[THETA]);
         return next_state;
@@ -107,7 +109,9 @@ public:
             {2.0, 2.0, 0.2},
             {1.0, 2.0, 0.2},
             {2.5, 1.5, 0.2},
-            {1.5, 2.5, 0.2}
+            {1.5, 2.5, 0.2},
+            {1.75, 2.25, 0.2},
+            {1.75, 1.0, 0.2}
         };
         for (const auto &obstacle : obstacles)
         {

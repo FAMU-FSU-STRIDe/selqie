@@ -66,6 +66,12 @@ private:
             return;
         }
 
+        if (msg->linear.x == 0.0 && msg->angular.z == 0.0)
+        {
+            _next_trajectories.clear();
+            return;
+        }
+
         double vel_x;
         double omega_z;
         map_des2cmd(msg->linear.x, msg->angular.z, vel_x, omega_z);
@@ -73,12 +79,6 @@ private:
         if (std::isnan(vel_x) || std::isnan(omega_z))
         {
             RCLCPP_WARN(this->get_logger(), "Invalid velocity command.");
-            return;
-        }
-
-        if (vel_x == 0.0 && omega_z == 0.0)
-        {
-            _next_trajectories.clear();
             return;
         }
 
@@ -132,6 +132,7 @@ private:
             _trajectories = _next_trajectories;
             _idx = 0;
             _start_time = this->now();
+            return;
         }
 
         const auto cdiff = (this->now() - _start_time).to_chrono<std::chrono::milliseconds>();

@@ -43,7 +43,7 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr _goal_sub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odom_sub;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr _cmd_pub;
-    rclcpp::TimerBase::SharedPtr _timer;
+    rclcpp::TimerBase::SharedPtr _solve_timer;
 
     bool _publish_all = false;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _path_pub;
@@ -130,13 +130,13 @@ public:
         this->get_parameter("time_limit_us", _sbmpo_params.time_limit_us);
 
         std::vector<double> grid_resolution;
-        this->declare_parameter("grid_resolution", std::vector<double>{0.05, 0.05, 0.05});
+        this->declare_parameter("grid_resolution", std::vector<double>{0.05, 0.05, 0.15});
         this->get_parameter("grid_resolution", grid_resolution);
         assert(grid_resolution.size() == 3);
         _sbmpo_params.grid_resolution = std::vector<float>(grid_resolution.begin(), grid_resolution.end());
 
         _sbmpo_params.fixed_samples = {
-            {-0.50, +0.00}, {+0.50, +0.00}, {-0.25, -0.05}, {-0.25, +0.05}, {+0.25, -0.05}, {+0.25, +0.05}, {-0.10, -0.10}, {-0.10, +0.10}, {+0.10, -0.10}, {+0.10, +0.10}, {+0.00, -0.30}, {+0.00, +0.30}};
+            {-0.25, +0.00}, {+0.25, +0.00}, {-0.10, -0.10}, {-0.10, +0.10}, {+0.10, -0.10}, {+0.10, +0.10}, {+0.00, -0.30}, {+0.00, +0.30}};
 
         _model = std::make_shared<WalkingPlannerModel>(_model_params);
         _sbmpo = std::make_unique<SBMPO>(_model);
@@ -154,7 +154,7 @@ public:
         if (_publish_all)
             _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("walk/states", 10);
 
-        _timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / solve_frequency)),
+        _solve_timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / solve_frequency)),
                                          std::bind(&WalkingPlanner::solve, this));
 
         RCLCPP_INFO(this->get_logger(), "Walking Planner Node Initialized");
