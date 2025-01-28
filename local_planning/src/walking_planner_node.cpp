@@ -130,7 +130,7 @@ public:
         this->get_parameter("time_limit_us", _sbmpo_params.time_limit_us);
 
         std::vector<double> grid_resolution;
-        this->declare_parameter("grid_resolution", std::vector<double>{0.05, 0.05, 0.025});
+        this->declare_parameter("grid_resolution", std::vector<double>{0.05, 0.05, 0.05});
         this->get_parameter("grid_resolution", grid_resolution);
         assert(grid_resolution.size() == 3);
         _sbmpo_params.grid_resolution = std::vector<float>(grid_resolution.begin(), grid_resolution.end());
