@@ -1,0 +1,9 @@
+/**:
+  ros__parameters:
+    leg_names: ['FL', 'RL', 'RR', 'FR']
+    robot_width: 0.25
+    frequency: 3.5
+    stride_resolution: 100
+    leg_length: 0.18
+    z_amplitude: 0.005
+    vel_amplitude_gain: 0.1

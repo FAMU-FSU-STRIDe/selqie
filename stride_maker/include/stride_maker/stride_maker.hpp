@@ -52,3 +52,31 @@ robot_msgs::msg::LegTrajectory make_walk_stride(const int num_points, const doub
 
     return leg_trajectory;
 }
+
+robot_msgs::msg::LegTrajectory make_swim_stride(const int num_points, const double frequency, const double leg_length,
+                                                const double angle, const double x_amplitude, const double z_amplitude)
+{
+    robot_msgs::msg::LegTrajectory leg_trajectory;
+    leg_trajectory.timing.reserve(num_points);
+    leg_trajectory.commands.reserve(num_points);
+
+    const double duration = 1.0 / frequency;
+    const double dt = duration / num_points;
+    const double theta = angle + M_PI_2;
+
+    double t = 0.0;
+    robot_msgs::msg::LegCommand leg_command;
+    leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+    for (int k = 0; k < num_points; k++)
+    {
+        leg_trajectory.timing.push_back(t);
+        const double x = x_amplitude * std::cos(2 * M_PI * t * frequency);
+        const double z = z_amplitude * std::sin(2 * M_PI * t * frequency) - leg_length;
+        leg_command.pos_setpoint.x = x * std::cos(theta) - z * std::sin(theta);
+        leg_command.pos_setpoint.z = x * std::sin(theta) + z * std::cos(theta);
+        leg_trajectory.commands.push_back(leg_command);
+        t += dt;
+    }
+
+    return leg_trajectory;
+}

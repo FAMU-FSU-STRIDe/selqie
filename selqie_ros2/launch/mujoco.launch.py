@@ -87,6 +87,16 @@ def WalkingPlannerNode():
             'publish_all': True
         }]
     )
+    
+def SwimNode():
+    return Node(
+        package='stride_maker',
+        executable='swim_node',
+        name='swim_node',
+        parameters=[os.path.join(CONFIG_FOLDER, 'swim_config.yaml'), {
+            'use_sim_time': True
+        }],
+    )
 
 def RVIZ2Node():
     return Node(
@@ -110,6 +120,7 @@ def generate_launch_description():
         LegTrajectoryPublisherNode('FR'),
         Walk2DNode(),
         WalkingPlannerNode(),
+        SwimNode(),
         RVIZ2Node(),
         IncludeLaunchFile('tf.launch.py')
     ])

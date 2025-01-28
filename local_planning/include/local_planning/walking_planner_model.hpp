@@ -103,24 +103,24 @@ public:
     */
     bool is_valid(const State &state) override
     {
-        const std::vector<std::vector<float>> obstacles = {
-            {1.0, 1.0, 0.2},
-            {1.5, 1.5, 0.2},
-            {2.0, 2.0, 0.2},
-            {1.0, 2.0, 0.2},
-            {2.5, 1.5, 0.2},
-            {1.5, 2.5, 0.2},
-            {1.75, 2.25, 0.2},
-            {1.75, 1.0, 0.2}
-        };
-        for (const auto &obstacle : obstacles)
-        {
-            const float dx = obstacle[0] - state[X];
-            const float dy = obstacle[1] - state[Y];
-            const float distance_squared = dx * dx + dy * dy;
-            if (distance_squared < obstacle[2] * obstacle[2])
-                return false;
-        }
+        // const std::vector<std::vector<float>> obstacles = {
+        //     {1.0, 1.0, 0.2},
+        //     {1.5, 1.5, 0.2},
+        //     {2.0, 2.0, 0.2},
+        //     {1.0, 2.0, 0.2},
+        //     {2.5, 1.5, 0.2},
+        //     {1.5, 2.5, 0.2},
+        //     {1.75, 2.25, 0.2},
+        //     {1.75, 1.0, 0.2}
+        // };
+        // for (const auto &obstacle : obstacles)
+        // {
+        //     const float dx = obstacle[0] - state[X];
+        //     const float dy = obstacle[1] - state[Y];
+        //     const float distance_squared = dx * dx + dy * dy;
+        //     if (distance_squared < obstacle[2] * obstacle[2])
+        //         return false;
+        // }
         return true;
     }
 
