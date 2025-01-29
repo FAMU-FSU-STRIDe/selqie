@@ -121,6 +121,7 @@ public:
         //     if (distance_squared < obstacle[2] * obstacle[2])
         //         return false;
         // }
+        (void)state;
         return true;
     }
 

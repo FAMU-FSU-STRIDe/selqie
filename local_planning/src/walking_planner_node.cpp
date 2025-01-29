@@ -32,6 +32,33 @@ geometry_msgs::msg::Pose state_to_pose(const sbmpo::State &state)
     return pose;
 }
 
+std::string exit_code_to_string(const sbmpo::ExitCode exit_code)
+{
+    switch (exit_code)
+    {
+    case sbmpo::SOLUTION_FOUND:
+        return "SOLUTION_FOUND";
+    case sbmpo::ITERATION_LIMIT:
+        return "ITERATION_LIMIT";
+    case sbmpo::NO_NODES_IN_QUEUE:
+        return "NO_NODES_IN_QUEUE";
+    case sbmpo::GENERATION_LIMIT:
+        return "GENERATION_LIMIT";
+    case sbmpo::RUNNING:
+        return "RUNNING";
+    case sbmpo::QUIT_SEARCH:
+        return "QUIT_SEARCH";
+    case sbmpo::TIME_LIMIT:
+        return "TIME_LIMIT";
+    case sbmpo::INVALID_START_STATE:
+        return "INVALID_START_STATE";
+    case sbmpo::NEGATIVE_COST:
+        return "NEGATIVE_COST";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 class WalkingPlanner : public rclcpp::Node
 {
 private:
@@ -155,7 +182,7 @@ public:
             _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("walk/states", 10);
 
         _solve_timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / solve_frequency)),
-                                         std::bind(&WalkingPlanner::solve, this));
+                                               std::bind(&WalkingPlanner::solve, this));
 
         RCLCPP_INFO(this->get_logger(), "Walking Planner Node Initialized");
     }
@@ -177,22 +204,27 @@ public:
         _sbmpo_params.goal_state = {goal_x, goal_y, goal_theta};
 
         _sbmpo->run(_sbmpo_params);
+        const sbmpo::ExitCode exit_code = _sbmpo->results()->exit_code;
 
-        if (_sbmpo->results()->exit_code == ExitCode::SOLUTION_FOUND &&
-            !_sbmpo->results()->control_path.empty())
+        if (exit_code != sbmpo::SOLUTION_FOUND)
+        {
+            _publish_cmd(0.0, 0.0);
+            RCLCPP_WARN(this->get_logger(), "Walking Planner Failed with Exit Code %d: %s",
+                        exit_code, exit_code_to_string(exit_code).c_str());
+        }
+        else if (_sbmpo->results()->control_path.empty())
+        {
+            _publish_cmd(0.0, 0.0);
+            RCLCPP_WARN(this->get_logger(), "Walking Planner Reached the Goal");
+        }
+        else
         {
             const auto cmd_vel = _sbmpo->results()->control_path[0][WalkingPlannerModel::VEL];
             const auto cmd_omega = _sbmpo->results()->control_path[0][WalkingPlannerModel::OMEGA];
             _publish_cmd(cmd_vel, cmd_omega);
         }
-        else
-        {
-            _publish_cmd(0.0, 0.0);
-            RCLCPP_WARN(this->get_logger(), "Walking Planner Failed to Solve. (Exit Code: %d)", _sbmpo->results()->exit_code);
-        }
 
         _publish_path(*_sbmpo->results());
-
         if (_publish_all)
         {
             _publish_states(*_sbmpo->results());

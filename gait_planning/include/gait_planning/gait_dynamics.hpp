@@ -35,12 +35,21 @@ enum GaitType : uint8_t
 
 struct GaitDynamicsOptions
 {
-    float sample_time = 1.0F;
-    int sample_resolution = 10;
+    float horizon_time = 1.0F;
+    int integration_steps = 5;
     float cost_of_transport = 1.0F;
     float jumping_loadup_time = 0.5F;
     float sinking_speed = 0.25F;
 };
+
+float wrap_angle(float angle)
+{
+    while (angle > M_PI)
+        angle -= 2 * M_PI;
+    while (angle <= -M_PI)
+        angle += 2 * M_PI;
+    return angle;
+}
 
 // Interface class for gait dynamics models
 class GaitDynamics
@@ -53,9 +62,9 @@ public:
 
     virtual State getNextState(const State &state, const Control &control)
     {
-        const float dt = _options.sample_time / _options.sample_resolution;
+        const float dt = _options.horizon_time / _options.integration_steps;
         State next_state = state;
-        for (int i = 0; i < _options.sample_resolution; i++)
+        for (int i = 0; i < _options.integration_steps; i++)
         {
             next_state[TIME] += dt;
             next_state[Q] += control[Wz] * dt;
@@ -64,12 +73,13 @@ public:
             next_state[Z] += control[Vz] * dt;
             next_state[GAIT] = control[NEW_GAIT];
         }
+        next_state[Q] = wrap_angle(next_state[Q]);
         return next_state;
     }
 
     virtual float getCost(const State &, const State &, const Control &)
     {
-        return _options.cost_of_transport * _options.sample_time;
+        return _options.cost_of_transport * _options.horizon_time;
     }
 
     virtual bool isValid(const State &state)
@@ -89,36 +99,19 @@ public:
 
     std::vector<Control> getControls(const State &) override
     {
-        return {{+0.20, +0.05, 0.0, WALK},
-                {+0.20, 0.000, 0.0, WALK},
-                {+0.20, -0.05, 0.0, WALK},
+        return {{+0.30, 0.000, 0.0, WALK},
+                {-0.30, 0.000, 0.0, WALK},
+
                 {+0.10, +0.10, 0.0, WALK},
-                {+0.10, +0.05, 0.0, WALK},
-                {+0.10, 0.000, 0.0, WALK},
-                {+0.10, -0.05, 0.0, WALK},
                 {+0.10, -0.10, 0.0, WALK},
-                {+0.05, +0.25, 0.0, WALK},
-                {+0.05, +0.10, 0.0, WALK},
-                {+0.05, -0.10, 0.0, WALK},
-                {+0.05, -0.25, 0.0, WALK},
+                {-0.10, +0.10, 0.0, WALK},
+                {-0.10, -0.10, 0.0, WALK},
+
                 {0.000, +0.25, 0.0, WALK},
                 {0.000, +0.10, 0.0, WALK},
-                {0.000, +0.05, 0.0, WALK},
-                {0.000, -0.05, 0.0, WALK},
-                {0.000, -0.10, 0.0, WALK},
                 {0.000, -0.25, 0.0, WALK},
-                {-0.05, +0.25, 0.0, WALK},
-                {-0.05, +0.10, 0.0, WALK},
-                {-0.05, -0.10, 0.0, WALK},
-                {-0.05, -0.25, 0.0, WALK},
-                {-0.10, +0.10, 0.0, WALK},
-                {-0.10, +0.05, 0.0, WALK},
-                {-0.10, 0.000, 0.0, WALK},
-                {-0.10, -0.05, 0.0, WALK},
-                {-0.10, -0.10, 0.0, WALK},
-                {-0.20, +0.05, 0.0, WALK},
-                {-0.20, 0.000, 0.0, WALK},
-                {-0.20, -0.05, 0.0, WALK},
+                {0.000, -0.10, 0.0, WALK},
+
                 {0.000, 0.000, 0.0, JUMP}};
     }
 };
@@ -139,21 +132,23 @@ public:
         return {{+0.05, +0.10, 0.000, SWIM},
                 {+0.05, 0.000, 0.000, SWIM},
                 {+0.05, -0.10, 0.000, SWIM},
-                {0.000, +0.10, 0.000, SWIM},
-                {0.000, +0.05, 0.000, SWIM},
-                {0.000, -0.05, 0.000, SWIM},
-                {0.000, -0.10, 0.000, SWIM},
                 {-0.05, +0.10, 0.000, SWIM},
                 {-0.05, 0.000, 0.000, SWIM},
                 {-0.05, -0.10, 0.000, SWIM},
-                {0.000, +0.10, +0.05, SWIM},
+
+                {0.000, +0.20, 0.000, SWIM},
+                {0.000, -0.20, 0.000, SWIM},
+                {0.000, +0.10, 0.000, SWIM},
+                {0.000, -0.10, 0.000, SWIM},
+
                 {0.000, +0.05, +0.05, SWIM},
                 {0.000, -0.05, +0.05, SWIM},
-                {0.000, -0.10, +0.05, SWIM},
-                {0.000, +0.10, -0.05, SWIM},
                 {0.000, +0.05, -0.05, SWIM},
                 {0.000, -0.05, -0.05, SWIM},
-                {0.000, -0.10, -0.05, SWIM},
+
+                {0.000, 0.000, +0.10, SWIM},
+                {0.000, 0.000, -0.05, SWIM},
+
                 {0.000, 0.000, 0.000, SINK}};
     }
 };
@@ -167,14 +162,14 @@ public:
     State getNextState(const State &state, const Control &control) override
     {
         State next_state = state;
-        next_state[TIME] += _options.sample_time + _options.jumping_loadup_time;
-        next_state[X] += control[Vx] * _options.sample_time;
-        next_state[Z] += control[Vz] * _options.sample_time;
+        next_state[TIME] += _options.horizon_time + _options.jumping_loadup_time;
+        next_state[X] += control[Vx] * _options.horizon_time;
+        next_state[Z] += control[Vz] * _options.horizon_time;
         next_state[GAIT] = control[NEW_GAIT];
         return next_state;
     }
 
-    std::vector<Control> getControls(const State &) override 
+    std::vector<Control> getControls(const State &) override
     {
         return {
             {0.0, +0.10, +0.40, SWIM},
@@ -190,7 +185,7 @@ class SinkingDynamics : public GaitDynamics
 public:
     SinkingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
-    State getNextState(const State &state, const Control &control) override 
+    State getNextState(const State &state, const Control &control) override
     {
         State next_state = state;
         next_state[TIME] += state[Z] / _options.sinking_speed;
@@ -199,10 +194,9 @@ public:
         return next_state;
     }
 
-    std::vector<Control> getControls(const State &) override 
+    std::vector<Control> getControls(const State &) override
     {
         return {
-            {0.0, 0.0, 0.0, WALK}
-        };
+            {0.0, 0.0, 0.0, WALK}};
     }
 };

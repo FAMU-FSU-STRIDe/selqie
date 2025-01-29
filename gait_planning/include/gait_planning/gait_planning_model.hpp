@@ -5,7 +5,9 @@
 
 struct GaitPlanningParams
 {
-    float goal_threshold = 1.0;
+    float goal_threshold = 3.0;
+    float heuristic_omega_factor = 0.0;
+    float heuristic_vel_factor = 2.0;
 };
 
 class GaitPlanningModel : public Model
@@ -15,9 +17,8 @@ private:
     GaitPlanningParams _params;
 
 public:
-    GaitPlanningModel(const GaitPlanningParams &params) : _params(params)
+    GaitPlanningModel(const GaitPlanningParams &params, const GaitDynamicsOptions &options) : _params(params)
     {
-        GaitDynamicsOptions options;
         _gait_dynamics.emplace_back(nullptr);
         _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>(options));
         _gait_dynamics.emplace_back(std::make_unique<SwimmingDynamics>(options));
@@ -53,10 +54,13 @@ public:
     */
     float heuristic(const State &state, const State &goal) override
     {
-        const float dX = goal[X] - state[X];
-        const float dY = goal[Y] - state[Y];
-        const float dZ = goal[Z] - state[Z];
-        return std::sqrt(dX * dX + dY * dY + dZ * dZ);
+        const float dq = wrap_angle(goal[Q] - state[Q]);
+        const float dx = goal[X] - state[X];
+        const float dy = goal[Y] - state[Y];
+        const float dz = goal[Z] - state[Z];
+        const float heur_vel = std::sqrt(dx * dx + dy * dy + dz * dz) * _params.heuristic_vel_factor;
+        const float heur_omega = std::abs(dq) * _params.heuristic_omega_factor;
+        return heur_vel + heur_omega;
     }
 
     /*

@@ -18,7 +18,7 @@ tmux split-window -v
 
 # Send the ros2 launch command to the left pane (pane 0)
 tmux select-pane -t 0
-tmux send-keys "source ${ROS2_WS}/install/setup.bash; ros2 launch selqie_ros2 mujoco.launch.py" C-m
+tmux send-keys "source ${ROS2_WS}/install/setup.bash; ros2 launch selqie_ros2 selqie_mujoco.launch.py" C-m
 
 # The bottom-right pane (pane 2) will be left open for general commands, with the environment already sourced
 tmux select-pane -t 1

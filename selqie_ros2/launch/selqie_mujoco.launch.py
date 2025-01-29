@@ -16,13 +16,10 @@ def IncludeLaunchFile(name : str):
 
 def generate_launch_description():
     return LaunchDescription([
-        IncludeLaunchFile('odrives.launch.py'),
+        IncludeLaunchFile('mujoco.launch.py'),
         IncludeLaunchFile('legs.launch.py'),
-        IncludeLaunchFile('imu.launch.py'),
-        IncludeLaunchFile('bar100.launch.py'),
-        IncludeLaunchFile('lights.launch.py'),
-        IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
+        # IncludeLaunchFile('local_planning.launch.py'),
+        IncludeLaunchFile('gait_planning.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
-        IncludeLaunchFile('ekf.launch.py'),
-        # IncludeLaunchFile('visualization.launch.py'),
+        IncludeLaunchFile('visualization.launch.py'),
     ])
