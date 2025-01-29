@@ -10,15 +10,20 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sbmpo REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(robot_msgs REQUIRED)
 
 include_directories(include)
 
 add_executable(gait_planning_node src/gait_planning_node.cpp)
-ament_target_dependencies(gait_planning_node rclcpp nav_msgs)
+ament_target_dependencies(gait_planning_node rclcpp nav_msgs robot_msgs)
 target_link_libraries(gait_planning_node sbmpo::sbmpo)
+
+add_executable(gait_handler_node src/gait_handler_node.cpp)
+ament_target_dependencies(gait_handler_node rclcpp robot_msgs)
 
 install(TARGETS
   gait_planning_node
+  gait_handler_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

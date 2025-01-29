@@ -4,6 +4,7 @@
 #include <geometry_msgs/msg/pose_array.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <std_msgs/msg/string.hpp>
+#include <robot_msgs/msg/gait_trajectory.hpp>
 
 #include "sbmpo/SBMPO.hpp"
 #include "gait_planning/gait_planning_model.hpp"
@@ -31,6 +32,16 @@ geometry_msgs::msg::Pose state_to_pose(const sbmpo::State &state)
     return pose;
 }
 
+sbmpo::State pose_to_state(const geometry_msgs::msg::Pose &pose)
+{
+    return {0.0,
+            quaternion_to_yaw(pose.orientation),
+            static_cast<float>(pose.position.x),
+            static_cast<float>(pose.position.y),
+            static_cast<float>(pose.position.z),
+            GaitType::NONE};
+}
+
 GaitType string_to_gait(const std::string &gait)
 {
     if (gait == "walk")
@@ -42,6 +53,23 @@ GaitType string_to_gait(const std::string &gait)
     if (gait == "sink")
         return SINK;
     return NONE;
+}
+
+std::string gait_to_string(const GaitType gait)
+{
+    switch (gait)
+    {
+    case WALK:
+        return "walk";
+    case SWIM:
+        return "swim";
+    case JUMP:
+        return "jump";
+    case SINK:
+        return "sink";
+    default:
+        return "none";
+    }
 }
 
 std::string exit_code_to_string(const sbmpo::ExitCode exit_code)
@@ -71,6 +99,15 @@ std::string exit_code_to_string(const sbmpo::ExitCode exit_code)
     }
 }
 
+void add_state_to_gait_trajectory(robot_msgs::msg::GaitTrajectory &gait_traj_msg, const sbmpo::State &state)
+{
+    geometry_msgs::msg::PoseStamped pose_stamped;
+    pose_stamped.header.stamp = rclcpp::Time(static_cast<int64_t>(state[TIME] * 1e9));
+    pose_stamped.pose = state_to_pose(state);
+    gait_traj_msg.path.poses.push_back(pose_stamped);
+    gait_traj_msg.gait.push_back(gait_to_string(static_cast<GaitType>(state[GAIT])));
+}
+
 class GaitPlanningNode : public rclcpp::Node
 {
 private:
@@ -83,6 +120,7 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr _goal_sub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odom_sub;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_sub;
+    rclcpp::Publisher<robot_msgs::msg::GaitTrajectory>::SharedPtr _gait_traj_pub;
     rclcpp::TimerBase::SharedPtr _solve_timer;
 
     bool _publish_all = false;
@@ -190,10 +228,12 @@ public:
         _gait_sub = this->create_subscription<std_msgs::msg::String>(
             "gait", 10, std::bind(&GaitPlanningNode::_gait_callback, this, std::placeholders::_1));
 
-        _path_pub = this->create_publisher<nav_msgs::msg::Path>("gait/path", 10);
+        _gait_traj_pub = this->create_publisher<robot_msgs::msg::GaitTrajectory>("gait/trajectory", 10);
+
+        _path_pub = this->create_publisher<nav_msgs::msg::Path>("gait_planner/path", 10);
 
         if (_publish_all)
-            _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("gait/states", 10);
+            _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("gait_planner/states", 10);
 
         _solve_timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / solve_frequency)),
                                                std::bind(&GaitPlanningNode::solve, this));
@@ -206,40 +246,40 @@ public:
         if (!_goal_msg || !_odom_msg || !_gait_msg)
             return;
 
-        const float goal_q = quaternion_to_yaw(_goal_msg->pose.orientation);
-        const float goal_x = _goal_msg->pose.position.x;
-        const float goal_y = _goal_msg->pose.position.y;
-        const float goal_z = _goal_msg->pose.position.z;
-        _sbmpo_params.goal_state = {0.0, goal_q, goal_x, goal_y, goal_z, GaitType::NONE};
-
-        const float state_q = quaternion_to_yaw(_odom_msg->pose.pose.orientation);
-        const float state_x = _odom_msg->pose.pose.position.x;
-        const float state_y = _odom_msg->pose.pose.position.y;
-        const float state_z = _odom_msg->pose.pose.position.z;
         const GaitType state_gait = string_to_gait(_gait_msg->data);
         if (state_gait == NONE)
         {
             RCLCPP_WARN(this->get_logger(), "Invalid Gait Type: %s", _gait_msg->data.c_str());
             return;
         }
-        _sbmpo_params.start_state = {0.0, state_q, state_x, state_y, state_z, static_cast<float>(state_gait)};
+
+        _sbmpo_params.start_state = pose_to_state(_odom_msg->pose.pose);
+        _sbmpo_params.start_state[GAIT] = static_cast<float>(state_gait);
+
+        _sbmpo_params.goal_state = pose_to_state(_goal_msg->pose);
+        _sbmpo_params.goal_state[GAIT] = static_cast<float>(state_gait);
 
         _sbmpo->run(_sbmpo_params);
         const sbmpo::ExitCode exit_code = _sbmpo->results()->exit_code;
 
+        robot_msgs::msg::GaitTrajectory gait_traj_msg;
+        gait_traj_msg.header.stamp = this->now();
+        gait_traj_msg.header.frame_id = "map";
         if (exit_code != sbmpo::SOLUTION_FOUND)
         {
             RCLCPP_WARN(this->get_logger(), "Gait Planner Failed with Exit Code %d: %s",
                         exit_code, exit_code_to_string(exit_code).c_str());
         }
-        else if (_sbmpo->results()->control_path.empty())
-        {
-            RCLCPP_WARN(this->get_logger(), "Gait Planner Planner Reached the Goal");
-        }
         else
         {
-            /// TODO: Publish results
+            for (const auto &state : _sbmpo->results()->state_path)
+            {
+                add_state_to_gait_trajectory(gait_traj_msg, state);
+            }
+            add_state_to_gait_trajectory(gait_traj_msg, _sbmpo_params.goal_state);
         }
+
+        _gait_traj_pub->publish(gait_traj_msg);
 
         _publish_path(*_sbmpo->results());
         if (_publish_all)

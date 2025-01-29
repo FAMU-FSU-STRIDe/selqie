@@ -18,8 +18,19 @@ def GaitPlanningNode():
             'publish_all': True
         }]
     )
+    
+def GaitHandlerNode():
+    return Node(
+        package='gait_planning',
+        executable='gait_handler_node',
+        name='gait_handler_node',
+        parameters=[{
+            'lookahead': 2
+        }]
+    )
 
 def generate_launch_description():
     return LaunchDescription([
         GaitPlanningNode(),
+        GaitHandlerNode()
     ])

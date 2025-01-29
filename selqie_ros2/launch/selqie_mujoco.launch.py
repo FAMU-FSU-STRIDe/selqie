@@ -18,7 +18,7 @@ def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('mujoco.launch.py'),
         IncludeLaunchFile('legs.launch.py'),
-        # IncludeLaunchFile('local_planning.launch.py'),
+        IncludeLaunchFile('local_planning.launch.py'),
         IncludeLaunchFile('gait_planning.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),

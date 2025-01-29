@@ -169,17 +169,17 @@ public:
         _sbmpo = std::make_unique<SBMPO>(_model);
 
         _goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            "goal_pose", 10, std::bind(&WalkingPlanner::_goal_callback, this, std::placeholders::_1));
+            "goal_pose/local", 10, std::bind(&WalkingPlanner::_goal_callback, this, std::placeholders::_1));
 
         _odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
             "odom", 10, std::bind(&WalkingPlanner::_odom_callback, this, std::placeholders::_1));
 
         _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
-        _path_pub = this->create_publisher<nav_msgs::msg::Path>("walk/path", 10);
+        _path_pub = this->create_publisher<nav_msgs::msg::Path>("walk_planner/path", 10);
 
         if (_publish_all)
-            _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("walk/states", 10);
+            _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("walk_planner/states", 10);
 
         _solve_timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / solve_frequency)),
                                                std::bind(&WalkingPlanner::solve, this));
