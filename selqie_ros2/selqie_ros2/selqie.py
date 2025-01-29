@@ -72,10 +72,6 @@ class SELQIE(Node):
         self._init_vision()
         self._init_recording()
 
-        # Start ROS spinning in a background thread
-        self._spin_thread = Thread(target=self._spin)
-        self._spin_thread.start()
-
     def _init_motors(self):
         """Initialize the motor publishers and subscribers."""
         self.NUM_MOTORS = 8
@@ -178,11 +174,16 @@ class SELQIE(Node):
     ########################
     ### ROS2 Spin Thread ###
     ########################
-
-    def _spin(self):
+    
+    def _spin_loop(self):
         """ROS2 spinning in a background thread."""
         while not self._stop_event.is_set():
             rclpy.spin_once(self, timeout_sec=0.1)
+
+    def spin(self):
+        """Start the ROS2 spinning thread."""
+        self._spin_thread = Thread(target=self._spin_loop)
+        self._spin_thread.start()
 
     def stop(self):
         """Stop the ROS2 spinning thread and clean up."""

@@ -8,5 +8,5 @@ mkdir -p /tmp/calibrationdata
 tar -xzf /tmp/calibrationdata.tar.gz -C /tmp/calibrationdata
 
 # Move left and right calibration files to config directory
-mv /tmp/calibrationdata/left.yaml ${SCRIPT_DIR}/../config/calibration_left.yaml
-mv /tmp/calibrationdata/right.yaml ${SCRIPT_DIR}/../config/calibration_right.yaml
+mv /tmp/calibrationdata/left.yaml ${SCRIPT_DIR}/../selqie_ros2/config/calibration_left.yaml
+mv /tmp/calibrationdata/right.yaml ${SCRIPT_DIR}/../selqie_ros2/config/calibration_right.yaml

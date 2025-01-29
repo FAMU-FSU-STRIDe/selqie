@@ -29,6 +29,7 @@ class SELQIETerminal(Cmd):
     def __init__(self):
         super().__init__()
         self._selqie = SELQIE()
+        self._selqie.spin()
 
     def do_exit(self, line : str):
         """ Exit the terminal """
