@@ -247,17 +247,13 @@ public:
             return;
 
         const GaitType state_gait = string_to_gait(_gait_msg->data);
-        if (state_gait == NONE)
-        {
-            RCLCPP_WARN(this->get_logger(), "Invalid Gait Type: %s", _gait_msg->data.c_str());
-            return;
-        }
 
         _sbmpo_params.start_state = pose_to_state(_odom_msg->pose.pose);
-        _sbmpo_params.start_state[GAIT] = static_cast<float>(state_gait);
+        _sbmpo_params.start_state[GAIT] = state_gait == GaitType::NONE
+                                              ? static_cast<float>(GaitType::WALK)
+                                              : static_cast<float>(state_gait);
 
         _sbmpo_params.goal_state = pose_to_state(_goal_msg->pose);
-        _sbmpo_params.goal_state[GAIT] = static_cast<float>(state_gait);
 
         _sbmpo->run(_sbmpo_params);
         const sbmpo::ExitCode exit_code = _sbmpo->results()->exit_code;

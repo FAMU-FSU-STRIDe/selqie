@@ -97,7 +97,7 @@ private:
         _cmd_pub->publish(cmd_msg);
     }
 
-    void _publish_path(const sbmpo::SearchResults &results)
+    void _publish_path(const sbmpo::SearchResults &results, const double z)
     {
         nav_msgs::msg::Path path_msg;
         path_msg.header.stamp = this->now();
@@ -106,19 +106,22 @@ private:
         {
             geometry_msgs::msg::PoseStamped pose_stamped;
             pose_stamped.pose = state_to_pose(state);
+            pose_stamped.pose.position.z = z;
             path_msg.poses.push_back(pose_stamped);
         }
         _path_pub->publish(path_msg);
     }
 
-    void _publish_states(const sbmpo::SearchResults &results)
+    void _publish_states(const sbmpo::SearchResults &results, const double z)
     {
         geometry_msgs::msg::PoseArray pose_array_msg;
         pose_array_msg.header.stamp = this->now();
         pose_array_msg.header.frame_id = "odom";
         for (const auto &node : results.nodes)
         {
-            pose_array_msg.poses.push_back(state_to_pose(node->state));
+            geometry_msgs::msg::Pose pose = state_to_pose(node->state);
+            pose.position.z = z;
+            pose_array_msg.poses.push_back(pose);
         }
         _pose_array_pub->publish(pose_array_msg);
     }
@@ -198,6 +201,7 @@ public:
 
         const float state_x = _odom_msg->pose.pose.position.x;
         const float state_y = _odom_msg->pose.pose.position.y;
+        const float state_z = _odom_msg->pose.pose.position.z;
         const float state_theta = quaternion_to_yaw(_odom_msg->pose.pose.orientation);
 
         _sbmpo_params.start_state = {state_x, state_y, state_theta};
@@ -215,7 +219,6 @@ public:
         else if (_sbmpo->results()->control_path.empty())
         {
             _publish_cmd(0.0, 0.0);
-            RCLCPP_WARN(this->get_logger(), "Walking Planner Reached the Goal");
         }
         else
         {
@@ -224,10 +227,10 @@ public:
             _publish_cmd(cmd_vel, cmd_omega);
         }
 
-        _publish_path(*_sbmpo->results());
+        _publish_path(*_sbmpo->results(), state_z);
         if (_publish_all)
         {
-            _publish_states(*_sbmpo->results());
+            _publish_states(*_sbmpo->results(), state_z);
         }
     }
 };

@@ -36,9 +36,10 @@ class GaitHandlerNode : public rclcpp::Node
                 _gait_pub->publish(gait_msg);
                 return;
             }
+            assert(msg->gait.size() >= 2);
 
             std::string start_gait = msg->gait[0];
-            int n = std::min(_lookahead, int(msg->gait.size()));
+            int n = std::min(_lookahead, int(msg->gait.size() - 1));
             for (int i = 0; i < n; i++)
             {
                 if (msg->gait[i] != start_gait)
@@ -52,6 +53,11 @@ class GaitHandlerNode : public rclcpp::Node
             local_goal_pose.header.frame_id = "map";
             local_goal_pose.header.stamp = this->now();
             _local_goal_pose_pub->publish(local_goal_pose);
+
+            std::string next_gait = msg->gait.size() == 2 ? start_gait : msg->gait[1];
+            std_msgs::msg::String gait_msg;
+            gait_msg.data = next_gait;
+            _gait_pub->publish(gait_msg);
         }
 };
 

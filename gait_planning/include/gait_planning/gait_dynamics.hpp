@@ -40,6 +40,8 @@ struct GaitDynamicsOptions
     float cost_of_transport = 1.0F;
     float jumping_loadup_time = 0.5F;
     float sinking_speed = 0.25F;
+    float robot_height = 0.25F;
+    float ground_level = 0.0F;
 };
 
 float wrap_angle(float angle)
@@ -55,10 +57,10 @@ float wrap_angle(float angle)
 class GaitDynamics
 {
 protected:
-    GaitDynamicsOptions _options;
+    GaitDynamicsOptions &_options;
 
 public:
-    GaitDynamics(const GaitDynamicsOptions &options) : _options(options) {}
+    GaitDynamics(GaitDynamicsOptions &options) : _options(options) {}
 
     virtual State getNextState(const State &state, const Control &control)
     {
@@ -84,8 +86,7 @@ public:
 
     virtual bool isValid(const State &state)
     {
-        (void)state;
-        return true;
+        return state[Z] > _options.ground_level;
     }
 
     virtual std::vector<Control> getControls(const State &state) = 0;
@@ -95,7 +96,7 @@ public:
 class WalkingDynamics : public GaitDynamics
 {
 public:
-    WalkingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    WalkingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
     std::vector<Control> getControls(const State &) override
     {
@@ -120,11 +121,11 @@ public:
 class SwimmingDynamics : public GaitDynamics
 {
 public:
-    SwimmingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    SwimmingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
     bool isValid(const State &state)
     {
-        return GaitDynamics::isValid(state) && state[Z] > 0.0;
+        return GaitDynamics::isValid(state) && state[Z] > _options.robot_height + _options.ground_level;
     }
 
     std::vector<Control> getControls(const State &) override
@@ -157,7 +158,7 @@ public:
 class JumpingDynamics : public GaitDynamics
 {
 public:
-    JumpingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    JumpingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
     State getNextState(const State &state, const Control &control) override
     {
@@ -183,13 +184,14 @@ public:
 class SinkingDynamics : public GaitDynamics
 {
 public:
-    SinkingDynamics(const GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    SinkingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
 
     State getNextState(const State &state, const Control &control) override
     {
+        const float z_final = _options.ground_level + _options.robot_height;
         State next_state = state;
-        next_state[TIME] += state[Z] / _options.sinking_speed;
-        next_state[Z] = 0.0;
+        next_state[TIME] += std::min((state[Z] - z_final) / _options.sinking_speed, 0.F);
+        next_state[Z] = z_final;
         next_state[GAIT] = control[NEW_GAIT];
         return next_state;
     }

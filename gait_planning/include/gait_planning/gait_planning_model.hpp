@@ -5,7 +5,7 @@
 
 struct GaitPlanningParams
 {
-    float goal_threshold = 3.0;
+    float goal_threshold = 1.0;
     float heuristic_omega_factor = 0.0;
     float heuristic_vel_factor = 2.0;
 };
@@ -17,7 +17,7 @@ private:
     GaitPlanningParams _params;
 
 public:
-    GaitPlanningModel(const GaitPlanningParams &params, const GaitDynamicsOptions &options) : _params(params)
+    GaitPlanningModel(const GaitPlanningParams &params, GaitDynamicsOptions &options) : _params(params)
     {
         _gait_dynamics.emplace_back(nullptr);
         _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>(options));
@@ -77,7 +77,8 @@ public:
     */
     bool is_valid(const State &state) override
     {
-        return state[Z] >= 0.0;
+        const auto gait = static_cast<GaitType>(state[GAIT]);
+        return _gait_dynamics[gait]->isValid(state);
     }
 
     /*
