@@ -37,12 +37,21 @@ struct GaitDynamicsOptions
 {
     float horizon_time = 1.0F;
     int integration_steps = 5;
-    float cost_of_transport = 1.0F;
-    float jumping_loadup_time = 0.5F;
-    float jump_height = 0.5F;
-    float sinking_speed = 0.25F;
     float robot_height = 0.25F;
     float ground_level = 0.0F;
+
+    float walk_cost_of_transport = 1.0F;
+    float walk_cost_of_reverse = 2.0F;
+
+    float jump_cost_of_transport = 1.5F;
+    float jumping_loadup_time = 0.5F;
+    float jump_height = 0.5F;
+
+    float swim_cost_of_transport = 5.0F;
+    float swim_cost_of_reverse = 3.0F;
+
+    float sink_cost_of_transport = 0.1F;
+    float sinking_speed = 0.25F;
 };
 
 float wrap_angle(float angle)
@@ -82,7 +91,7 @@ public:
 
     virtual float getCost(const State &, const State &, const Control &)
     {
-        return _options.cost_of_transport * _options.horizon_time;
+        return _options.horizon_time;
     }
 
     virtual bool isValid(const State &state)
@@ -98,6 +107,12 @@ class WalkingDynamics : public GaitDynamics
 {
 public:
     WalkingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
+
+    float getCost(const State &, const State &, const Control &control) override
+    {
+        const float reverse_cost = control[Vx] < 0 ? _options.walk_cost_of_reverse : 1.0F;
+        return _options.horizon_time * _options.walk_cost_of_transport * reverse_cost;
+    }
 
     std::vector<Control> getControls(const State &) override
     {
@@ -123,6 +138,12 @@ class SwimmingDynamics : public GaitDynamics
 {
 public:
     SwimmingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
+
+    float getCost(const State &, const State &, const Control &control) override
+    {
+        const float reverse_cost = control[Vx] < 0 ? _options.swim_cost_of_reverse : 1.0F;
+        return _options.horizon_time * _options.swim_cost_of_transport * reverse_cost;
+    }
 
     bool isValid(const State &state)
     {
@@ -171,6 +192,11 @@ public:
         return next_state;
     }
 
+    float getCost(const State &, const State &, const Control &) override
+    {
+        return _options.horizon_time * _options.jump_cost_of_transport;
+    }
+
     std::vector<Control> getControls(const State &) override
     {
         return {
@@ -194,6 +220,11 @@ public:
         next_state[Z] = z_final;
         next_state[GAIT] = control[NEW_GAIT];
         return next_state;
+    }
+
+    float getCost(const State &, const State &, const Control &) override
+    {
+        return _options.horizon_time * _options.sink_cost_of_transport;
     }
 
     std::vector<Control> getControls(const State &) override

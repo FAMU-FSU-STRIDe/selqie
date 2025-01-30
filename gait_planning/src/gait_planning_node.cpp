@@ -196,8 +196,23 @@ public:
         this->declare_parameter("integration_steps", 5);
         this->get_parameter("integration_steps", _dynamics_options.integration_steps);
 
-        this->declare_parameter("cost_of_transport", 1.0);
-        this->get_parameter("cost_of_transport", _dynamics_options.cost_of_transport);
+        this->declare_parameter("robot_height", 0.25);
+        this->get_parameter("robot_height", _dynamics_options.robot_height);
+
+        this->declare_parameter("walk_cost_of_transport", 1.0);
+        this->get_parameter("walk_cost_of_transport", _dynamics_options.walk_cost_of_transport);
+
+        this->declare_parameter("walk_cost_of_reverse", 2.0);
+        this->get_parameter("walk_cost_of_reverse", _dynamics_options.walk_cost_of_reverse);
+
+        this->declare_parameter("swim_cost_of_transport", 5.0);
+        this->get_parameter("swim_cost_of_transport", _dynamics_options.swim_cost_of_transport);
+
+        this->declare_parameter("swim_cost_of_reverse", 3.0);
+        this->get_parameter("swim_cost_of_reverse", _dynamics_options.swim_cost_of_reverse);
+
+        this->declare_parameter("jump_cost_of_transport", 1.5);
+        this->get_parameter("jump_cost_of_transport", _dynamics_options.jump_cost_of_transport);
 
         this->declare_parameter("jumping_loadup_time", 0.5);
         this->get_parameter("jumping_loadup_time", _dynamics_options.jumping_loadup_time);
@@ -205,11 +220,11 @@ public:
         this->declare_parameter("jump_height", 0.5);
         this->get_parameter("jump_height", _dynamics_options.jump_height);
 
+        this->declare_parameter("sink_cost_of_transport", 0.1);
+        this->get_parameter("sink_cost_of_transport", _dynamics_options.sink_cost_of_transport);
+
         this->declare_parameter("sinking_speed", 0.25);
         this->get_parameter("sinking_speed", _dynamics_options.sinking_speed);
-
-        this->declare_parameter("robot_height", 0.25);
-        this->get_parameter("robot_height", _dynamics_options.robot_height);
 
         this->declare_parameter("goal_threshold", _gait_params.goal_threshold);
         this->get_parameter("goal_threshold", _gait_params.goal_threshold);
@@ -283,7 +298,7 @@ public:
             RCLCPP_WARN(this->get_logger(), "Gait Planner Failed with Exit Code %d: %s",
                         exit_code, exit_code_to_string(exit_code).c_str());
         }
-        else if (_sbmpo->results()->state_path.size() == 1)
+        else if (int(_sbmpo->results()->state_path.size()) <= _local_lookahead)
         {
             _publish_local_goal(_sbmpo_params.goal_state);
         }
@@ -296,7 +311,7 @@ public:
             }
 
             int n;
-            for (n = 0; n < std::min(_local_lookahead, int(_sbmpo->results()->state_path.size())); n++)
+            for (n = 0; n < _local_lookahead; n++)
             {
                 const auto gait_n = static_cast<GaitType>(_sbmpo->results()->state_path[n][StateIndex::GAIT]);
                 if (gait_n != state_gait)
