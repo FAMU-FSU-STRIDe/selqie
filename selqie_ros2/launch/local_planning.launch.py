@@ -11,9 +11,7 @@ def Walk2DNode():
         package='stride_maker',
         executable='walk2d_node',
         name='walk2d_node',
-        parameters=[os.path.join(CONFIG_FOLDER, 'walk2d_config.yaml'), {
-            'use_sim_time': True
-        }],
+        parameters=[os.path.join(CONFIG_FOLDER, 'walk2d_config.yaml')],
     )
 
 def WalkingPlannerNode():
@@ -21,12 +19,7 @@ def WalkingPlannerNode():
         package='local_planning',
         executable='walking_planner_node',
         name='walking_planner_node',
-        parameters=[{
-            'use_sim_time': True,
-            'solve_frequency': 3.0,
-            'max_iterations': 500000,
-            'publish_all': True
-        }]
+        parameters=[os.path.join(CONFIG_FOLDER, 'walking_planner_config.yaml')]
     )
     
 def SwimNode():
@@ -34,9 +27,7 @@ def SwimNode():
         package='stride_maker',
         executable='swim_node',
         name='swim_node',
-        parameters=[os.path.join(CONFIG_FOLDER, 'swim_config.yaml'), {
-            'use_sim_time': True
-        }],
+        parameters=[os.path.join(CONFIG_FOLDER, 'swim_config.yaml')],
     )
 
 def generate_launch_description():

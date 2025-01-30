@@ -11,26 +11,10 @@ def GaitPlanningNode():
         package='gait_planning',
         executable='gait_planning_node',
         name='gait_planning_node',
-        parameters=[{
-            'use_sim_time': True,
-            'solve_frequency': 1.0,
-            'max_iterations': 100000,
-            'publish_all': True
-        }]
-    )
-    
-def GaitHandlerNode():
-    return Node(
-        package='gait_planning',
-        executable='gait_handler_node',
-        name='gait_handler_node',
-        parameters=[{
-            'lookahead': 2
-        }]
+        parameters=[os.path.join(CONFIG_FOLDER, 'gait_planning_config.yaml')]
     )
 
 def generate_launch_description():
     return LaunchDescription([
-        GaitPlanningNode(),
-        GaitHandlerNode()
+        GaitPlanningNode()
     ])

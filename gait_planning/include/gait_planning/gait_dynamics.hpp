@@ -39,6 +39,7 @@ struct GaitDynamicsOptions
     int integration_steps = 5;
     float cost_of_transport = 1.0F;
     float jumping_loadup_time = 0.5F;
+    float jump_height = 0.5F;
     float sinking_speed = 0.25F;
     float robot_height = 0.25F;
     float ground_level = 0.0F;
@@ -164,8 +165,8 @@ public:
     {
         State next_state = state;
         next_state[TIME] += _options.horizon_time + _options.jumping_loadup_time;
-        next_state[X] += control[Vx] * _options.horizon_time;
-        next_state[Z] += control[Vz] * _options.horizon_time;
+        next_state[X] += control[Vx] * _options.jump_height;
+        next_state[Z] += control[Vz] * _options.jump_height;
         next_state[GAIT] = control[NEW_GAIT];
         return next_state;
     }
@@ -173,9 +174,8 @@ public:
     std::vector<Control> getControls(const State &) override
     {
         return {
-            {0.0, +0.10, +0.40, SWIM},
-            {0.0, +0.05, +0.45, SWIM},
-            {0.0, 0.000, +0.50, SWIM},
+            {0.0, +0.25, +0.75, SWIM},
+            {0.0, 0.000, +1.00, SWIM},
         };
     }
 };

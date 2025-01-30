@@ -1,0 +1,18 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    solve_frequency: 1.0
+    publish_all: true
+    horizon_time: 4.0
+    integration_steps: 5
+    cost_of_transport: 1.0
+    jumping_loadup_time: 0.5
+    jump_height: 0.5
+    sinking_speed: 0.25
+    robot_height: 0.25
+    goal_threshold: 1.0
+    max_iterations: 1000000
+    max_generations: 1000
+    time_limit_us: 5000000
+    grid_resolution: [0.0, 0.15, 0.15, 0.30, 0.15, 1.0]
+    local_lookahead: 2
