@@ -42,6 +42,6 @@ def generate_launch_description():
         IncludeLaunchFile('tf.launch.py'),
         IncludeLaunchFile('ekf.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
-        # Depth2PoseNode(),
+        Depth2PoseNode(),
         IMUBiasCorrectionNode(),
     ])
