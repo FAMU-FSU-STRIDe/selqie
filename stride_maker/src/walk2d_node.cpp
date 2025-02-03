@@ -38,6 +38,11 @@ private:
 
     void updateGait(const std_msgs::msg::String::SharedPtr msg)
     {
+        if (msg->data == _gait_name && msg->data != _current_gait)
+        {
+            RCLCPP_INFO(this->get_logger(), "Switching to Walking Gait.");
+        }
+
         _current_gait = msg->data;
         _trajectories.clear();
         _next_trajectories.clear();
