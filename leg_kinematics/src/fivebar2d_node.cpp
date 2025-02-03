@@ -43,8 +43,17 @@ public:
         const float X = foot_position.x();
         const float Z = foot_position.z();
 
-        const float theta0 = std::atan2(-Z, X);
-        const float theta1 = std::atan2(-Z, -X);
+        static int n = 0;
+        static bool signZ_last = Z > 0.0f;
+        bool signZ = Z > 0.0f;
+        if ((X < 0.0f) && (signZ != signZ_last))
+        {
+            n += signZ ? 1 : -1;
+        }
+        signZ_last = signZ;
+
+        const float theta0 = 2.0 * M_PI * n - std::atan2(Z, X);
+        const float theta1 = M_PI - theta0;
         const float R = std::sqrt(X * X + Z * Z);
         const float alpha = std::acos((R * R + _L1 * _L1 - _L2 * _L2) / (2.0f * R * _L1));
 

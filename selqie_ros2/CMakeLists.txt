@@ -21,6 +21,7 @@ install(PROGRAMS
   scripts/tests/plot_depth_data.py
   scripts/tests/plot_imu_data.py
   scripts/tests/test_imu.py
+  scripts/tests/test_leg_control.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
