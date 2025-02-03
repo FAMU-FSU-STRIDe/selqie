@@ -181,9 +181,14 @@ class SELQIE(Node):
             rclpy.spin_once(self, timeout_sec=0.1)
 
     def spin(self):
+        """Start the ROS2 spinning loop."""
+        rclpy.spin(self)
+        
+    def spin_background(self):
         """Start the ROS2 spinning thread."""
         self._spin_thread = Thread(target=self._spin_loop)
         self._spin_thread.start()
+        
 
     def stop(self):
         """Stop the ROS2 spinning thread and clean up."""
@@ -371,10 +376,11 @@ class SELQIE(Node):
         """Send a Twist message to the cmd_vel topic."""
         self._cmd_vel_pub.publish(cmd_vel)
 
-    def set_control_command_velocity(self, linear_x : float, angular_z : float):
+    def set_control_command_velocity(self, linear_x : float, angular_z : float, linear_z : float = 0.0):
         """Set the linear x and angular z velocities of the robot."""
         cmd_vel = Twist()
         cmd_vel.linear.x = linear_x
+        cmd_vel.linear.z = linear_z
         cmd_vel.angular.z = angular_z
         self.send_control_command_velocity(cmd_vel)
     

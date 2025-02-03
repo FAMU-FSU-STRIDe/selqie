@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import math
+
 import rclpy
 from sensor_msgs.msg import Joy
 from robot_msgs.msg import ODriveConfig
@@ -26,7 +28,7 @@ class SELQIEJoystick():
         self._selqie.get_logger().info("SELQIE Joystick Node Started")
         
         try:
-            rclpy.spin(self._selqie)
+            self._selqie.spin()
         except KeyboardInterrupt:
             self._selqie.destroy_node()
         
@@ -106,10 +108,25 @@ class SELQIEJoystick():
             # Cross down
             pass
 
-        left_axis_x = int(msg.axes[1] * 5) / 5.0
-        left_axis_y = int(msg.axes[0] * 5) / 5.0
-        right_axis_x = int (msg.axes[3] * 5) / 5.0
-        # TODO
+        la_x = int(msg.axes[1] * 5) / 5.0 # left stick x
+        la_y = int(msg.axes[0] * 5) / 5.0 # left stick y
+        ra_x = int (msg.axes[3] * 5) / 5.0 # right stick x
+        
+        if la_x > 0.0:
+            n_vx = math.sqrt(la_x)
+        else:
+            n_vx = -math.sqrt(-la_x)
+        if la_y > 0.0:
+            n_wz = math.sqrt(la_y)
+        else:
+            n_wz = -math.sqrt(-la_y)
+            
+        ALPHA = 0.25
+        cmd_vx = n_vx / (abs(n_wz) + 1) * ALPHA * max(abs(n_vx), abs(n_wz))
+        cmd_wz = n_wz / (abs(n_vx) + 1) * ALPHA * max(abs(n_vx), abs(n_wz))
+        cmd_vz = ra_x * ALPHA
+        
+        self._selqie.set_control_command_velocity(cmd_vx, cmd_wz, cmd_vz)
             
         self.last_msg = msg
 

@@ -50,32 +50,19 @@ private:
 
         const double vel_x = msg->linear.x;
         const double vel_z = msg->linear.z;
-        const double omega_z = msg->angular.z;
 
-        if (vel_x == 0.0 && vel_z == 0.0 && omega_z == 0.0)
+        if (vel_x == 0.0 && vel_z == 0.0)
         {
             _next_trajectories.clear();
             return;
         }
 
-        const double vel_x_left = vel_x - 0.5 * _robot_width * omega_z;
-        const double vel_x_right = vel_x + 0.5 * _robot_width * omega_z;
+        const double mag = std::sqrt(vel_x * vel_x + vel_z * vel_z);
+        const double x_amp = _vel_amplitude_gain * mag;
+        const double phi = 2.0 * std::atan2(vel_z - mag, vel_x);
 
-        const double mag_left = std::sqrt(vel_x_left * vel_x_left + vel_z * vel_z);
-        const double mag_right = std::sqrt(vel_x_right * vel_x_right + vel_z * vel_z);
-
-        const double x_amp_left = _vel_amplitude_gain * mag_left;
-        const double x_amp_right = _vel_amplitude_gain * mag_right;
-
-        const double phi_left = 2.0 * std::atan2(vel_z - mag_left, vel_x_left);
-        const double phi_right = 2.0 * std::atan2(vel_z - mag_right, vel_x_right);
-
-        const auto traj_FL = make_swim_stride(_stride_resolution, _frequency, _leg_length, phi_left, x_amp_left, _z_amplitude);
-        const auto traj_RL = make_swim_stride(_stride_resolution, _frequency, _leg_length, phi_left, x_amp_left, _z_amplitude);
-        const auto traj_RR = make_swim_stride(_stride_resolution, _frequency, _leg_length, phi_right, x_amp_right, _z_amplitude);
-        const auto traj_FR = make_swim_stride(_stride_resolution, _frequency, _leg_length, phi_right, x_amp_right, _z_amplitude);
-
-        _next_trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
+        const auto traj = make_swim_stride(_stride_resolution, _frequency, _leg_length, phi, x_amp, _z_amplitude);
+        _next_trajectories = {traj, traj, traj, traj};
     }
 
     void publishLegCommand()
