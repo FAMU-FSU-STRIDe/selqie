@@ -34,14 +34,24 @@ private:
     std::vector<robot_msgs::msg::LegTrajectory> _trajectories, _next_trajectories;
     rclcpp::Time _start_time;
 
-    void updateGait(const std_msgs::msg::String::SharedPtr msg)
+    void _gait_callback(const std_msgs::msg::String::SharedPtr msg)
     {
+        if (msg->data == _gait_name && msg->data == _current_gait)
+        {
+            return;
+        }
+        
+        if (msg->data == _gait_name)
+        {
+            RCLCPP_INFO(this->get_logger(), "Switching to Swimming Gait.");
+        }
+
         _current_gait = msg->data;
         _trajectories.clear();
         _next_trajectories.clear();
     }
 
-    void updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
+    void _cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
         if (_current_gait != _gait_name)
         {
@@ -65,7 +75,7 @@ private:
         _next_trajectories = {traj, traj, traj, traj};
     }
 
-    void publishLegCommand()
+    void _publish_leg_command()
     {
         if (_trajectories.empty())
         {
@@ -125,10 +135,10 @@ public:
         this->get_parameter("vel_amplitude_gain", _vel_amplitude_gain);
 
         _gait_name_sub = this->create_subscription<std_msgs::msg::String>(
-            "gait", qos_reliable(), std::bind(&SwimNode::updateGait, this, std::placeholders::_1));
+            "gait", qos_reliable(), std::bind(&SwimNode::_gait_callback, this, std::placeholders::_1));
 
         _cmd_vel_sub = this->create_subscription<geometry_msgs::msg::Twist>(
-            "cmd_vel", qos_reliable(), std::bind(&SwimNode::updateCmdVel, this, std::placeholders::_1));
+            "cmd_vel", qos_reliable(), std::bind(&SwimNode::_cmd_vel_callback, this, std::placeholders::_1));
 
         for (const auto &leg_name : leg_names)
         {
@@ -136,7 +146,7 @@ public:
                 "leg" + leg_name + "/command", qos_fast()));
         }
 
-        _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&SwimNode::publishLegCommand, this));
+        _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&SwimNode::_publish_leg_command, this));
 
         RCLCPP_INFO(this->get_logger(), "Swim Node Initialized.");
     }

@@ -1,10 +1,11 @@
 #include <algorithm>
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/pose.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/twist.hpp>
-#include <nav_msgs/msg/path.hpp>
 #include <geometry_msgs/msg/pose_array.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <nav_msgs/msg/path.hpp>
 
 #include "local_planning/walking_planner_model.hpp"
 #include "sbmpo/SBMPO.hpp"
@@ -63,13 +64,17 @@ std::string exit_code_to_string(const sbmpo::ExitCode exit_code)
 class WalkingPlanner : public rclcpp::Node
 {
 private:
+    std::string _gait_name = "walk";
     WalkingPlannerParams _model_params;
     std::shared_ptr<WalkingPlannerModel> _model;
     SearchParameters _sbmpo_params;
     std::unique_ptr<SBMPO> _sbmpo;
 
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_sub;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_transition_sub;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr _goal_sub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odom_sub;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _gait_pub;
 
     float _solve_frequency = 1.0;
     rclcpp::TimerBase::SharedPtr _solve_timer;
@@ -82,8 +87,20 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _path_pub;
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr _pose_array_pub;
 
+    std_msgs::msg::String::SharedPtr _gait_msg;
+    std_msgs::msg::String::SharedPtr _gait_transition_msg;
     geometry_msgs::msg::PoseStamped::SharedPtr _goal_msg;
     nav_msgs::msg::Odometry::SharedPtr _odom_msg;
+
+    void _gait_callback(const std_msgs::msg::String::SharedPtr msg)
+    {
+        _gait_msg = msg;
+    }
+
+    void _gait_transition_callback(const std_msgs::msg::String::SharedPtr msg)
+    {
+        _gait_transition_msg = msg;
+    }
 
     void _goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
@@ -112,6 +129,11 @@ private:
         cmd_msg.linear.x = vel;
         cmd_msg.angular.z = omega;
         _cmd_pub->publish(cmd_msg);
+    }
+
+    void _publish_transition_gait()
+    {
+        _gait_pub->publish(*_gait_transition_msg);
     }
 
     void _publish_path(const sbmpo::SearchResults &results, const double z)
@@ -194,11 +216,19 @@ public:
         _model = std::make_shared<WalkingPlannerModel>(_model_params);
         _sbmpo = std::make_unique<SBMPO>(_model);
 
+        _gait_sub = this->create_subscription<std_msgs::msg::String>(
+            "gait", 10, std::bind(&WalkingPlanner::_gait_callback, this, std::placeholders::_1));
+
+        _gait_transition_sub = this->create_subscription<std_msgs::msg::String>(
+            "gait/transition", 10, std::bind(&WalkingPlanner::_gait_transition_callback, this, std::placeholders::_1));
+
         _goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(
             "goal_pose/local", 10, std::bind(&WalkingPlanner::_goal_callback, this, std::placeholders::_1));
 
         _odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
             "odom", 10, std::bind(&WalkingPlanner::_odom_callback, this, std::placeholders::_1));
+
+        _gait_pub = this->create_publisher<std_msgs::msg::String>("gait", 10);
 
         _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
@@ -215,7 +245,10 @@ public:
 
     void solve()
     {
-        if (!_goal_msg || !_odom_msg)
+        if (!_goal_msg || !_odom_msg || !_gait_msg)
+            return;
+
+        if (_gait_msg->data != _gait_name)
             return;
 
         const float goal_x = _goal_msg->pose.position.x;
@@ -241,6 +274,7 @@ public:
         }
         else if (_sbmpo->results()->control_path.empty())
         {
+            _publish_transition_gait();
             _publish_cmd(0.0, 0.0);
         }
         else

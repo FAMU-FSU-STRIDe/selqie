@@ -148,7 +148,7 @@ private:
         _local_goal_pub->publish(local_goal_pose);
     }
 
-    void _publish_gait(const GaitType &gait)
+    void _publish_transition_gait(const GaitType &gait)
     {
         std_msgs::msg::String gait_msg;
         gait_msg.data = gait_to_string(gait);
@@ -263,7 +263,7 @@ public:
 
         _local_goal_pub = this->create_publisher<geometry_msgs::msg::PoseStamped>("goal_pose/local", 10);
 
-        _gait_pub = this->create_publisher<std_msgs::msg::String>("gait", 10);
+        _gait_pub = this->create_publisher<std_msgs::msg::String>("gait/transition", 10);
 
         _path_pub = this->create_publisher<nav_msgs::msg::Path>("gait_planner/path", 10);
 
@@ -294,31 +294,29 @@ public:
 
         if (exit_code != sbmpo::SOLUTION_FOUND)
         {
-            _publish_gait(GaitType::NONE);
+            _publish_transition_gait(GaitType::NONE);
             RCLCPP_WARN(this->get_logger(), "Gait Planner Failed with Exit Code %d: %s",
                         exit_code, exit_code_to_string(exit_code).c_str());
         }
         else if (int(_sbmpo->results()->state_path.size()) <= _local_lookahead)
         {
+            _publish_transition_gait(GaitType::NONE);
             _publish_local_goal(_sbmpo_params.goal_state);
         }
         else
         {
-            const auto next_gait = static_cast<GaitType>(_sbmpo->results()->state_path[1][StateIndex::GAIT]);
-            if (next_gait != state_gait)
-            {
-                _publish_gait(next_gait);
-            }
-
             int n;
+            GaitType gait_n;
             for (n = 0; n < _local_lookahead; n++)
             {
-                const auto gait_n = static_cast<GaitType>(_sbmpo->results()->state_path[n][StateIndex::GAIT]);
+                gait_n = static_cast<GaitType>(_sbmpo->results()->state_path[n][StateIndex::GAIT]);
                 if (gait_n != state_gait)
                 {
                     break;
                 }
             }
+
+            _publish_transition_gait(gait_n);
             _publish_local_goal(_sbmpo->results()->state_path[n]);
         }
 

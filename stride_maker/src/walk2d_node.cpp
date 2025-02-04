@@ -36,9 +36,14 @@ private:
     std::vector<robot_msgs::msg::LegTrajectory> _trajectories, _next_trajectories;
     rclcpp::Time _start_time;
 
-    void updateGait(const std_msgs::msg::String::SharedPtr msg)
+    void _gait_callback(const std_msgs::msg::String::SharedPtr msg)
     {
-        if (msg->data == _gait_name && msg->data != _current_gait)
+        if (msg->data == _gait_name && msg->data == _current_gait)
+        {
+            return;
+        }
+        
+        if (msg->data == _gait_name)
         {
             RCLCPP_INFO(this->get_logger(), "Switching to Walking Gait.");
         }
@@ -48,7 +53,7 @@ private:
         _next_trajectories.clear();
     }
 
-    void map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
+    void _map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
     {
         // mapping obtained from walk stride sweep experiment
         const double a = 64 * des_v * des_v - 192 * des_v * des_w - 80 * des_v + 144 * des_w * des_w - 120 * des_w + 25;
@@ -64,10 +69,11 @@ private:
         cmd_w = 4.0 * des_w + (-8.0 * des_v - sqrta + 5.0) / 3.0;
     }
 
-    void updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
+    void _cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
         if (_current_gait != _gait_name)
         {
+            _trajectories.clear();
             return;
         }
 
@@ -79,7 +85,7 @@ private:
 
         double vel_x;
         double omega_z;
-        map_des2cmd(msg->linear.x, msg->angular.z, vel_x, omega_z);
+        _map_des2cmd(msg->linear.x, msg->angular.z, vel_x, omega_z);
 
         if (std::isnan(vel_x) || std::isnan(omega_z))
         {
@@ -122,7 +128,7 @@ private:
         _next_trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
     }
 
-    void publishLegCommand()
+    void _publish_leg_command()
     {
         if (_trajectories.empty())
         {
@@ -189,10 +195,10 @@ public:
         this->get_parameter("max_stance_length", _max_stance_length);
 
         _gait_name_sub = this->create_subscription<std_msgs::msg::String>(
-            "gait", qos_reliable(), std::bind(&Walk2DNode::updateGait, this, std::placeholders::_1));
+            "gait", qos_reliable(), std::bind(&Walk2DNode::_gait_callback, this, std::placeholders::_1));
 
         _cmd_vel_sub = this->create_subscription<geometry_msgs::msg::Twist>(
-            "cmd_vel", qos_reliable(), std::bind(&Walk2DNode::updateCmdVel, this, std::placeholders::_1));
+            "cmd_vel", qos_reliable(), std::bind(&Walk2DNode::_cmd_vel_callback, this, std::placeholders::_1));
 
         for (const auto &leg_name : leg_names)
         {
@@ -200,7 +206,7 @@ public:
                 "leg" + leg_name + "/command", qos_fast()));
         }
 
-        _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&Walk2DNode::publishLegCommand, this));
+        _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&Walk2DNode::_publish_leg_command, this));
 
         RCLCPP_INFO(this->get_logger(), "Walk2D Node Initialized.");
     }
