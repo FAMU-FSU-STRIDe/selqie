@@ -21,7 +21,7 @@ private:
     std::string _current_gait;
     int _idx = 0;
     std::vector<robot_msgs::msg::LegTrajectory> _trajectories;
-    rclcpp::Time _last_time;
+    double _last_time = 0.0;
 
     void _gait_callback(const std_msgs::msg::String::SharedPtr msg)
     {
@@ -59,11 +59,10 @@ private:
         }
 
         const double delta = _idx > 0
-                                 ? (_trajectories[0].timing[_idx] - _trajectories[0].timing[_idx - 1]) * 1E3
+                                 ? (_trajectories[0].timing[_idx] - _trajectories[0].timing[_idx - 1])
                                  : 0.0;
-        const auto cdiff = (this->now() - _last_time).to_chrono<std::chrono::milliseconds>();
-        const auto delay = std::chrono::milliseconds(time_t(delta));
-        if (delay <= cdiff)
+        const double diff = this->now().seconds() - _last_time;
+        if (delta <= diff)
         {
             for (size_t i = 0; i < _leg_cmd_pubs.size(); i++)
             {
@@ -75,7 +74,7 @@ private:
                 _idx = 0;
             }
 
-            _last_time = this->now();
+            _last_time = this->now().seconds();
         }
     }
 
@@ -108,7 +107,6 @@ public:
                 "leg" + leg_name + "/command", 10));
         }
 
-        _last_time = this->now();
         _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&StrideMakerNode::_publish_leg_command, this));
     }
 
