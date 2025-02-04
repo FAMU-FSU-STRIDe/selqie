@@ -11,7 +11,8 @@ def IncludeLaunchFile(name : str):
     return IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(LAUNCH_FOLDER, name)
-        )
+        ),
+        launch_arguments={'use_sim_time': 'true'}.items()
     )
 
 def generate_launch_description():

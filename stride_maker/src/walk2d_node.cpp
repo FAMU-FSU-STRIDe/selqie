@@ -32,8 +32,8 @@ private:
     double _max_stance_length = 0.15;
 
     std::string _current_gait;
-    std::size_t _idx = std::numeric_limits<std::size_t>::max();
-    std::vector<robot_msgs::msg::LegTrajectory> _trajectories, _next_trajectories;
+    int _idx = std::numeric_limits<int>::max();
+    std::vector<robot_msgs::msg::LegTrajectory> _trajectories;
     rclcpp::Time _start_time;
 
     void _gait_callback(const std_msgs::msg::String::SharedPtr msg)
@@ -42,7 +42,7 @@ private:
         {
             return;
         }
-        
+
         if (msg->data == _gait_name)
         {
             RCLCPP_INFO(this->get_logger(), "Switching to Walking Gait.");
@@ -50,7 +50,6 @@ private:
 
         _current_gait = msg->data;
         _trajectories.clear();
-        _next_trajectories.clear();
     }
 
     void _map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
@@ -73,13 +72,12 @@ private:
     {
         if (_current_gait != _gait_name)
         {
-            _trajectories.clear();
             return;
         }
 
         if (msg->linear.x == 0.0 && msg->angular.z == 0.0)
         {
-            _next_trajectories.clear();
+            _trajectories.clear();
             return;
         }
 
@@ -125,22 +123,19 @@ private:
                                               _center_shift, stance_length_right, _body_height,
                                               _step_height, 0.75);
 
-        _next_trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
+        _trajectories = {traj_FL, traj_RL, traj_RR, traj_FR};
     }
 
     void _publish_leg_command()
     {
         if (_trajectories.empty())
         {
-            _trajectories = _next_trajectories;
+            _idx = std::numeric_limits<int>::max();
             return;
         }
 
-        assert(_trajectories.size() == _leg_cmd_pubs.size());
-
-        if (_idx >= _trajectories[0].timing.size())
+        if (_idx >= _stride_resolution)
         {
-            _trajectories = _next_trajectories;
             _idx = 0;
             _start_time = this->now();
             return;
@@ -152,10 +147,13 @@ private:
         {
             for (size_t i = 0; i < _leg_cmd_pubs.size(); i++)
             {
-                assert(_idx < _trajectories[i].commands.size());
                 _leg_cmd_pubs[i]->publish(_trajectories[i].commands[_idx]);
             }
             _idx++;
+        }
+        else
+        {
+            RCLCPP_INFO(this->get_logger(), "Diff: %lu, Delay: %lu", cdiff.count(), delay.count());
         }
     }
 
@@ -168,6 +166,7 @@ public:
         std::vector<std::string> leg_names = {"FL", "RL", "RR", "FR"};
         this->declare_parameter("leg_names", leg_names);
         this->get_parameter("leg_names", leg_names);
+        assert(leg_names.size() == 4);
 
         this->declare_parameter("hip_positions", _hip_positions);
         this->get_parameter("hip_positions", _hip_positions);

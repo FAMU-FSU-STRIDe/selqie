@@ -78,9 +78,6 @@ private:
 
     float _solve_frequency = 1.0;
     rclcpp::TimerBase::SharedPtr _solve_timer;
-
-    float _max_lin_acc = 0.5;
-    float _max_ang_acc = 0.5;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr _cmd_pub;
 
     bool _publish_all = false;
@@ -110,17 +107,6 @@ private:
     void _odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
         _odom_msg = msg;
-    }
-
-    void _smoothen_cmd(float &vel, float &omega)
-    {
-        static float last_vel = 0.0, last_omega = 0.0;
-        const float max_delta_v = _max_lin_acc / _solve_frequency;
-        const float max_delta_w = _max_ang_acc / _solve_frequency;
-        vel = last_vel + std::clamp(vel - last_vel, -max_delta_v, max_delta_v);
-        omega = last_omega + std::clamp(omega - last_omega, -max_delta_w, max_delta_w);
-        last_vel = vel;
-        last_omega = omega;
     }
 
     void _publish_cmd(const float vel, const float omega)
@@ -170,12 +156,6 @@ public:
     {
         this->declare_parameter("solve_frequency", 1.0);
         _solve_frequency = this->get_parameter("solve_frequency").as_double();
-
-        this->declare_parameter("max_linear_acceleration", 0.5);
-        this->get_parameter("max_linear_acceleration", _max_lin_acc);
-
-        this->declare_parameter("max_angular_acceleration", 0.5);
-        this->get_parameter("max_angular_acceleration", _max_ang_acc);
 
         this->declare_parameter("publish_all", false);
         this->get_parameter("publish_all", _publish_all);
@@ -230,7 +210,7 @@ public:
 
         _gait_pub = this->create_publisher<std_msgs::msg::String>("gait", 10);
 
-        _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+        _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel/raw", 10);
 
         _path_pub = this->create_publisher<nav_msgs::msg::Path>("walk_planner/path", 10);
 
@@ -281,7 +261,6 @@ public:
         {
             auto cmd_vel = _sbmpo->results()->control_path[0][WalkingPlannerModel::VEL];
             auto cmd_omega = _sbmpo->results()->control_path[0][WalkingPlannerModel::OMEGA];
-            _smoothen_cmd(cmd_vel, cmd_omega);
             _publish_cmd(cmd_vel, cmd_omega);
         }
 

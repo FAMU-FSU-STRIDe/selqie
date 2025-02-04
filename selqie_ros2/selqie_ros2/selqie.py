@@ -140,7 +140,7 @@ class SELQIE(Node):
 
     def _init_control(self):
         """Initialize the control publishers and subscribers."""
-        self._cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', QOS_RELIABLE())
+        self._cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel/raw', QOS_RELIABLE())
 
         self._goal_pose_pub = self.create_publisher(PoseStamped, 'goal_pose', QOS_RELIABLE())
 

@@ -1,6 +1,5 @@
 /**:
   ros__parameters:
-    # use_sim_time: true
     solve_frequency: 1.0
     publish_all: true
     horizon_time: 4.0

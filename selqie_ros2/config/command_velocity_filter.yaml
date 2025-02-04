@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    frequency: 5.0
+    linear_acceleration: 0.05
+    angular_acceleration: 0.05
