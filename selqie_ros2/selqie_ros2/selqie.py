@@ -79,7 +79,7 @@ class SELQIE(Node):
 
         self._motor_command_publishers = []
         for i in range(self.NUM_MOTORS):
-            self._motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', QOS_FAST()))
+            self._motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', QOS_RELIABLE()))
 
         self._motor_config_publishers = []
         for i in range(self.NUM_MOTORS):
@@ -106,7 +106,7 @@ class SELQIE(Node):
 
         self._leg_command_publishers = []
         for i in range(self.NUM_LEGS):
-            self._leg_command_publishers.append(self.create_publisher(LegCommand, f'leg{self.LEG_NAMES[i]}/command', QOS_FAST()))
+            self._leg_command_publishers.append(self.create_publisher(LegCommand, f'leg{self.LEG_NAMES[i]}/command', QOS_RELIABLE()))
 
         self._leg_estimates = [LegEstimate() for _ in range(self.NUM_LEGS)]
         self._leg_estimate_subscribers = []
@@ -377,7 +377,7 @@ class SELQIE(Node):
         self._cmd_vel_pub.publish(cmd_vel)
 
     def set_control_command_velocity(self, linear_x : float, angular_z : float, linear_z : float = 0.0):
-        """Set the linear x and angular z velocities of the robot."""
+        """Set the linear x, z, and angular z velocities of the robot."""
         cmd_vel = Twist()
         cmd_vel.linear.x = linear_x
         cmd_vel.linear.z = linear_z

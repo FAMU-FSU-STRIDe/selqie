@@ -63,7 +63,7 @@ public:
     MuJoCoMotorNode(rclcpp::Node *node, const uint8_t id) : _node(node), _id(id)
     {
         _command_sub = node->create_subscription<MotorCommand>(
-            "motor" + std::to_string(id) + "/command", qos_fast(), std::bind(&MuJoCoMotorNode::command, this, std::placeholders::_1));
+            "motor" + std::to_string(id) + "/command", qos_reliable(), std::bind(&MuJoCoMotorNode::command, this, std::placeholders::_1));
 
         _config_sub = node->create_subscription<ODriveConfig>(
             "motor" + std::to_string(id) + "/config", qos_reliable(), std::bind(&MuJoCoMotorNode::config, this, std::placeholders::_1));

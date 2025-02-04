@@ -196,11 +196,14 @@ class SELQIETerminal(Cmd):
     def do_cmd_vel(self, line : str):
         """ Publish a Twist message to cmd_vel """
         args = line.split()
-        if len(args) != 2:
-            print("Usage: cmd_vel <lin_x> <ang_z>")
+        if len(args) < 2 or len(args) > 3:
+            print("Usage: cmd_vel <lin_x> <ang_z> <lin_z = 0.0>")
             return
         try:
-            self._selqie.set_control_command_velocity(float(args[0]), float(args[1]))
+            if len(args) == 2:
+                self._selqie.set_control_command_velocity(float(args[0]), float(args[1]))
+            else:
+                self._selqie.set_control_command_velocity(float(args[0]), float(args[1]), float(args[2]))
         except ValueError:
             print("Invalid values")
             return

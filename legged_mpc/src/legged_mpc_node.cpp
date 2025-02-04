@@ -158,7 +158,7 @@ public:
     _leg_command_pubs.resize(_config.num_legs);
     for (std::size_t i = 0; i < _config.num_legs; i++)
     {
-      _leg_command_pubs[i] = this->create_publisher<LegCommand>("leg" + leg_names[i] + "/command", qos_fast());
+      _leg_command_pubs[i] = this->create_publisher<LegCommand>("leg" + leg_names[i] + "/command", qos_reliable());
     }
 
     _body_traj_sub = this->create_subscription<BodyTrajectory>(

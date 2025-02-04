@@ -8,10 +8,10 @@ from rclpy.node import Node
 from robot_msgs.msg import LegCommand
 
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-def QOS_FAST() -> QoSProfile:
-    """Get a QoSProfile with best-effort reliability and a depth of 10."""
+def QOS_RELIABLE() -> QoSProfile:
+    """Get a QoSProfile with reliable reliability and a depth of 10."""
     return QoSProfile(
-        reliability=QoSReliabilityPolicy.BEST_EFFORT,
+        reliability=QoSReliabilityPolicy.RELIABLE,
         depth=10
     )
 
@@ -28,7 +28,7 @@ def main(args=None):
     
     cmd_pubs = []
     for i in range(NUM_LEGS):
-        cmd_pubs.append(node.create_publisher(LegCommand, f'leg{LEG_NAMES[i]}/command', QOS_FAST()))
+        cmd_pubs.append(node.create_publisher(LegCommand, f'leg{LEG_NAMES[i]}/command', QOS_RELIABLE()))
         
     node.get_logger().info('Waiting for subscribers...')
     while not all(pub.get_subscription_count() != 0 for pub in cmd_pubs):

@@ -102,7 +102,7 @@ namespace odrive_ros2
             _can_tx_pub = this->create_publisher<CanFrame>("can/tx", qos_reliable());
 
             _command_sub = this->create_subscription<MotorCommand>(
-                "odrive/command", qos_fast(), std::bind(&ODriveCanNode::command, this, std::placeholders::_1));
+                "odrive/command", qos_reliable(), std::bind(&ODriveCanNode::command, this, std::placeholders::_1));
 
             _config_sub = this->create_subscription<ODriveConfig>(
                 "odrive/config", qos_reliable(), std::bind(&ODriveCanNode::config, this, std::placeholders::_1));

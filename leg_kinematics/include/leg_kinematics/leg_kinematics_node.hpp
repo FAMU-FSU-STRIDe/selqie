@@ -105,7 +105,7 @@ public:
         _latest_motor_positions.resize(num_motors);
 
         _leg_command_sub = node->create_subscription<LegCommand>(
-            "leg/command", qos_fast(), std::bind(&LegKinematicsNode::legCommand, this, std::placeholders::_1));
+            "leg/command", qos_reliable(), std::bind(&LegKinematicsNode::legCommand, this, std::placeholders::_1));
         _leg_estimate_pub = node->create_publisher<LegEstimate>("leg/estimate", qos_fast());
 
         for (std::size_t m = 0; m < num_motors; m++)
@@ -118,7 +118,7 @@ public:
             _motor_estimate_subs.push_back(
                 node->create_subscription<MotorEstimate>("motor" + std::to_string(m) + "/estimate", qos_fast(), estimate_callback));
             _motor_command_pubs.push_back(
-                node->create_publisher<MotorCommand>("motor" + std::to_string(m) + "/command", qos_fast()));
+                node->create_publisher<MotorCommand>("motor" + std::to_string(m) + "/command", qos_reliable()));
         }
 
         double estimate_rate = 50.0;

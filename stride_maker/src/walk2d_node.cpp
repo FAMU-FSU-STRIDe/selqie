@@ -203,7 +203,7 @@ public:
         for (const auto &leg_name : leg_names)
         {
             _leg_cmd_pubs.push_back(this->create_publisher<robot_msgs::msg::LegCommand>(
-                "leg" + leg_name + "/command", qos_fast()));
+                "leg" + leg_name + "/command", qos_reliable()));
         }
 
         _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&Walk2DNode::_publish_leg_command, this));

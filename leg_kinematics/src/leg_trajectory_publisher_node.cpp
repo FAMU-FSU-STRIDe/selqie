@@ -32,7 +32,7 @@ public:
             "leg/trajectory", qos_reliable(),
             std::bind(&LegTrajectoryPublisherNode::updateTrajectory, this, std::placeholders::_1));
 
-        _leg_command_pub = this->create_publisher<LegCommand>("leg/command", qos_fast());
+        _leg_command_pub = this->create_publisher<LegCommand>("leg/command", qos_reliable());
 
         _publish_timer = this->create_wall_timer(std::chrono::milliseconds(1),
                                                  std::bind(&LegTrajectoryPublisherNode::publishLegCommand, this));
