@@ -167,7 +167,6 @@ class SELQIE(Node):
                                      "odrive0/info", "odrive1/info", "odrive2/info", "odrive3/info", "odrive4/info", "odrive5/info", "odrive6/info", "odrive7/info",
                                      "legFL/command", "legRL/command", "legRR/command", "legFR/command",
                                      "stereo/left/image_raw", "stereo/right/image_raw",
-                                     "stereo/left/camera_info", "stereo/right/camera_info",
                                      "imu/data", "lights/pwm", "bar100/depth", "bar100/temperature"]
         self.ROSBAG_SAVE_FOLDER = '/home/selqie/rosbags'
         self._rosbag_process = None

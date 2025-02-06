@@ -11,7 +11,8 @@ def IncludeLaunchFile(name : str):
     return IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(LAUNCH_FOLDER, name)
-        )
+        ),
+        launch_arguments={'use_sim_time': 'true'}.items()
     )
     
 from launch_ros.actions import Node
@@ -23,6 +24,7 @@ def Depth2PoseNode():
         output='screen',
         parameters=[{
             'z_variance': 2.89,
+            'use_sim_time': True
         }],
     )
     
@@ -33,7 +35,8 @@ def IMUBiasCorrectionNode():
         name='imu_bias_correction_node',
         output='screen',
         parameters=[{
-            'bias': [0.0, 0.0, -9.81]
+            'bias': [0.0, 0.0, -9.81],
+            'use_sim_time': True
         }],
     )
 
@@ -41,7 +44,7 @@ def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('tf.launch.py'),
         IncludeLaunchFile('ekf.launch.py'),
-        IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
+        IncludeLaunchFile('stereo_cameras_disparity_only.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
         Depth2PoseNode(),
         IMUBiasCorrectionNode(),

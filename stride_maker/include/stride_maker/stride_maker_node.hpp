@@ -59,6 +59,11 @@ private:
             return;
         }
 
+        const int trajectory_size = _trajectories[0].timing.size();
+
+        if (_idx >= trajectory_size)
+            _idx = 0;
+
         const double delta = _idx > 0
                                  ? (_trajectories[0].timing[_idx] - _trajectories[0].timing[_idx - 1])
                                  : 0.0;
@@ -69,12 +74,8 @@ private:
             {
                 _leg_cmd_pubs[i]->publish(_trajectories[i].commands[_idx]);
             }
-
-            if (++_idx >= _stride_resolution)
-            {
-                _idx = 0;
-            }
-
+            
+            ++_idx;
             _last_time = this->now().seconds();
         }
     }
