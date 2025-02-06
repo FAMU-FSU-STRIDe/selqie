@@ -51,6 +51,15 @@ def SwimNode(use_sim_time : str):
                     {'use_sim_time': use_sim_time}],
     )
 
+def JumpNode(use_sim_time : str):
+    return Node(
+        package='stride_maker',
+        executable='jump_node',
+        name='jump_node',
+        parameters=[os.path.join(CONFIG_FOLDER, 'jump_config.yaml'),
+                    {'use_sim_time': use_sim_time}],
+    )
+
 def generate_launch_description():
     launch_args, use_sim_time = UseSimTime()
     return LaunchDescription([
@@ -59,4 +68,5 @@ def generate_launch_description():
         Walk2DNode(use_sim_time),
         WalkingPlannerNode(use_sim_time),
         SwimNode(use_sim_time),
+        JumpNode(use_sim_time),
     ])

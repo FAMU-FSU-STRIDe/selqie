@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROJECT_NAME=selqie
-PROJECT_DIR=/home/selqie/selqie_ws/src/
+PROJECT_DIR=/home/selqie/selqie_ws/src
 
 # Get the absolute path to the directory containing this script
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -22,5 +22,6 @@ docker run -it \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /dev:/dev \
     -v "/${SCRIPT_DIR}/../:${PROJECT_DIR}" \
+    -v "/${SCRIPT_DIR}/../../rosbags:${PROJECT_DIR}/../../rosbags" \
     ${PROJECT_NAME}:latest \
     /bin/bash

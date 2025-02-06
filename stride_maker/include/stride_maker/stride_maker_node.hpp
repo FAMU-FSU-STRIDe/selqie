@@ -11,6 +11,7 @@ protected:
     std::string _gait_name = "walk";
     int _stride_resolution = 100;
     double _frequency = 1.0;
+    double _default_height = 0.18;
 
 private:
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_name_sub;
@@ -94,6 +95,9 @@ public:
 
         this->declare_parameter("frequency", _frequency);
         this->get_parameter("frequency", _frequency);
+
+        this->declare_parameter("default_height", _default_height);
+        this->get_parameter("default_height", _default_height);
 
         _gait_name_sub = this->create_subscription<std_msgs::msg::String>(
             "gait", 10, std::bind(&StrideMakerNode::_gait_callback, this, std::placeholders::_1));

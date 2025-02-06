@@ -6,12 +6,9 @@
 class ImuBiasCorrectionNode : public rclcpp::Node
 {
 private:
-    int _sample_size = 1000;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr _imu_sub;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _imu_pub;
 
-    int _sample_count = 0;
-    tf2::Vector3 _acc_sum = tf2::Vector3(0, 0, 0);
     tf2::Vector3 _bias = tf2::Vector3(0, 0, 0);
 
     void imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
@@ -23,21 +20,6 @@ private:
         // Rotate acceleration vector by orientation
         tf2::Vector3 acc(msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z);
         acc = tf2::Matrix3x3(q) * acc;
-
-        // Accumulate acceleration
-        if (_sample_count < _sample_size)
-        {
-            _acc_sum += acc;
-            _sample_count++;
-
-            // Calculate bias
-            _bias = _acc_sum / _sample_count;
-        }
-        else if (_sample_count == _sample_size)
-        {
-            RCLCPP_INFO(this->get_logger(), "Bias correction is done: [%f, %f, %f]", _bias.x(), _bias.y(), _bias.z());
-            _sample_count++;
-        }
 
         // Apply bias correction
         acc -= _bias;
@@ -56,8 +38,11 @@ private:
 public:
     ImuBiasCorrectionNode() : Node("imu_bias_correction_node")
     {
-        this->declare_parameter("sample_size", _sample_size);
-        this->get_parameter("sample_size", _sample_size);
+        std::vector<double> bias = {0, 0, 0};
+        this->declare_parameter("bias", bias);
+        this->get_parameter("bias", bias);
+        assert(bias.size() == 3);
+        _bias = tf2::Vector3(bias[0], bias[1], bias[2]);
 
         _imu_sub = this->create_subscription<sensor_msgs::msg::Imu>(
             "imu/data", 10, std::bind(&ImuBiasCorrectionNode::imu_callback, this, std::placeholders::_1));

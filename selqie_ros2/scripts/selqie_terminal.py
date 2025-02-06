@@ -207,6 +207,49 @@ class SELQIETerminal(Cmd):
         except ValueError:
             print("Invalid values")
             return
+        
+    def do_walk(self, line : str):
+        """ Walk the robot """
+        args = line.split()
+        if len(args) < 2 or len(args) > 3:
+            print("Usage: walk <lin_x> <ang_z>")
+            return
+        try:
+            self._selqie.set_control_gait('walk')
+            self._selqie.set_control_command_velocity(float(args[0]), float(args[1]))
+        except ValueError:
+            print("Invalid values")
+            return
+        
+    def do_swim(self, line : str):
+        """ Swim the robot """
+        args = line.split()
+        if len(args) < 2 or len(args) > 3:
+            print("Usage: swim <lin_x> <lin_z>")
+            return
+        try:
+            self._selqie.set_control_gait('swim')
+            self._selqie.set_control_command_velocity(float(args[0]), 0.0, float(args[1]))
+        except ValueError:
+            print("Invalid values")
+            return
+        
+    def do_jump(self, line : str):
+        """ Jump the robot """
+        args = line.split()
+        if len(args) < 2 or len(args) > 3:
+            print("Usage: jump <lin_x> <lin_z>")
+            return
+        try:
+            self._selqie.set_control_gait('jump')
+            self._selqie.set_control_command_velocity(float(args[0]), 0.0, float(args[1]))
+        except ValueError:
+            print("Invalid values")
+            return
+        
+    def do_sink(self, line : str):
+        """ Sink the robot """
+        self._selqie.set_control_gait('sink')
 
     def do_set_goal(self, line : str):
         """ Set the goal position for the robot """

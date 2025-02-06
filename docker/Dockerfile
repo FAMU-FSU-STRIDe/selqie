@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y \
     git curl wget gpg apt-transport-https gdb tmux \
-    python3-pip python3-smbus \
+    python3-pip python3-smbus python3-matplotlib \
     libsocketcan-dev can-utils libeigen3-dev
 
 # Install ROS dependencies

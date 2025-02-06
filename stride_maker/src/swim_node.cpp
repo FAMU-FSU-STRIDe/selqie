@@ -12,7 +12,8 @@ private:
     {
         if (msg->linear.x == 0.0 && msg->linear.z == 0.0)
         {
-            return {};
+            const auto traj = make_default_stride(_default_height);
+            return {traj, traj, traj, traj};
         }
 
         const double vel_x = msg->linear.x;

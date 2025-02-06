@@ -33,7 +33,7 @@ def IMUBiasCorrectionNode():
         name='imu_bias_correction_node',
         output='screen',
         parameters=[{
-            'sample_size': 3000
+            'bias': [0.0, 0.0, -9.81]
         }],
     )
 
@@ -41,6 +41,7 @@ def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('tf.launch.py'),
         IncludeLaunchFile('ekf.launch.py'),
+        IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
         Depth2PoseNode(),
         IMUBiasCorrectionNode(),
