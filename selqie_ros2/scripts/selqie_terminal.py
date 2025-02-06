@@ -219,9 +219,9 @@ class SELQIETerminal(Cmd):
             return
         try:
             if len(args) == 2:
-                self._selqie.set_control_command_velocity(float(args[0]), float(args[1]))
+                self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]))
             else:
-                self._selqie.set_control_command_velocity(float(args[0]), float(args[1]), float(args[2]))
+                self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]), float(args[2]))
         except ValueError:
             print("Invalid values")
             return
@@ -234,7 +234,7 @@ class SELQIETerminal(Cmd):
             return
         try:
             self._selqie.set_control_gait('walk')
-            self._selqie.set_control_command_velocity(float(args[0]), float(args[1]))
+            self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]))
         except ValueError:
             print("Invalid values")
             return
@@ -247,7 +247,7 @@ class SELQIETerminal(Cmd):
             return
         try:
             self._selqie.set_control_gait('swim')
-            self._selqie.set_control_command_velocity(float(args[0]), 0.0, float(args[1]))
+            self._selqie.set_control_command_velocity_raw(float(args[0]), 0.0, float(args[1]))
         except ValueError:
             print("Invalid values")
             return

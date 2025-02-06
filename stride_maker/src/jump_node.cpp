@@ -22,8 +22,8 @@ private:
 
         const double x0 = 0.0;
         const double z0 = _z_crouch;
-        const double x1 = x0 + (_z_jump - x0) * v_x / mag_v;
-        const double z1 = z0 + (_z_jump - z0) * v_z / mag_v;
+        const double x1 = _z_jump * v_x / mag_v;
+        const double z1 = _z_jump * v_z / mag_v;
 
         const auto traj = make_jump_stride(x0, z0, x1, z1, _time_crouch, _time_hold);
 
