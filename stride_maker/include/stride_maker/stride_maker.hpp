@@ -95,29 +95,27 @@ robot_msgs::msg::LegTrajectory make_swim_stride(
 }
 
 robot_msgs::msg::LegTrajectory make_jump_stride(
-    const int num_points, const double thrust_x, const double thrust_z,
-    const double crouch_z, const double time_crouch, const double time_jump)
+    const double x0, const double z0, const double x1, const double z1,
+    const double time_crouch, const double time_hold)
 {
     robot_msgs::msg::LegTrajectory leg_trajectory;
-    leg_trajectory.timing.reserve(num_points);
-    leg_trajectory.commands.reserve(num_points);
 
+    leg_trajectory.timing.push_back(0.0);
     robot_msgs::msg::LegCommand leg_command;
     leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
-    leg_command.pos_setpoint.x = 0.0;
-    leg_command.pos_setpoint.z = crouch_z;
-    // leg_trajectory.timing.push_back(0.0);
-    // leg_trajectory.commands.push_back(leg_command);
+    leg_command.pos_setpoint.x = x0;
+    leg_command.pos_setpoint.z = z0;
+    leg_trajectory.commands.push_back(leg_command);
 
-    const double dt = time_jump / num_points;
-    leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_FORCE;
-    leg_command.force_setpoint.x = -thrust_x;
-    leg_command.force_setpoint.z = -thrust_z;
-    for (int k = 1; k < num_points; k++)
-    {
-        leg_trajectory.commands.push_back(leg_command);
-        leg_trajectory.timing.push_back(time_crouch + k * dt);
-    }
+    leg_trajectory.timing.push_back(time_crouch);
+    leg_command.pos_setpoint.x = x1;
+    leg_command.pos_setpoint.z = z1;
+    leg_trajectory.commands.push_back(leg_command);
+
+    leg_trajectory.timing.push_back(time_crouch + time_hold);
+    leg_command.pos_setpoint.x = x0;
+    leg_command.pos_setpoint.z = z0;
+    leg_trajectory.commands.push_back(leg_command);
 
     return leg_trajectory;
 }

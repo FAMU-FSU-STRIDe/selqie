@@ -105,6 +105,24 @@ class SELQIETerminal(Cmd):
                 print("Invalid leg name")
         except ValueError:
             print("Invalid position values")
+
+    def do_set_leg_force(self, line : str):
+        """ Set the force of a leg """
+        args = line.split()
+        if len(args) != 4:
+            print("Usage: set_leg_force <leg_name/*> <x> <y> <z>")
+            return
+        try:
+            leg = args[0]
+            if leg == "*":
+                for i in range(self._selqie.NUM_LEGS):
+                    self._selqie.set_leg_force(i, float(args[1]), float(args[2]), float(args[3]))
+            elif leg in self._selqie.LEG_NAMES:
+                self._selqie.set_leg_force(self._selqie.LEG_NAMES.index(leg), float(args[1]), float(args[2]), float(args[3]))
+            else:
+                print("Invalid leg name")
+        except ValueError:
+            print("Invalid force values")
     
     def do_run_trajectory(self, line : str):
         """ Run a trajectory file or sequence of files """

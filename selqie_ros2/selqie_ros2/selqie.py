@@ -293,6 +293,15 @@ class SELQIE(Node):
         command.pos_setpoint.z = z
         self.send_leg_command(leg_idx, command)
 
+    def set_leg_force(self, leg_idx : int, fx : float, fy : float, fz : float):
+        """Set the force of the leg."""
+        command = LegCommand()
+        command.control_mode = LegCommand.CONTROL_MODE_FORCE
+        command.force_setpoint.x = fx
+        command.force_setpoint.y = fy
+        command.force_setpoint.z = fz
+        self.send_leg_command(leg_idx, command)
+
     def set_leg_position_default(self, leg_idx : int):
         """Set the leg to the default position."""
         self.set_leg_position(leg_idx, *self.DEFAULT_LEG_POSITION)

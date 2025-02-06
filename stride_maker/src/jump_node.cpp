@@ -3,11 +3,10 @@
 class JumpNode : public StrideMakerNode
 {
 private:
-    double _robot_mass;
     double _z_crouch;
     double _z_jump;
     double _time_crouch;
-    double _time_jump;
+    double _time_hold;
 
     std::vector<robot_msgs::msg::LegTrajectory> get_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
     {
@@ -19,14 +18,14 @@ private:
 
         const double v_x = msg->linear.x;
         const double v_z = msg->linear.z;
-        const double v_mag = std::sqrt(v_x * v_x + v_z * v_z);
-        const double kin_energy = 0.5 * _robot_mass * v_mag * v_mag;
-        const double delta_z = _z_crouch - _z_jump;
-        const double thrust = kin_energy / delta_z;
-        const double thrust_x = thrust * v_x / v_mag;
-        const double thrust_z = thrust * v_z / v_mag;
+        const double mag_v = std::sqrt(v_x * v_x + v_z * v_z);
 
-        const auto traj = make_jump_stride(_stride_resolution, thrust_x, thrust_z, _z_crouch, _time_crouch, _time_jump);
+        const double x0 = 0.0;
+        const double z0 = _z_crouch;
+        const double x1 = x0 + (_z_jump - x0) * v_x / mag_v;
+        const double z1 = z0 + (_z_jump - z0) * v_z / mag_v;
+
+        const auto traj = make_jump_stride(x0, z0, x1, z1, _time_crouch, _time_hold);
 
         return {traj, traj, traj, traj};
     }
@@ -34,9 +33,6 @@ private:
 public:
     JumpNode() : StrideMakerNode("jump")
     {
-        this->declare_parameter("robot_mass", 1.0);
-        this->get_parameter("robot_mass", _robot_mass);
-
         this->declare_parameter("z_crouch", 0.105);
         this->get_parameter("z_crouch", _z_crouch);
 
@@ -46,8 +42,8 @@ public:
         this->declare_parameter("time_crouch", 3.0);
         this->get_parameter("time_crouch", _time_crouch);
 
-        this->declare_parameter("time_jump", 0.5);
-        this->get_parameter("time_jump", _time_jump);
+        this->declare_parameter("time_hold", 0.5);
+        this->get_parameter("time_hold", _time_hold);
 
         RCLCPP_INFO(this->get_logger(), "Jump Node Initialized.");
     }
