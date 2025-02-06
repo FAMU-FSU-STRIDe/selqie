@@ -140,7 +140,9 @@ class SELQIE(Node):
 
     def _init_control(self):
         """Initialize the control publishers and subscribers."""
-        self._cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel/raw', QOS_RELIABLE())
+        self._cmd_vel_raw_pub = self.create_publisher(Twist, 'cmd_vel/raw', QOS_RELIABLE())
+
+        self._cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', QOS_RELIABLE())
 
         self._goal_pose_pub = self.create_publisher(PoseStamped, 'goal_pose', QOS_RELIABLE())
 
@@ -167,7 +169,6 @@ class SELQIE(Node):
                                      "odrive0/info", "odrive1/info", "odrive2/info", "odrive3/info", "odrive4/info", "odrive5/info", "odrive6/info", "odrive7/info",
                                      "legFL/command", "legRL/command", "legRR/command", "legFR/command",
                                      "stereo/left/image_raw", "stereo/right/image_raw",
-                                     "stereo/left/camera_info", "stereo/right/camera_info",
                                      "imu/data", "lights/pwm", "bar100/depth", "bar100/temperature"]
         self.ROSBAG_SAVE_FOLDER = '/home/selqie/rosbags'
         self._rosbag_process = None
@@ -381,6 +382,18 @@ class SELQIE(Node):
     #########################
     ### Control Functions ###
     #########################
+
+    def send_control_command_velocity_raw(self, cmd_vel : Twist):
+        """Send a Twist message to the cmd_vel topic."""
+        self._cmd_vel_raw_pub.publish(cmd_vel)
+
+    def set_control_command_velocity_raw(self, linear_x : float, angular_z : float, linear_z : float = 0.0):
+        """Set the linear x, z, and angular z velocities of the robot."""
+        cmd_vel = Twist()
+        cmd_vel.linear.x = linear_x
+        cmd_vel.linear.z = linear_z
+        cmd_vel.angular.z = angular_z
+        self.send_control_command_velocity_raw(cmd_vel)
 
     def send_control_command_velocity(self, cmd_vel : Twist):
         """Send a Twist message to the cmd_vel topic."""

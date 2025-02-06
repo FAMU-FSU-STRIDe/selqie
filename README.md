@@ -4,7 +4,7 @@
 | --------------------- | ------------------------ |
 | Jonathan Tyler Boylan | jtylerboylan@outlook.com |
 
-<img src="./docs/figures/SoftwareStackNetwork.png"/>
+<img src="./docs/figures/ROS_Network.png"/>
 
 # Packages
 

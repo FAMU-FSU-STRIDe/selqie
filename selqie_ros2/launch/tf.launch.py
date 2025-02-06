@@ -1,6 +1,15 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+def UseSimTime():
+    launch_arg = DeclareLaunchArgument(
+        'use_sim_time', default_value='false', description='Use simulation clock'
+    )
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    return launch_arg, use_sim_time
+
 MAP_FRAME = 'map'
 
 ODOM_FRAME = 'odom'
@@ -27,7 +36,7 @@ CAMERA_RIGHT_FRAME = 'camera_right'
 CAMERA_RIGHT_POSITION = [0, -0.359, 0]
 CAMERA_RIGHT_ORIENTATION = [-1.5707, 0, -1.5707]
 
-def StaticTransform(pos, ori, parent, child):
+def StaticTransform(pos, ori, parent, child, use_sim_time):
     return Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -42,22 +51,24 @@ def StaticTransform(pos, ori, parent, child):
             '--child-frame-id', child
         ],
         parameters=[{
-            'use_sim_time': True
+            'use_sim_time': use_sim_time
         }]
     )
 
 def generate_launch_description():
+    launch_args, use_sim_time = UseSimTime()
     return LaunchDescription([
+        launch_args,
         # Odom to Map
-        StaticTransform(INITIAL_ODOM_POSITION, INITIAL_ODOM_ORIENTATION, MAP_FRAME, ODOM_FRAME),
+        StaticTransform(INITIAL_ODOM_POSITION, INITIAL_ODOM_ORIENTATION, MAP_FRAME, ODOM_FRAME, use_sim_time),
         # Base Link to Odom
-        StaticTransform(INITIAL_ROBOT_POSITION, INITIAL_ROBOT_ORIENTATION, ODOM_FRAME, ROBOT_FRAME),
+        StaticTransform(INITIAL_ROBOT_POSITION, INITIAL_ROBOT_ORIENTATION, ODOM_FRAME, ROBOT_FRAME, use_sim_time),
         # Base Link to IMU Link
-        StaticTransform(IMU_POSITION, IMU_ORIENTATION, ROBOT_FRAME, IMU_FRAME),
+        StaticTransform(IMU_POSITION, IMU_ORIENTATION, ROBOT_FRAME, IMU_FRAME, use_sim_time),
         # IMU to Camera Link
-        StaticTransform(CAMERA_LINK_POSITION, CAMERA_LINK_ORIENTATION, ROBOT_FRAME, CAMERA_LINK_FRAME),
+        StaticTransform(CAMERA_LINK_POSITION, CAMERA_LINK_ORIENTATION, ROBOT_FRAME, CAMERA_LINK_FRAME, use_sim_time),
         # Camera Link to Camera Left
-        StaticTransform(CAMERA_LEFT_POSITION, CAMERA_LEFT_ORIENTATION, CAMERA_LINK_FRAME, CAMERA_LEFT_FRAME),
+        StaticTransform(CAMERA_LEFT_POSITION, CAMERA_LEFT_ORIENTATION, CAMERA_LINK_FRAME, CAMERA_LEFT_FRAME, use_sim_time),
         # Camera Link to Camera Right
-        StaticTransform(CAMERA_RIGHT_POSITION, CAMERA_RIGHT_ORIENTATION, CAMERA_LINK_FRAME, CAMERA_RIGHT_FRAME)
+        StaticTransform(CAMERA_RIGHT_POSITION, CAMERA_RIGHT_ORIENTATION, CAMERA_LINK_FRAME, CAMERA_RIGHT_FRAME, use_sim_time)
     ])
