@@ -19,6 +19,8 @@ namespace stereo_usb_cam
         rclcpp::TimerBase::SharedPtr _timer;
         std::string _encoding;
 
+        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _left_image_playback_sub, _right_image_playback_sub;
+
         void timer_callback()
         {
             const rclcpp::Time left_timestamp = this->now();
@@ -72,48 +74,6 @@ namespace stereo_usb_cam
         StereoUsbCam(const rclcpp::NodeOptions &options)
             : Node("stereo_usb_cam_node", options)
         {
-            this->declare_parameter("width", 640);
-            const int width = this->get_parameter("width").as_int();
-
-            this->declare_parameter("height", 480);
-            const int height = this->get_parameter("height").as_int();
-
-            this->declare_parameter("framerate", 30.0);
-            const double framerate = this->get_parameter("framerate").as_double();
-
-            this->declare_parameter("encoding", "bgr8");
-            _encoding = this->get_parameter("encoding").as_string();
-
-
-            this->declare_parameter("left_video_device", "/dev/video0");
-            const std::string left_video_device = this->get_parameter("left_video_device").as_string();
-
-            _left_capture.open(left_video_device, cv::CAP_V4L2);
-            _left_capture.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
-            _left_capture.set(cv::CAP_PROP_FRAME_WIDTH, width);
-            _left_capture.set(cv::CAP_PROP_FRAME_HEIGHT, height);
-            _left_capture.set(cv::CAP_PROP_FPS, framerate);
-
-            if (!_left_capture.isOpened())
-            {
-                RCLCPP_ERROR(get_logger(), "Failed to open left camera");
-                rclcpp::shutdown();
-            }
-
-            this->declare_parameter("right_video_device", "/dev/video1");
-            const std::string right_video_device = this->get_parameter("right_video_device").as_string();
-
-            _right_capture.open(right_video_device, cv::CAP_V4L2);
-            _right_capture.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
-            _right_capture.set(cv::CAP_PROP_FRAME_WIDTH, width);
-            _right_capture.set(cv::CAP_PROP_FRAME_HEIGHT, height);
-            _right_capture.set(cv::CAP_PROP_FPS, framerate);
-
-            if (!_right_capture.isOpened())
-            {
-                RCLCPP_ERROR(get_logger(), "Failed to open right camera");
-                rclcpp::shutdown();
-            }
 
             this->declare_parameter("left_frame_id", "camera_left");
             this->get_parameter("left_frame_id", _left_header.frame_id);
@@ -148,8 +108,75 @@ namespace stereo_usb_cam
             _left_camera_pub = image_transport::create_camera_publisher(this, "left/image_raw", rclcpp::QoS{100}.get_rmw_qos_profile());
             _right_camera_pub = image_transport::create_camera_publisher(this, "right/image_raw", rclcpp::QoS{100}.get_rmw_qos_profile());
 
-            _timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000 / framerate)),
-                                             std::bind(&StereoUsbCam::timer_callback, this));
+            this->declare_parameter("playback", false);
+            const bool playback = this->get_parameter("playback").as_bool();
+
+            if (!playback)
+            {
+
+                this->declare_parameter("width", 640);
+                const int width = this->get_parameter("width").as_int();
+
+                this->declare_parameter("height", 480);
+                const int height = this->get_parameter("height").as_int();
+
+                this->declare_parameter("framerate", 30.0);
+                const double framerate = this->get_parameter("framerate").as_double();
+
+                this->declare_parameter("encoding", "bgr8");
+                _encoding = this->get_parameter("encoding").as_string();
+
+                this->declare_parameter("left_video_device", "/dev/video0");
+                const std::string left_video_device = this->get_parameter("left_video_device").as_string();
+
+                _left_capture.open(left_video_device, cv::CAP_V4L2);
+                _left_capture.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+                _left_capture.set(cv::CAP_PROP_FRAME_WIDTH, width);
+                _left_capture.set(cv::CAP_PROP_FRAME_HEIGHT, height);
+                _left_capture.set(cv::CAP_PROP_FPS, framerate);
+
+                if (!_left_capture.isOpened())
+                {
+                    RCLCPP_ERROR(get_logger(), "Failed to open left camera");
+                    rclcpp::shutdown();
+                }
+
+                this->declare_parameter("right_video_device", "/dev/video1");
+                const std::string right_video_device = this->get_parameter("right_video_device").as_string();
+
+                _right_capture.open(right_video_device, cv::CAP_V4L2);
+                _right_capture.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+                _right_capture.set(cv::CAP_PROP_FRAME_WIDTH, width);
+                _right_capture.set(cv::CAP_PROP_FRAME_HEIGHT, height);
+                _right_capture.set(cv::CAP_PROP_FPS, framerate);
+
+                if (!_right_capture.isOpened())
+                {
+                    RCLCPP_ERROR(get_logger(), "Failed to open right camera");
+                    rclcpp::shutdown();
+                }
+
+                _timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000 / framerate)),
+                                                 std::bind(&StereoUsbCam::timer_callback, this));
+            }
+            else
+            {
+                _left_image_playback_sub = this->create_subscription<sensor_msgs::msg::Image>(
+                    "left/image_raw/playback", 10,
+                    [this](const sensor_msgs::msg::Image::SharedPtr msg)
+                    {
+                        _left_camera_info.header.stamp = msg->header.stamp;
+                        _left_camera_pub.publish(msg, std::make_shared<sensor_msgs::msg::CameraInfo>(_left_camera_info));
+                    });
+
+                _right_image_playback_sub = this->create_subscription<sensor_msgs::msg::Image>(
+                    "right/image_raw/playback", 10,
+                    [this](const sensor_msgs::msg::Image::SharedPtr msg)
+                    {
+                        _right_camera_info.header.stamp = msg->header.stamp;
+                        _right_camera_pub.publish(msg, std::make_shared<sensor_msgs::msg::CameraInfo>(_right_camera_info));
+                    });
+            }
 
             RCLCPP_INFO(get_logger(), "Stereo USB Cam Node Initialized");
         }

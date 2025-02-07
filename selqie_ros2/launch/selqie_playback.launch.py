@@ -43,8 +43,8 @@ def IMUBiasCorrectionNode():
 def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('tf.launch.py'),
-        IncludeLaunchFile('ekf.launch.py'),
-        IncludeLaunchFile('stereo_cameras_disparity_only.launch.py'),
+        # IncludeLaunchFile('ekf.launch.py'),
+        IncludeLaunchFile('stereo_cameras_disparity_playback.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
         Depth2PoseNode(),
         IMUBiasCorrectionNode(),

@@ -19,6 +19,24 @@ CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config'
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
     
+def ComposableStereoCameraNode(use_sim_time):
+    return ComposableNode(
+        package='stereo_usb_cam',
+        plugin='stereo_usb_cam::StereoUsbCam',
+        name="stereo_camera",
+        namespace='stereo',
+        parameters=[{
+            'playback': True,
+            'left_frame_id': 'camera_left',
+            'right_frame_id': 'camera_right',
+            'left_camera_info_url': LEFT_CAMERA_INFO_URL,
+            'right_camera_info_url': RIGHT_CAMERA_INFO_URL,
+            'left_camera_name': 'narrow_stereo/left',
+            'right_camera_name': 'narrow_stereo/right',
+            'use_sim_time': use_sim_time
+        }]
+    )
+    
 def ComposableRectifyNode(camera_name, use_sim_time):
     return ComposableNode(
         package='image_proc',
@@ -73,6 +91,8 @@ def generate_launch_description():
             executable='component_container_mt',
             namespace='stereo',
             composable_node_descriptions= [
+                # Stereo camera node
+                ComposableStereoCameraNode(use_sim_time),
                 # Image rectification for the left camera
                 ComposableRectifyNode('left', use_sim_time),
                 # Image rectification for the right camera
