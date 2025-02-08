@@ -387,7 +387,7 @@ class SELQIE(Node):
         """Send a Twist message to the cmd_vel topic."""
         self._cmd_vel_raw_pub.publish(cmd_vel)
 
-    def set_control_command_velocity_raw(self, linear_x : float, angular_z : float, linear_z : float = 0.0):
+    def set_control_command_velocity_raw(self, linear_x : float, linear_z : float, angular_z : float):
         """Set the linear x, z, and angular z velocities of the robot."""
         cmd_vel = Twist()
         cmd_vel.linear.x = linear_x
@@ -399,7 +399,7 @@ class SELQIE(Node):
         """Send a Twist message to the cmd_vel topic."""
         self._cmd_vel_pub.publish(cmd_vel)
 
-    def set_control_command_velocity(self, linear_x : float, angular_z : float, linear_z : float = 0.0):
+    def set_control_command_velocity(self, linear_x : float, linear_z : float, angular_z : float):
         """Set the linear x, z, and angular z velocities of the robot."""
         cmd_vel = Twist()
         cmd_vel.linear.x = linear_x

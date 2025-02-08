@@ -2,6 +2,22 @@ from launch import LaunchDescription
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+def UseSimTime():
+    launch_arg = DeclareLaunchArgument(
+        'use_sim_time', default_value='false', description='Use simulation clock'
+    )
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    return launch_arg, use_sim_time
+
+def Playback():
+    launch_arg = DeclareLaunchArgument(
+        'playback', default_value='false', description='Use playback mode'
+    )
+    playback = LaunchConfiguration('playback')
+    return launch_arg, playback
+
 import os
 from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'selqie_ros2'
@@ -10,13 +26,16 @@ CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config'
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
 
-def ComposableStereoCameraNode():
+DISPARITY_CONFIG_FILE = os.path.join(CONFIG_FOLDER, 'disparity_config.yaml')
+    
+def ComposableStereoCameraNode(use_sim_time, playback):
     return ComposableNode(
         package='stereo_usb_cam',
         plugin='stereo_usb_cam::StereoUsbCam',
         name="stereo_camera",
         namespace='stereo',
         parameters=[{
+            'playback': playback,
             'width': 640,
             'height': 480,
             'framerate': 30.0,
@@ -28,10 +47,11 @@ def ComposableStereoCameraNode():
             'right_camera_info_url': RIGHT_CAMERA_INFO_URL,
             'left_camera_name': 'narrow_stereo/left',
             'right_camera_name': 'narrow_stereo/right',
-        }],
+            'use_sim_time': use_sim_time
+        }]
     )
     
-def ComposableRectifyNode(camera_name):
+def ComposableRectifyNode(camera_name, use_sim_time):
     return ComposableNode(
         package='image_proc',
         plugin='image_proc::RectifyNode',
@@ -41,21 +61,22 @@ def ComposableRectifyNode(camera_name):
             ('image', 'image_raw'),
             ('image_rect', 'image_rect')
         ],
+        parameters=[{
+            'use_sim_time' : use_sim_time
+        }]
     )
     
-def ComposableDisparityNode():
+def ComposableDisparityNode(use_sim_time):
     return ComposableNode(
         package='stereo_image_proc',
         plugin='stereo_image_proc::DisparityNode',
         namespace='stereo',
-        parameters=[{
-            'speckle_size': 500,
-            'approximate_sync': True,
-            'approximate_sync_tolerance_period': 0.05
+        parameters=[DISPARITY_CONFIG_FILE, {
+            'use_sim_time' : use_sim_time
         }]
     )
     
-def ComposablePointCloudNode():
+def ComposablePointCloudNode(use_sim_time):
     return ComposableNode(
         package='stereo_image_proc',
         plugin='stereo_image_proc::PointCloudNode',
@@ -63,6 +84,7 @@ def ComposablePointCloudNode():
         parameters=[{
             'use_color': True,
             'approximate_sync': True,
+            'use_sim_time' : use_sim_time
         }],
         remappings=[
             ('left/image_rect_color', 'left/image_rect'),
@@ -71,7 +93,11 @@ def ComposablePointCloudNode():
     )
 
 def generate_launch_description():
+    launch_args1, use_sim_time = UseSimTime()
+    launch_args2, playback = Playback()
     return LaunchDescription([
+        launch_args1,
+        launch_args2,
         ComposableNodeContainer(
             name='stereo_disparity_container',
             package='rclcpp_components',
@@ -79,15 +105,15 @@ def generate_launch_description():
             namespace='stereo',
             composable_node_descriptions= [
                 # Stereo camera node
-                ComposableStereoCameraNode(),
+                ComposableStereoCameraNode(use_sim_time, playback),
                 # Image rectification for the left camera
-                ComposableRectifyNode('left'),
+                ComposableRectifyNode('left', use_sim_time),
                 # Image rectification for the right camera
-                ComposableRectifyNode('right'),
+                ComposableRectifyNode('right', use_sim_time),
                 # Disparity Map
-                ComposableDisparityNode(),
+                ComposableDisparityNode(use_sim_time),
                 # Point cloud 
-                ComposablePointCloudNode(),
+                ComposablePointCloudNode(use_sim_time),
             ],
             output='screen',
             # prefix=['xterm -e gdb -ex run --args'],

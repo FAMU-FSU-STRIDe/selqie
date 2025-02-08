@@ -25,7 +25,9 @@ private:
         const double x1 = _z_jump * v_x / mag_v;
         const double z1 = _z_jump * v_z / mag_v;
 
-        const auto traj = make_jump_stride(x0, z0, x1, z1, _time_crouch, _time_hold);
+        const auto traj = make_jump_stride(_stride_resolution, _default_height,
+                                           x0, z0, x1, z1,
+                                           _time_crouch, _time_hold);
 
         return {traj, traj, traj, traj};
     }

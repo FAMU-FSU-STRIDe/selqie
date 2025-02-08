@@ -95,27 +95,42 @@ robot_msgs::msg::LegTrajectory make_swim_stride(
 }
 
 robot_msgs::msg::LegTrajectory make_jump_stride(
+    const int num_points, const double default_height,
     const double x0, const double z0, const double x1, const double z1,
     const double time_crouch, const double time_hold)
 {
     robot_msgs::msg::LegTrajectory leg_trajectory;
+    leg_trajectory.timing.reserve(num_points);
+    leg_trajectory.commands.reserve(num_points);
 
-    leg_trajectory.timing.push_back(0.0);
+    const int half_points = num_points / 2;
+    for (int k = 0; k < half_points; k++)
+    {
+        const double t = static_cast<double>(k) / half_points;
+        leg_trajectory.timing.push_back(t * time_crouch);
+        robot_msgs::msg::LegCommand leg_command;
+        leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+        leg_command.pos_setpoint.x = x0;
+        leg_command.pos_setpoint.z = -default_height + (z0 + default_height) * t;
+        leg_trajectory.commands.push_back(leg_command);
+    }
+
+    for (int k = 1; k < half_points; k++)
+    {
+        const double t = static_cast<double>(k) / half_points;
+        leg_trajectory.timing.push_back(time_crouch + t * time_hold);
+        robot_msgs::msg::LegCommand leg_command;
+        leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+        leg_command.pos_setpoint.x = x1;
+        leg_command.pos_setpoint.z = z1;
+        leg_trajectory.commands.push_back(leg_command);
+    }
+
+    leg_trajectory.timing.push_back(time_crouch + time_hold);
     robot_msgs::msg::LegCommand leg_command;
     leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
     leg_command.pos_setpoint.x = x0;
-    leg_command.pos_setpoint.z = z0;
-    leg_trajectory.commands.push_back(leg_command);
-
-    leg_trajectory.timing.push_back(time_crouch);
-    leg_command.pos_setpoint.x = x1;
-    leg_command.pos_setpoint.z = z1;
-    leg_trajectory.commands.push_back(leg_command);
-
-    leg_trajectory.timing.push_back(time_crouch + time_hold);
-    leg_command.pos_setpoint.x = x0;
-    leg_command.pos_setpoint.z = z0;
-    leg_trajectory.commands.push_back(leg_command);
+    leg_command.pos_setpoint.z = default_height;
 
     return leg_trajectory;
 }
