@@ -18,6 +18,8 @@ CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config'
 
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'
+
+DISPARITY_CONFIG_FILE = os.path.join(CONFIG_FOLDER, 'disparity_config.yaml')
     
 def ComposableStereoCameraNode(use_sim_time):
     return ComposableNode(
@@ -57,10 +59,7 @@ def ComposableDisparityNode(use_sim_time):
         package='stereo_image_proc',
         plugin='stereo_image_proc::DisparityNode',
         namespace='stereo',
-        parameters=[{
-            'speckle_size': 500,
-            'approximate_sync': True,
-            'approximate_sync_tolerance_period': 0.05,
+        parameters=[DISPARITY_CONFIG_FILE, {
             'use_sim_time' : use_sim_time
         }]
     )
