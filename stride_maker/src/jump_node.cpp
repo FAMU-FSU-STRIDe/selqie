@@ -8,12 +8,58 @@ private:
     double _time_crouch;
     double _time_hold;
 
-    std::vector<robot_msgs::msg::LegTrajectory> get_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
+    void _make_jump_stride(const double x0, const double z0, const double x1, const double z1)
+    {
+        _timing.reserve(_stride_resolution);
+
+        robot_msgs::msg::LegCommand leg_command;
+        leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+
+        _leg_commands = {{}, {}, {}, {}};
+        for (int leg_idx = 0; leg_idx < 4; leg_idx++)
+        {
+            _leg_commands[leg_idx].reserve(_stride_resolution);
+
+            const int half_points = _stride_resolution / 2;
+            for (int k = 0; k < half_points; k++)
+            {
+                const double t = static_cast<double>(k) / half_points;
+
+                if (leg_idx == 0)
+                    _timing.push_back(t * _time_crouch);
+
+                leg_command.pos_setpoint.x = x0;
+                leg_command.pos_setpoint.z = -_default_height + (z0 + _default_height) * t;
+                _leg_commands[leg_idx].push_back(leg_command);
+            }
+
+            for (int k = 1; k < half_points; k++)
+            {
+                const double t = static_cast<double>(k) / half_points;
+
+                if (leg_idx == 0)
+                    _timing.push_back(_time_crouch + t * _time_hold);
+
+                leg_command.pos_setpoint.x = x1;
+                leg_command.pos_setpoint.z = z1;
+                _leg_commands[leg_idx].push_back(leg_command);
+            }
+
+            if (leg_idx == 0)
+                _timing.push_back(_time_crouch + _time_hold);
+
+            leg_command.pos_setpoint.x = x0;
+            leg_command.pos_setpoint.z = -_default_height;
+            _leg_commands[leg_idx].push_back(leg_command);
+        }
+    }
+
+    void update_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
     {
         if (msg->linear.x == 0.0 && msg->linear.z == 0.0)
         {
-            const auto traj = make_default_stride(_default_height);
-            return {traj, traj, traj, traj};
+            _make_default_stride();
+            return;
         }
 
         const double v_x = msg->linear.x;
@@ -25,11 +71,7 @@ private:
         const double x1 = _z_jump * v_x / mag_v;
         const double z1 = _z_jump * v_z / mag_v;
 
-        const auto traj = make_jump_stride(_stride_resolution, _default_height,
-                                           x0, z0, x1, z1,
-                                           _time_crouch, _time_hold);
-
-        return {traj, traj, traj, traj};
+        _make_jump_stride(x0, z0, x1, z1);
     }
 
 public:

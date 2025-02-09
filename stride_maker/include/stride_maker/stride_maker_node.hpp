@@ -3,7 +3,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/twist.hpp>
-#include "stride_maker/stride_maker.hpp"
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <robot_msgs/msg/leg_command.hpp>
+
+using namespace std::chrono_literals;
 
 class StrideMakerNode : public rclcpp::Node
 {
@@ -13,15 +16,31 @@ protected:
     double _frequency = 1.0;
     double _default_height = 0.18;
 
+    std::vector<double> _timing;
+    std::vector<std::vector<robot_msgs::msg::LegCommand>> _leg_commands;
+    std::vector<geometry_msgs::msg::TwistWithCovarianceStamped> _gait_odometry;
+
+    void _make_default_stride()
+    {
+        _timing = {0.0, 0.1};
+        robot_msgs::msg::LegCommand leg_command;
+        leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+        leg_command.pos_setpoint.x = 0.0;
+        leg_command.pos_setpoint.z = -_default_height;
+        std::vector<robot_msgs::msg::LegCommand> commands = {leg_command, leg_command};
+        _leg_commands = {commands, commands, commands, commands};
+        /// TODO: Gait Odometry
+    }
+
 private:
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_name_sub;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr _cmd_vel_sub;
     std::vector<rclcpp::Publisher<robot_msgs::msg::LegCommand>::SharedPtr> _leg_cmd_pubs;
-    rclcpp::TimerBase::SharedPtr _timer;
+    rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr _gait_odometry_pub;
+    rclcpp::TimerBase::SharedPtr _cmd_timer, _odom_timer;
 
     std::string _current_gait;
     int _idx = 0;
-    std::vector<robot_msgs::msg::LegTrajectory> _trajectories;
     double _last_time = 0.0;
 
     void _gait_callback(const std_msgs::msg::String::SharedPtr msg)
@@ -36,8 +55,11 @@ private:
             RCLCPP_INFO(this->get_logger(), "Switching to Gait: %s", _gait_name.c_str());
         }
 
+        _timing.clear();
+        _leg_commands.clear();
+        _gait_odometry.clear();
+
         _current_gait = msg->data;
-        _trajectories.clear();
         _idx = 0;
     }
 
@@ -48,33 +70,40 @@ private:
             return;
         }
 
-        _trajectories = get_stride(msg);
+        _timing.clear();
+        _leg_commands.clear();
+        _gait_odometry.clear();
+        update_stride(msg);
     }
 
     void _publish_leg_command()
     {
-        if (_trajectories.empty())
+        if (_timing.empty() || _leg_commands.empty())
         {
             _idx = 0;
             return;
         }
+        assert(_leg_commands.size() == _leg_cmd_pubs.size());
 
-        const int trajectory_size = _trajectories[0].timing.size();
-
-        if (_idx >= trajectory_size)
+        if (_idx >= static_cast<int>(_timing.size()))
             _idx = 0;
 
-        const double delta = _idx > 0
-                                 ? (_trajectories[0].timing[_idx] - _trajectories[0].timing[_idx - 1])
-                                 : 0.0;
+        const double delta = _idx > 0 ? (_timing[_idx] - _timing[_idx - 1]) : 0.0;
         const double diff = this->now().seconds() - _last_time;
         if (delta <= diff)
         {
             for (size_t i = 0; i < _leg_cmd_pubs.size(); i++)
             {
-                _leg_cmd_pubs[i]->publish(_trajectories[i].commands[_idx]);
+                assert(_leg_commands[i].size() == _timing.size());
+                _leg_cmd_pubs[i]->publish(_leg_commands[i][_idx]);
             }
-            
+
+            if (!_gait_odometry.empty())
+            {
+                assert(_gait_odometry.size() == _timing.size());
+                _gait_odometry_pub->publish(_gait_odometry[_idx]);
+            }
+
             ++_idx;
             _last_time = this->now().seconds();
         }
@@ -112,8 +141,12 @@ public:
                 "leg" + leg_name + "/command", 10));
         }
 
-        _timer = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&StrideMakerNode::_publish_leg_command, this));
+        _gait_odometry_pub = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
+            "gait/vel_estimate", 10);
+
+        _cmd_timer = this->create_wall_timer(
+            1ms, std::bind(&StrideMakerNode::_publish_leg_command, this));
     }
 
-    virtual std::vector<robot_msgs::msg::LegTrajectory> get_stride(const geometry_msgs::msg::Twist::SharedPtr msg) = 0;
+    virtual void update_stride(const geometry_msgs::msg::Twist::SharedPtr msg) = 0;
 };
