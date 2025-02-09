@@ -15,8 +15,8 @@ include_directories(include)
 add_executable(command_velocity_filter_node src/command_velocity_filter_node.cpp)
 ament_target_dependencies(command_velocity_filter_node rclcpp geometry_msgs)
 
-add_executable(walk2d_node src/walk2d_node.cpp)
-ament_target_dependencies(walk2d_node rclcpp robot_msgs)
+add_executable(walk_node src/walk_node.cpp)
+ament_target_dependencies(walk_node rclcpp robot_msgs)
 
 add_executable(swim_node src/swim_node.cpp)
 ament_target_dependencies(swim_node rclcpp robot_msgs)
@@ -29,7 +29,7 @@ ament_target_dependencies(sink_node rclcpp robot_msgs)
 
 install(TARGETS
   command_velocity_filter_node
-  walk2d_node
+  walk_node
   swim_node
   jump_node
   sink_node

@@ -16,7 +16,7 @@ PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
 
 COMMAND_VELOCITY_FILTER_CONFIG = os.path.join(CONFIG_FOLDER, 'command_velocity_filter.yaml')
-WALK2D_CONFIG = os.path.join(CONFIG_FOLDER, 'walk2d_config.yaml')
+WALK_CONFIG = os.path.join(CONFIG_FOLDER, 'walk_config.yaml')
 SWIM_CONFIG = os.path.join(CONFIG_FOLDER, 'swim_config.yaml')
 JUMP_CONFIG = os.path.join(CONFIG_FOLDER, 'jump_config.yaml')
 
@@ -28,12 +28,12 @@ def CommandVelocityFilterNode(use_sim_time : str):
         parameters=[COMMAND_VELOCITY_FILTER_CONFIG, {'use_sim_time': use_sim_time}]
     )
 
-def Walk2DNode(use_sim_time : str):
+def WalkNode(use_sim_time : str):
     return Node(
         package='stride_maker',
-        executable='walk2d_node',
-        name='walk2d_node',
-        parameters=[WALK2D_CONFIG, {'use_sim_time': use_sim_time}],
+        executable='walk_node',
+        name='walk_node',
+        parameters=[WALK_CONFIG, {'use_sim_time': use_sim_time}],
     )
     
 def SwimNode(use_sim_time : str):
@@ -65,7 +65,7 @@ def generate_launch_description():
     return LaunchDescription([
         launch_args,
         CommandVelocityFilterNode(use_sim_time),
-        Walk2DNode(use_sim_time),
+        WalkNode(use_sim_time),
         SwimNode(use_sim_time),
         JumpNode(use_sim_time),
         SinkNode(use_sim_time),
