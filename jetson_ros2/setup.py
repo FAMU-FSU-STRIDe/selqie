@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'gpio_node = jetson_ros2.gpio_node:main',
+            'jetson_status_node = jetson_ros2.jetson_status_node:main',
         ],
     },
 )

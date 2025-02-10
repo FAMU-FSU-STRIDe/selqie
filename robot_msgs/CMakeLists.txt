@@ -22,6 +22,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LegCommand.msg"
   "msg/LegEstimate.msg"
   "msg/LegTrajectory.msg"
+  "msg/JetsonStatus.msg"
   "msg/BodyTrajectory.msg"
   "msg/FootholdTrajectory.msg"
   "msg/FootholdState.msg"
