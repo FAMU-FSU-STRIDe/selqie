@@ -12,7 +12,10 @@ def IncludeLaunchFile(name : str):
         PythonLaunchDescriptionSource(
             os.path.join(LAUNCH_FOLDER, name)
         ),
-        launch_arguments={'use_sim_time': 'true'}.items()
+        launch_arguments={
+            'use_sim_time': 'true',
+            'playback': 'true'
+            }.items()
     )
     
 from launch_ros.actions import Node
@@ -44,7 +47,7 @@ def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('tf.launch.py'),
         # IncludeLaunchFile('ekf.launch.py'),
-        IncludeLaunchFile('stereo_cameras_disparity_playback.launch.py'),
+        IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
         Depth2PoseNode(),
         IMUBiasCorrectionNode(),

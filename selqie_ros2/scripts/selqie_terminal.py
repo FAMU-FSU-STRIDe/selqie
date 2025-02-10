@@ -214,14 +214,11 @@ class SELQIETerminal(Cmd):
     def do_cmd_vel(self, line : str):
         """ Publish a Twist message to cmd_vel """
         args = line.split()
-        if len(args) < 2 or len(args) > 3:
-            print("Usage: cmd_vel <lin_x> <ang_z> <lin_z = 0.0>")
+        if len(args) != 3:
+            print("Usage: cmd_vel <lin_x> <lin_z> <ang_z>")
             return
         try:
-            if len(args) == 2:
-                self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]))
-            else:
-                self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]), float(args[2]))
+            self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]), float(args[2]))
         except ValueError:
             print("Invalid values")
             return
@@ -229,12 +226,13 @@ class SELQIETerminal(Cmd):
     def do_walk(self, line : str):
         """ Walk the robot """
         args = line.split()
-        if len(args) < 2 or len(args) > 3:
+        if len(args)!= 2:
             print("Usage: walk <lin_x> <ang_z>")
             return
         try:
             self._selqie.set_control_gait('walk')
-            self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]))
+            time.sleep(0.1)
+            self._selqie.set_control_command_velocity_raw(float(args[0]), 0.0, float(args[1]))
         except ValueError:
             print("Invalid values")
             return
@@ -242,12 +240,13 @@ class SELQIETerminal(Cmd):
     def do_swim(self, line : str):
         """ Swim the robot """
         args = line.split()
-        if len(args) < 2 or len(args) > 3:
+        if len(args) != 2:
             print("Usage: swim <lin_x> <lin_z>")
             return
         try:
             self._selqie.set_control_gait('swim')
-            self._selqie.set_control_command_velocity_raw(float(args[0]), 0.0, float(args[1]))
+            time.sleep(0.1)
+            self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]), 0.0)
         except ValueError:
             print("Invalid values")
             return
@@ -255,12 +254,13 @@ class SELQIETerminal(Cmd):
     def do_jump(self, line : str):
         """ Jump the robot """
         args = line.split()
-        if len(args) < 2 or len(args) > 3:
+        if len(args) != 2:
             print("Usage: jump <lin_x> <lin_z>")
             return
         try:
             self._selqie.set_control_gait('jump')
-            self._selqie.set_control_command_velocity(float(args[0]), 0.0, float(args[1]))
+            time.sleep(0.1)
+            self._selqie.set_control_command_velocity(float(args[0]), float(args[1]), 0.0)
         except ValueError:
             print("Invalid values")
             return

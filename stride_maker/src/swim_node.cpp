@@ -8,12 +8,46 @@ private:
     double _z_amplitude = 0.005;
     double _vel_amplitude_gain = 0.1;
 
-    std::vector<robot_msgs::msg::LegTrajectory> get_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
+    void _make_swim_stride(const std::vector<double> phis, const std::vector<double> x_amplitudes)
+    {
+        assert(phis.size() == 4);
+        assert(x_amplitudes.size() == 4);
+        
+        _timing.reserve(_stride_resolution);
+
+        const double duration = 1.0 / _frequency;
+        const double dt = duration / _stride_resolution;
+
+        robot_msgs::msg::LegCommand leg_command;
+        leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+
+        _leg_commands = {{}, {}, {}, {}};
+        for (int leg_idx = 0; leg_idx < 4; leg_idx++)
+        {
+            _leg_commands[leg_idx].reserve(_stride_resolution);
+            for (int k = 0; k < _stride_resolution; k++)
+            {
+                const double t = k * dt;
+
+                if (leg_idx == 0)
+                    _timing.push_back(t);
+
+                const double phi = phis[leg_idx];
+                const double x = x_amplitudes[leg_idx] * std::cos(2 * M_PI * t * _frequency);
+                const double z = _z_amplitude * std::sin(2 * M_PI * t * _frequency) - _leg_length;
+                leg_command.pos_setpoint.x = x * std::cos(phi) - z * std::sin(phi);
+                leg_command.pos_setpoint.z = x * std::sin(phi) + z * std::cos(phi);
+                _leg_commands[leg_idx].push_back(leg_command);
+            }
+        }
+    }
+
+    void update_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
     {
         if (msg->linear.x == 0.0 && msg->linear.z == 0.0)
         {
-            const auto traj = make_default_stride(_default_height);
-            return {traj, traj, traj, traj};
+            _make_default_stride();
+            return;
         }
 
         const double vel_x = msg->linear.x;
@@ -23,8 +57,7 @@ private:
         const double x_amp = _vel_amplitude_gain * mag;
         const double phi = 2.0 * std::atan2(vel_z - mag, vel_x);
 
-        const auto traj = make_swim_stride(_stride_resolution, _frequency, _leg_length, phi, x_amp, _z_amplitude);
-        return {traj, traj, traj, traj};
+        _make_swim_stride({phi, phi, phi, phi}, {x_amp, x_amp, x_amp, x_amp});
     }
 
 public:

@@ -3,14 +3,9 @@
 class SinkNode : public StrideMakerNode
 {
 private:
-    std::vector<robot_msgs::msg::LegTrajectory> get_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
+    void update_stride(const geometry_msgs::msg::Twist::SharedPtr) override
     {
-        if (msg->linear.x == 0.0 && msg->linear.z == 0.0)
-        {
-            return {};
-        }
-
-        return {};
+        _make_default_stride();
     }
 
 public:

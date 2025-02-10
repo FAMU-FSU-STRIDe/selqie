@@ -12,8 +12,11 @@ find_package(robot_msgs REQUIRED)
 
 include_directories(include)
 
-add_executable(walk2d_node src/walk2d_node.cpp)
-ament_target_dependencies(walk2d_node rclcpp robot_msgs)
+add_executable(command_velocity_filter_node src/command_velocity_filter_node.cpp)
+ament_target_dependencies(command_velocity_filter_node rclcpp geometry_msgs)
+
+add_executable(walk_node src/walk_node.cpp)
+ament_target_dependencies(walk_node rclcpp robot_msgs)
 
 add_executable(swim_node src/swim_node.cpp)
 ament_target_dependencies(swim_node rclcpp robot_msgs)
@@ -21,10 +24,15 @@ ament_target_dependencies(swim_node rclcpp robot_msgs)
 add_executable(jump_node src/jump_node.cpp)
 ament_target_dependencies(jump_node rclcpp robot_msgs)
 
+add_executable(sink_node src/sink_node.cpp)
+ament_target_dependencies(sink_node rclcpp robot_msgs)
+
 install(TARGETS
-  walk2d_node
+  command_velocity_filter_node
+  walk_node
   swim_node
   jump_node
+  sink_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
