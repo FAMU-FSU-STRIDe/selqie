@@ -19,31 +19,34 @@ void map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &
 class WalkNode : public StrideMakerNode
 {
 private:
-    double _robot_width = 1.0;
-    double _body_height = 0.2;
-    double _center_shift = 0.0;
-    double _step_height = 0.05;
-    double _duty_factor = 0.5;
-    double _max_stance_length = 0.15;
+    double _leg_command_rate;
+    double _robot_width;
+    double _center_shift;
+    double _step_height;
+    double _duty_factor;
+    double _max_stance_length;
+
+    double _frequency;
 
     void _make_walk_stride(const std::vector<double> stance_lengths, const std::vector<double> &offsets)
     {
         assert(stance_lengths.size() == 4);
         assert(offsets.size() == 4);
 
-        const int points_per_half = _stride_resolution / 2;
+        const int num_points = _leg_command_rate / _frequency;
+        const int points_per_half = num_points / 2;
         const double duration = 1.0 / _frequency;
         const double stance_duration = duration * _duty_factor;
         const double stance_dt = stance_duration / points_per_half;
         const double swing_duration = duration * (1.0 - _duty_factor);
         const double swing_dt = swing_duration / points_per_half;
 
-        _timing.reserve(_stride_resolution);
+        _timing.reserve(num_points);
         _leg_commands = {{}, {}, {}, {}};
         for (int leg_idx = 0; leg_idx < 4; leg_idx++)
         {
-            _leg_commands[leg_idx].reserve(_stride_resolution);
-            const int offset_index = offsets[leg_idx] * _stride_resolution;
+            _leg_commands[leg_idx].reserve(num_points);
+            const int offset_index = offsets[leg_idx] * num_points;
             const double stance_length = stance_lengths[leg_idx];
             const double touchdown_x = 0.5 * stance_length * (1.0 + _center_shift);
             const double takeoff_x = touchdown_x - stance_length;
@@ -52,12 +55,12 @@ private:
             double t = 0.0;
             robot_msgs::msg::LegCommand leg_command;
             leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
-            for (int k = 0; k < _stride_resolution; k++)
+            for (int k = 0; k < num_points; k++)
             {
                 if (leg_idx == 0)
                     _timing.push_back(t);
 
-                const int i = (k + offset_index) % _stride_resolution;
+                const int i = (k + offset_index) % num_points;
                 const int p = i % points_per_half;
                 const int q = i / points_per_half;
                 const double f = static_cast<double>(p) / points_per_half;
@@ -65,14 +68,14 @@ private:
                 {
                     t += stance_dt;
                     leg_command.pos_setpoint.x = touchdown_x - f * stance_length;
-                    leg_command.pos_setpoint.z = -_body_height;
+                    leg_command.pos_setpoint.z = -_default_height;
                     _leg_commands[leg_idx].push_back(leg_command);
                 }
                 else
                 {
                     t += swing_dt;
                     leg_command.pos_setpoint.x = x0 - 0.5 * stance_length * std::cos(M_PI * f);
-                    leg_command.pos_setpoint.z = -_body_height + _step_height * std::sin(M_PI * f);
+                    leg_command.pos_setpoint.z = -_default_height + _step_height * std::sin(M_PI * f);
                     _leg_commands[leg_idx].push_back(leg_command);
                 }
             }
@@ -122,22 +125,22 @@ public:
     WalkNode()
         : StrideMakerNode("walk")
     {
-        this->declare_parameter("robot_width", _robot_width);
+        this->declare_parameter("leg_command_rate", 250.0);
+        this->get_parameter("leg_command_rate", _leg_command_rate);
+
+        this->declare_parameter("robot_width", 0.25);
         this->get_parameter("robot_width", _robot_width);
 
-        this->declare_parameter("body_height", _body_height);
-        this->get_parameter("body_height", _body_height);
-
-        this->declare_parameter("center_shift", _center_shift);
+        this->declare_parameter("center_shift", 0.0);
         this->get_parameter("center_shift", _center_shift);
 
-        this->declare_parameter("step_height", _step_height);
+        this->declare_parameter("step_height", 0.05);
         this->get_parameter("step_height", _step_height);
 
-        this->declare_parameter("duty_factor", _duty_factor);
+        this->declare_parameter("duty_factor", 0.5);
         this->get_parameter("duty_factor", _duty_factor);
 
-        this->declare_parameter("max_stance_length", _max_stance_length);
+        this->declare_parameter("max_stance_length", 0.15);
         this->get_parameter("max_stance_length", _max_stance_length);
 
         RCLCPP_INFO(this->get_logger(), "Walk Node Initialized.");

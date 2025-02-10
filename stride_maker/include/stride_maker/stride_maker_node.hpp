@@ -11,10 +11,8 @@ using namespace std::chrono_literals;
 class StrideMakerNode : public rclcpp::Node
 {
 protected:
-    std::string _gait_name = "walk";
-    int _stride_resolution = 100;
-    double _frequency = 1.0;
-    double _default_height = 0.18;
+    std::string _gait_name;
+    double _default_height;
 
     std::vector<double> _timing;
     std::vector<std::vector<robot_msgs::msg::LegCommand>> _leg_commands;
@@ -29,7 +27,6 @@ protected:
         leg_command.pos_setpoint.z = -_default_height;
         std::vector<robot_msgs::msg::LegCommand> commands = {leg_command, leg_command};
         _leg_commands = {commands, commands, commands, commands};
-        /// TODO: Gait Odometry
     }
 
 private:
@@ -120,13 +117,7 @@ public:
         this->get_parameter("leg_names", leg_names);
         assert(leg_names.size() == 4);
 
-        this->declare_parameter("stride_resolution", _stride_resolution);
-        this->get_parameter("stride_resolution", _stride_resolution);
-
-        this->declare_parameter("frequency", _frequency);
-        this->get_parameter("frequency", _frequency);
-
-        this->declare_parameter("default_height", _default_height);
+        this->declare_parameter("default_height", 0.175);
         this->get_parameter("default_height", _default_height);
 
         _gait_name_sub = this->create_subscription<std_msgs::msg::String>(

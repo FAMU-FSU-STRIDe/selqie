@@ -268,6 +268,14 @@ class SELQIETerminal(Cmd):
     def do_sink(self, line : str):
         """ Sink the robot """
         self._selqie.set_control_gait('sink')
+        time.sleep(0.1)
+        self._selqie.set_control_command_velocity(0.0, 0.0, 0.0)
+
+    def do_stand(self, line : str):
+        """ Stand the robot """
+        self._selqie.set_control_gait('stand')
+        time.sleep(0.1)
+        self._selqie.set_control_command_velocity(0.0, 0.0, 0.0)
 
     def do_set_goal(self, line : str):
         """ Set the goal position for the robot """

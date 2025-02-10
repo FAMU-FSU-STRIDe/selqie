@@ -27,12 +27,16 @@ ament_target_dependencies(jump_node rclcpp robot_msgs)
 add_executable(sink_node src/sink_node.cpp)
 ament_target_dependencies(sink_node rclcpp robot_msgs)
 
+add_executable(stand_node src/stand_node.cpp)
+ament_target_dependencies(stand_node rclcpp robot_msgs)
+
 install(TARGETS
   command_velocity_filter_node
   walk_node
   swim_node
   jump_node
   sink_node
+  stand_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

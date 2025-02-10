@@ -60,6 +60,14 @@ def SinkNode(use_sim_time : str):
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
+def StandNode(use_sim_time : str):
+    return Node(
+        package='stride_maker',
+        executable='stand_node',
+        name='stand_node',
+        parameters=[{'use_sim_time': use_sim_time}],
+    )
+
 def generate_launch_description():
     launch_args, use_sim_time = UseSimTime()
     return LaunchDescription([
@@ -69,4 +77,5 @@ def generate_launch_description():
         SwimNode(use_sim_time),
         JumpNode(use_sim_time),
         SinkNode(use_sim_time),
+        StandNode(use_sim_time),
     ])

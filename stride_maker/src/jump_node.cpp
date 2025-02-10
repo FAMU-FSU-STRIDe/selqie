@@ -3,6 +3,7 @@
 class JumpNode : public StrideMakerNode
 {
 private:
+    double _leg_command_rate;
     double _z_crouch;
     double _z_jump;
     double _time_crouch;
@@ -10,7 +11,9 @@ private:
 
     void _make_jump_stride(const double x0, const double z0, const double x1, const double z1)
     {
-        _timing.reserve(_stride_resolution);
+        const int num_points = _leg_command_rate * (_time_crouch + _time_hold);
+
+        _timing.reserve(num_points);
 
         robot_msgs::msg::LegCommand leg_command;
         leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
@@ -18,9 +21,9 @@ private:
         _leg_commands = {{}, {}, {}, {}};
         for (int leg_idx = 0; leg_idx < 4; leg_idx++)
         {
-            _leg_commands[leg_idx].reserve(_stride_resolution);
+            _leg_commands[leg_idx].reserve(num_points);
 
-            const int half_points = _stride_resolution / 2;
+            const int half_points = num_points / 2;
             for (int k = 0; k < half_points; k++)
             {
                 const double t = static_cast<double>(k) / half_points;
@@ -77,6 +80,9 @@ private:
 public:
     JumpNode() : StrideMakerNode("jump")
     {
+        this->declare_parameter("leg_command_rate", 100.0);
+        this->get_parameter("leg_command_rate", _leg_command_rate);
+
         this->declare_parameter("z_crouch", 0.105);
         this->get_parameter("z_crouch", _z_crouch);
 

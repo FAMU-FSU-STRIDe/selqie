@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
-    stride_resolution: 500
-    default_height: 0.18
+    leg_command_rate: 50.0
+    default_height: 0.175
     z_crouch: -0.105
     z_jump: -0.195
     time_crouch: 3.0

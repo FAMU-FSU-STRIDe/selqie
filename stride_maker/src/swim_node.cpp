@@ -3,20 +3,23 @@
 class SwimNode : public StrideMakerNode
 {
 private:
-    double _robot_width = 1.0;
-    double _leg_length = 0.18;
-    double _z_amplitude = 0.005;
-    double _vel_amplitude_gain = 0.1;
+    double _leg_command_rate;
+    double _frequency;
+    double _leg_length;
+    double _z_amplitude;
+    double _vel_amplitude_gain;
 
     void _make_swim_stride(const std::vector<double> phis, const std::vector<double> x_amplitudes)
     {
         assert(phis.size() == 4);
         assert(x_amplitudes.size() == 4);
-        
-        _timing.reserve(_stride_resolution);
+
+        const int num_points = _leg_command_rate / _frequency;
+
+        _timing.reserve(num_points);
 
         const double duration = 1.0 / _frequency;
-        const double dt = duration / _stride_resolution;
+        const double dt = duration / num_points;
 
         robot_msgs::msg::LegCommand leg_command;
         leg_command.control_mode = robot_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
@@ -24,8 +27,8 @@ private:
         _leg_commands = {{}, {}, {}, {}};
         for (int leg_idx = 0; leg_idx < 4; leg_idx++)
         {
-            _leg_commands[leg_idx].reserve(_stride_resolution);
-            for (int k = 0; k < _stride_resolution; k++)
+            _leg_commands[leg_idx].reserve(num_points);
+            for (int k = 0; k < num_points; k++)
             {
                 const double t = k * dt;
 
@@ -63,16 +66,19 @@ private:
 public:
     SwimNode() : StrideMakerNode("swim")
     {
-        this->declare_parameter("robot_width", _robot_width);
-        this->get_parameter("robot_width", _robot_width);
+        this->declare_parameter("leg_command_rate", 250.0);
+        this->get_parameter("leg_command_rate", _leg_command_rate);
 
-        this->declare_parameter("leg_length", _leg_length);
+        this->declare_parameter("frequency", 1.0);
+        this->get_parameter("frequency", _frequency);
+
+        this->declare_parameter("leg_length", 0.18);
         this->get_parameter("leg_length", _leg_length);
 
-        this->declare_parameter("z_amplitude", _z_amplitude);
+        this->declare_parameter("z_amplitude", 0.005);
         this->get_parameter("z_amplitude", _z_amplitude);
 
-        this->declare_parameter("vel_amplitude_gain", _vel_amplitude_gain);
+        this->declare_parameter("vel_amplitude_gain", 0.1);
         this->get_parameter("vel_amplitude_gain", _vel_amplitude_gain);
 
         RCLCPP_INFO(this->get_logger(), "Swim Node Initialized.");
