@@ -13,7 +13,7 @@ Panels:
         - /Local Planning1/Goal Pose1/Topic1
         - /Gait Planning1/Goal Pose1
       Splitter Ratio: 0.45736435055732727
-    Tree Height: 499
+    Tree Height: 741
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -48,6 +48,137 @@ Visualization Manager:
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFL_calfA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFL_calfB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFL_motor_box:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFL_thighA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFL_thighB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFR_calfA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFR_calfB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFR_motor_box:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFR_thighA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legFR_thighB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRL_calfA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRL_calfB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRL_motor_box:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRL_thighA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRL_thighB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRR_calfA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRR_calfB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRR_motor_box:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRR_thighA:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        legRR_thighB:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
@@ -62,12 +193,52 @@ Visualization Manager:
         camera_right:
           Value: true
         imu_link:
-          Value: true
+          Value: false
+        legFL_calfA:
+          Value: false
+        legFL_calfB:
+          Value: false
+        legFL_motor_box:
+          Value: false
+        legFL_thighA:
+          Value: false
+        legFL_thighB:
+          Value: false
+        legFR_calfA:
+          Value: false
+        legFR_calfB:
+          Value: false
+        legFR_motor_box:
+          Value: false
+        legFR_thighA:
+          Value: false
+        legFR_thighB:
+          Value: false
+        legRL_calfA:
+          Value: false
+        legRL_calfB:
+          Value: false
+        legRL_motor_box:
+          Value: false
+        legRL_thighA:
+          Value: false
+        legRL_thighB:
+          Value: false
+        legRR_calfA:
+          Value: false
+        legRR_calfB:
+          Value: false
+        legRR_motor_box:
+          Value: false
+        legRR_thighA:
+          Value: false
+        legRR_thighB:
+          Value: false
         map:
           Value: true
         odom:
-          Value: true
-      Marker Scale: 1
+          Value: false
+      Marker Scale: 0.5
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -83,6 +254,34 @@ Visualization Manager:
                   {}
               imu_link:
                 {}
+              legFL_motor_box:
+                legFL_thighA:
+                  legFL_calfA:
+                    {}
+                legFL_thighB:
+                  legFL_calfB:
+                    {}
+              legFR_motor_box:
+                legFR_thighA:
+                  legFR_calfA:
+                    {}
+                legFR_thighB:
+                  legFR_calfB:
+                    {}
+              legRL_motor_box:
+                legRL_thighA:
+                  legRL_calfA:
+                    {}
+                legRL_thighB:
+                  legRL_calfB:
+                    {}
+              legRR_motor_box:
+                legRR_thighA:
+                  legRR_calfA:
+                    {}
+                legRR_thighB:
+                  legRR_calfB:
+                    {}
       Update Interval: 0
       Value: true
     - Class: rviz_common/Group
@@ -457,7 +656,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.7551015615463257
+      Distance: 2.1328647136688232
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -472,20 +671,20 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4100000560283661
+      Pitch: 0.335000216960907
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.8115017414093018
+      Yaw: 3.796510934829712
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1016
+  Height: 1376
   Hide Left Dock: false
   Hide Right Dock: false
   Left Stereo:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000040000000000000185000003c5fc0200000010fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000002c100000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000001600000285000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d0061006700650200000403000002880000037d00000228fb0000000a0049006d00610067006502000001fc000002110000058400000296fb0000000a0049006d00610067006503000006fe000005e200000433000001fffb00000016004c006500660074002000530074006500720065006f01000002a10000013a0000002800fffffffb0000001800520069006700680074002000530074006500720065006f000000003d000003a40000002800fffffffb0000000a0049006d00610067006500000002d0000000c70000000000000000fb0000001e004200610063006b0020004c00650066007400200049006d006100670065010000031b000000c00000000000000000fb00000020004200610063006b00200052006900670068007400200049006d0061006700650000000809000000ae000000000000000000000001000001b4000003b6fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000017000003b6000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000005af000003c500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001920000052dfc0200000010fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000002c100000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000001600000377000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d0061006700650200000403000002880000037d00000228fb0000000a0049006d00610067006502000001fc000002110000058400000296fb0000000a0049006d00610067006503000006fe000005e200000433000001fffb00000016004c006500660074002000530074006500720065006f0100000393000001b00000002800fffffffb0000001800520069006700680074002000530074006500720065006f000000003d000003a40000002800fffffffb0000000a0049006d00610067006500000002d0000000c70000000000000000fb0000001e004200610063006b0020004c00650066007400200049006d006100670065010000031b000000c00000000000000000fb00000020004200610063006b00200052006900670068007400200049006d0061006700650000000809000000ae000000000000000000000001000001b4000003b6fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000017000003b6000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000008220000052d00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
   Right Stereo:
     collapsed: false
   Selection:
@@ -494,6 +693,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1850
+  Width: 2490
   X: 70
   Y: 27

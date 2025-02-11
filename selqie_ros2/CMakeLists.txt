@@ -17,6 +17,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/selqie_terminal.py
   scripts/selqie_joystick.py
+  scripts/selqie_rviz.py
   scripts/tests/plot_control_data.py
   scripts/tests/plot_depth_data.py
   scripts/tests/plot_imu_data.py
