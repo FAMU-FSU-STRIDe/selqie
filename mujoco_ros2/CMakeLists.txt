@@ -13,6 +13,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(robot_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 # Mujoco dependencies
 find_package(mujoco REQUIRED)
@@ -23,7 +24,7 @@ include_directories(include)
 
 # add executable
 add_executable(mujoco_node src/mujoco_node.cpp)
-ament_target_dependencies(mujoco_node rclcpp robot_msgs nav_msgs)
+ament_target_dependencies(mujoco_node rclcpp robot_msgs nav_msgs tf2_ros)
 target_link_libraries(mujoco_node mujoco::mujoco glfw)
 
 # install targets

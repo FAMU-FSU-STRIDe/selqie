@@ -10,10 +10,10 @@
 #include <robot_msgs/msg/o_drive_config.hpp>
 #include <robot_msgs/msg/o_drive_info.hpp>
 
-#include "mujoco_ros2/mujoco.hpp"
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 
-#define MUJOCO_Q_OFFSET 7
-#define MUJOCO_V_OFFSET 6
+#include "mujoco_ros2/mujoco.hpp"
 
 static inline rclcpp::QoS qos_fast()
 {
@@ -212,11 +212,14 @@ private:
     std::string _model_path = "/home/ubuntu/ros2_ws/src/mujoco_ros2/models/robot.xml";
     float _frame_rate = 60.0;
     std::string _odom_frame_id = "odom";
+    std::string _base_frame_id = "base_link";
 
     std::vector<std::shared_ptr<MuJoCoMotorNode>> _motor_nodes;
 
     rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr _clock_pub;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr _odom_pub;
+
+    std::unique_ptr<tf2_ros::TransformBroadcaster> _tf_broadcaster;
 
 public:
     MuJoCoNode() : Node("mujoco_node")
@@ -230,8 +233,13 @@ public:
         this->declare_parameter("odom_frame_id", _odom_frame_id);
         this->get_parameter("odom_frame_id", _odom_frame_id);
 
+        this->declare_parameter("base_frame_id", _base_frame_id);
+        this->get_parameter("base_frame_id", _base_frame_id);
+
         _clock_pub = this->create_publisher<rosgraph_msgs::msg::Clock>("clock", qos_reliable());
         _odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", qos_reliable());
+
+        _tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
         std::thread([this]()
                     { runMuJoCo(); })
@@ -314,6 +322,17 @@ public:
         odom_msg.twist.twist.angular.z = data->qvel[5];
 
         _odom_pub->publish(odom_msg);
+
+        geometry_msgs::msg::TransformStamped tf_msg;
+        tf_msg.header.stamp = odom_msg.header.stamp;
+        tf_msg.header.frame_id = _odom_frame_id;
+        tf_msg.child_frame_id = _base_frame_id;
+        tf_msg.transform.translation.x = odom_msg.pose.pose.position.x;
+        tf_msg.transform.translation.y = odom_msg.pose.pose.position.y;
+        tf_msg.transform.translation.z = odom_msg.pose.pose.position.z;
+        tf_msg.transform.rotation = odom_msg.pose.pose.orientation;
+
+        _tf_broadcaster->sendTransform(tf_msg);
     }
 };
 
