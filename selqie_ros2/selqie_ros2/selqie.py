@@ -9,11 +9,12 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from ament_index_python.packages import get_package_share_directory
 
-from std_msgs.msg import String, Float32
-from geometry_msgs.msg import Twist, PoseStamped, Quaternion
+from std_msgs.msg import Empty, String, Float32
+from geometry_msgs.msg import Twist, PoseStamped, PoseWithCovarianceStamped, Quaternion
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, Imu
 from robot_msgs.msg import *
+from robot_localization.srv import SetPose
 
 def QOS_FAST() -> QoSProfile:
     """Get a QoSProfile with best-effort reliability and a depth of 10."""
@@ -133,10 +134,14 @@ class SELQIE(Node):
         self._temperature_sub = self.create_subscription(Float32, 'bar100/temperature', temperature_callback, QOS_RELIABLE())
 
     def _init_localization(self):
-        """Initialize the odometry subscriber."""
+        """Initialize the localization publishers and subscribers."""
         self._odom = Odometry()
         odom_callback = lambda msg: setattr(self, '_odom', msg)
         self._odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, QOS_RELIABLE())
+
+        self._set_pose_client = self.create_client(SetPose, 'set_pose')
+
+        self._imu_calibrate_pub = self.create_publisher(Empty, 'imu/calibrate', QOS_RELIABLE())
 
     def _init_control(self):
         """Initialize the control publishers and subscribers."""
@@ -378,6 +383,30 @@ class SELQIE(Node):
     def get_localization(self) -> Odometry:
         """Get the latest Odometry message."""
         return self._odom
+    
+    def send_localization_set_pose(self, pose : PoseStamped):
+        """Send a PoseStamped message to the set_pose service."""
+        req = SetPose.Request()
+        req.pose = pose
+        self._set_pose_client.call_async(req)
+
+    def set_localization_pose(self, x : float, y : float, z : float, theta : float):
+        """Set the pose of the robot."""
+        pose = PoseWithCovarianceStamped()
+        pose.header.frame_id = 'map'
+        pose.pose.pose.position.x = x
+        pose.pose.pose.position.y = y
+        pose.pose.pose.position.z = z
+        pose.pose.pose.orientation = EUL2QUAT([0.0, 0.0, theta])
+        self.send_localization_set_pose(pose)
+
+    def set_localization_pose_zero(self):
+        """Set the pose of the robot to zero."""
+        self.set_localization_pose(0.0, 0.0, 0.0, 0.0)
+
+    def send_localization_calibrate_imu(self):
+        """Send an Empty message to the imu/calibrate topic."""
+        self._imu_calibrate_pub.publish(Empty())
     
     #########################
     ### Control Functions ###

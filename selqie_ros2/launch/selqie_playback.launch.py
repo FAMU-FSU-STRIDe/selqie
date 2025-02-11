@@ -31,14 +31,14 @@ def Depth2PoseNode():
         }],
     )
     
-def IMUBiasCorrectionNode():
+def IMUCalibrationNode():
     return Node(
         package='selqie_localization',
-        executable='imu_bias_correction_node',
-        name='imu_bias_correction_node',
+        executable='imu_calibration_node',
+        name='imu_calibration_node',
         output='screen',
         parameters=[{
-            'bias': [0.0, 0.0, -9.81],
+            'sample_size': 500,
             'use_sim_time': True
         }],
     )
@@ -46,9 +46,9 @@ def IMUBiasCorrectionNode():
 def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchFile('tf.launch.py'),
-        # IncludeLaunchFile('ekf.launch.py'),
+        IncludeLaunchFile('ekf.launch.py'),
         IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
         Depth2PoseNode(),
-        IMUBiasCorrectionNode(),
+        IMUCalibrationNode(),
     ])

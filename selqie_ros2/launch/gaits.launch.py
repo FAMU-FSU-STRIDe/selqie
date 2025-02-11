@@ -22,7 +22,7 @@ JUMP_CONFIG = os.path.join(CONFIG_FOLDER, 'jump_config.yaml')
 
 def CommandVelocityFilterNode(use_sim_time : str):
     return Node(
-        package='local_planning',
+        package='stride_maker',
         executable='command_velocity_filter_node',
         name='command_velocity_filter_node',
         parameters=[COMMAND_VELOCITY_FILTER_CONFIG, {'use_sim_time': use_sim_time}]

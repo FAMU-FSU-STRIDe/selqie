@@ -3,7 +3,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-class ImuBiasCorrectionNode : public rclcpp::Node
+class ImuCalibrationNode : public rclcpp::Node
 {
 private:
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr _imu_sub;
@@ -36,7 +36,7 @@ private:
     }
 
 public:
-    ImuBiasCorrectionNode() : Node("imu_bias_correction_node")
+    ImuCalibrationNode() : Node("imu_bias_correction_node")
     {
         std::vector<double> bias = {0, 0, 0};
         this->declare_parameter("bias", bias);
@@ -45,7 +45,7 @@ public:
         _bias = tf2::Vector3(bias[0], bias[1], bias[2]);
 
         _imu_sub = this->create_subscription<sensor_msgs::msg::Imu>(
-            "imu/data", 10, std::bind(&ImuBiasCorrectionNode::imu_callback, this, std::placeholders::_1));
+            "imu/data", 10, std::bind(&ImuCalibrationNode::imu_callback, this, std::placeholders::_1));
 
         _imu_pub = this->create_publisher<sensor_msgs::msg::Imu>("imu/data_corrected", 10);
 
@@ -56,7 +56,7 @@ public:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<ImuBiasCorrectionNode>());
+    rclcpp::spin(std::make_shared<ImuCalibrationNode>());
     rclcpp::shutdown();
     return 0;
 }

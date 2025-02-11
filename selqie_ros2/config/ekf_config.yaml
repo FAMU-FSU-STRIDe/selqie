@@ -8,7 +8,7 @@
     world_frame: 'odom'
     publish_tf: true
 
-    imu0: 'imu/data_corrected' # imu_link frame
+    imu0: 'imu/data/calibrated' # imu_link frame
     imu0_config: [false, false, false,
                   true, true, true,
                   false, false, false,

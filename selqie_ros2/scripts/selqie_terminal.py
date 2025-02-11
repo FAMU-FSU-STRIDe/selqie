@@ -289,6 +289,14 @@ class SELQIETerminal(Cmd):
             print("Invalid values")
             return
         
+    def do_calibrate_imu(self, line : str):
+        """ Calibrate the IMU """
+        self._selqie.send_localization_calibrate_imu()
+
+    def do_reset_localization(self, line : str):
+        """ Reset the localization """
+        self._selqie.set_localization_pose_zero()
+        
 def main():
     rclpy.init()
     SELQIETerminal().cmdloop()
