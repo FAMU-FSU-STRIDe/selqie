@@ -82,6 +82,17 @@ private:
         }
     }
 
+    void _make_walk_odometry(const double vel_x, const double omega_z)
+    {
+        for (size_t i = 0; i < _timing.size(); i++)
+        {
+            geometry_msgs::msg::TwistWithCovarianceStamped odometry;
+            odometry.twist.twist.linear.x = vel_x;
+            odometry.twist.twist.angular.z = omega_z;
+            _gait_odometry.push_back(odometry);
+        }
+    }
+
     void update_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
     {
         if (msg->linear.x == 0.0 && msg->angular.z == 0.0)
@@ -119,6 +130,8 @@ private:
         _make_walk_stride(
             {stance_length_left, stance_length_left, stance_length_right, stance_length_right},
             {0.25, 0.75, 0.25, 0.75});
+
+        _make_walk_odometry(msg->linear.x, msg->angular.z);
     }
 
 public:

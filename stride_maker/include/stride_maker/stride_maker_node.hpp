@@ -13,6 +13,7 @@ class StrideMakerNode : public rclcpp::Node
 protected:
     std::string _gait_name;
     double _default_height;
+    std::vector<double> _covariances;
 
     std::vector<double> _timing;
     std::vector<std::vector<robot_msgs::msg::LegCommand>> _leg_commands;
@@ -27,6 +28,18 @@ protected:
         leg_command.pos_setpoint.z = -_default_height;
         std::vector<robot_msgs::msg::LegCommand> commands = {leg_command, leg_command};
         _leg_commands = {commands, commands, commands, commands};
+    }
+
+    void _stamp_twist(geometry_msgs::msg::TwistWithCovarianceStamped &msg)
+    {
+        msg.header.stamp = this->now();
+        msg.header.frame_id = "base_link";
+        msg.twist.covariance[0] = _covariances[0];
+        msg.twist.covariance[7] = _covariances[1];
+        msg.twist.covariance[14] = _covariances[2];
+        msg.twist.covariance[21] = _covariances[3];
+        msg.twist.covariance[28] = _covariances[4];
+        msg.twist.covariance[35] = _covariances[5];
     }
 
 private:
@@ -98,6 +111,7 @@ private:
             if (!_gait_odometry.empty())
             {
                 assert(_gait_odometry.size() == _timing.size());
+                _stamp_twist(_gait_odometry[_idx]);
                 _gait_odometry_pub->publish(_gait_odometry[_idx]);
             }
 
@@ -119,6 +133,10 @@ public:
 
         this->declare_parameter("default_height", 0.175);
         this->get_parameter("default_height", _default_height);
+
+        this->declare_parameter("covariances", std::vector<double>(6, 0.01));
+        this->get_parameter("covariances", _covariances);
+        assert(_covariances.size() == 6);
 
         _gait_name_sub = this->create_subscription<std_msgs::msg::String>(
             "gait", 10, std::bind(&StrideMakerNode::_gait_callback, this, std::placeholders::_1));

@@ -45,6 +45,18 @@ private:
         }
     }
 
+    void _make_swim_odometry(const double vel_x, const double vel_z, const double omega_y)
+    {
+        for (size_t i = 0; i < _timing.size(); i++)
+        {
+            geometry_msgs::msg::TwistWithCovarianceStamped odometry;
+            odometry.twist.twist.linear.x = vel_x;
+            odometry.twist.twist.linear.z = vel_z;
+            odometry.twist.twist.angular.y = omega_y;
+            _gait_odometry.push_back(odometry);
+        }
+    }
+
     void update_stride(const geometry_msgs::msg::Twist::SharedPtr msg) override
     {
         if (msg->linear.x == 0.0 && msg->linear.z == 0.0)
@@ -55,12 +67,14 @@ private:
 
         const double vel_x = msg->linear.x;
         const double vel_z = msg->linear.z;
+        const double omega_y = msg->angular.y;
 
         const double mag = std::sqrt(vel_x * vel_x + vel_z * vel_z);
         const double x_amp = _vel_amplitude_gain * mag;
         const double phi = 2.0 * std::atan2(vel_z - mag, vel_x);
 
         _make_swim_stride({phi, phi, phi, phi}, {x_amp, x_amp, x_amp, x_amp});
+        _make_swim_odometry(vel_x, vel_z, omega_y);
     }
 
 public:

@@ -6,6 +6,9 @@ private:
     void update_stride(const geometry_msgs::msg::Twist::SharedPtr) override
     {
         _make_default_stride();
+
+        geometry_msgs::msg::TwistWithCovarianceStamped standing_odometry;
+        _gait_odometry = {standing_odometry, standing_odometry};
     }
 
 public:
