@@ -17,6 +17,7 @@ CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config'
 
 WALKING_PLANNER_CONFIG = os.path.join(CONFIG_FOLDER, 'walking_planner_config.yaml')
 SWIMMING_PLANNER_CONFIG = os.path.join(CONFIG_FOLDER, 'swimming_planner_config.yaml')
+JUMPING_PLANNER_CONFIG = os.path.join(CONFIG_FOLDER, 'jumping_planner_config.yaml')
     
 def WalkingPlannerNode(use_sim_time : str):
     return Node(
@@ -33,11 +34,20 @@ def SwimmingPlannerNode(use_sim_time : str):
         name='swimming_planner_node',
         parameters=[SWIMMING_PLANNER_CONFIG, {'use_sim_time': use_sim_time}]
     )
+    
+def JumpingPlannerNode(use_sim_time : str):
+    return Node(
+        package='local_planning',
+        executable='jumping_planner_node',
+        name='jumping_planner_node',
+        parameters=[JUMPING_PLANNER_CONFIG, {'use_sim_time': use_sim_time}]
+    )
 
 def generate_launch_description():
     launch_args, use_sim_time = UseSimTime()
     return LaunchDescription([
         launch_args,
         WalkingPlannerNode(use_sim_time),
-        SwimmingPlannerNode(use_sim_time)
+        SwimmingPlannerNode(use_sim_time),
+        JumpingPlannerNode(use_sim_time)
     ])
