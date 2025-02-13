@@ -4,6 +4,8 @@ import os
 from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'selqie_ros2'
 LAUNCH_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'launch')
+CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
+IMU_CALIBRATION_FILE = os.path.join(CONFIG_FOLDER, 'imu_calibration.txt')
 
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -39,6 +41,7 @@ def IMUCalibrationNode():
         output='screen',
         parameters=[{
             'sample_size': 500,
+            'calibration_file': IMU_CALIBRATION_FILE,
             'use_sim_time': True
         }],
     )
@@ -50,6 +53,7 @@ def generate_launch_description():
         IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
         IncludeLaunchFile('gaits.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
+        IncludeLaunchFile('urdf.launch.py'),
         Depth2PoseNode(),
         IMUCalibrationNode(),
     ])

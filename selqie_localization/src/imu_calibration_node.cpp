@@ -1,3 +1,4 @@
+#include <fstream>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/empty.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -16,6 +17,7 @@ private:
     tf2::Vector3 _bias = tf2::Vector3(0, 0, 0);
     bool _calibrating = false;
     int _sample_count = 0;
+    std::string _calibration_file_path = "";
 
     void calibrate_callback(const std_msgs::msg::Empty::SharedPtr)
     {
@@ -47,6 +49,14 @@ private:
                 _bias /= _sample_size;
                 _calibrating = false;
                 RCLCPP_INFO(this->get_logger(), "IMU calibration complete.");
+
+                if (!_calibration_file_path.empty())
+                {
+                    // Save calibration to file
+                    std::ofstream file(_calibration_file_path);
+                    file << _bias[0] << " " << _bias[1] << " " << _bias[2];
+                    RCLCPP_INFO(this->get_logger(), "Saved IMU calibration to file: %s", _calibration_file_path.c_str());
+                }
             }
 
             _imu_pub->publish(*msg);
@@ -74,7 +84,28 @@ public:
         this->declare_parameter("sample_size", 100);
         this->get_parameter("sample_size", _sample_size);
 
-        _bias = tf2::Vector3(0, 0, 0);
+        this->declare_parameter("calibration_file", "");
+        this->get_parameter("calibration_file", _calibration_file_path);
+
+        if (_calibration_file_path.empty())
+        {
+            _bias = tf2::Vector3(0, 0, 0);
+            RCLCPP_INFO(this->get_logger(), "Using default IMU calibration.");
+        }
+        else
+        {
+            std::ifstream file(_calibration_file_path);
+
+            if (file)
+            {
+                file >> _bias[0] >> _bias[1] >> _bias[2];
+                RCLCPP_INFO(this->get_logger(), "Loaded IMU calibration from file: %s", _calibration_file_path.c_str());
+            }
+            else
+            {
+                RCLCPP_ERROR(this->get_logger(), "Failed to load IMU calibration from file: %s", _calibration_file_path.c_str());
+            }
+        }
 
         _calibrate_sub = this->create_subscription<std_msgs::msg::Empty>(
             "imu/calibrate", 10, std::bind(&ImuCalibrationNode::calibrate_callback, this, std::placeholders::_1));

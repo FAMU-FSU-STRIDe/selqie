@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
-    correlation_window_size: 15 # 35
+    correlation_window_size: 35
     speckle_size: 500
-    uniqueness_ratio: 15.0 # 50.0
+    uniqueness_ratio: 50.0
     approximate_sync: True
     approximate_sync_tolerance_period: 0.05
