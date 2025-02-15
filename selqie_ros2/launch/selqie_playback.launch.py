@@ -53,6 +53,7 @@ def generate_launch_description():
         IncludeLaunchFile('stereo_cameras_disparity.launch.py'),
         IncludeLaunchFile('gaits.launch.py'),
         IncludeLaunchFile('visualization.launch.py'),
+        IncludeLaunchFile('terrain_mapping.launch.py'),
         IncludeLaunchFile('urdf.launch.py'),
         Depth2PoseNode(),
         IMUCalibrationNode(),
