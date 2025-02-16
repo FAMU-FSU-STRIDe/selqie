@@ -296,6 +296,10 @@ class SELQIETerminal(Cmd):
     def do_reset_localization(self, line : str):
         """ Reset the localization """
         self._selqie.set_localization_pose_zero()
+
+    def do_reset_map(self, line : str):
+        """ Reset the map """
+        self._selqie.send_mapping_reset()
         
 def main():
     rclpy.init()

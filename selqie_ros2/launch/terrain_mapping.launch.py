@@ -70,11 +70,12 @@ def PointCloudMapNode(layer_name, use_sim_time : str):
         name='pointcloud_node',
         output='screen',
         parameters=[{
-            'layer_name': 'map',
+            'layer_name': layer_name,
             'frequency': 2.0,
             'use_sim_time': use_sim_time
         }],
-        remappings=[('points', f'/stereo/points/{layer_name}')]
+        remappings=[('points', f'/stereo/points/{layer_name}')],
+        # prefix=['xterm -e gdb -ex run --args']
     )
 
 def generate_launch_description():

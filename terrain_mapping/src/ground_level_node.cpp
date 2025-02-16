@@ -17,17 +17,17 @@ private:
     rclcpp::TimerBase::SharedPtr _timer;
 
     double _ground_level = 0.0;
-    std_msgs::msg::String::SharedPtr _gait_msg;
+    bool _update_level = false;
     grid_map_msgs::msg::GridMap::SharedPtr _map_msg;
 
     void _gait_callback(const std_msgs::msg::String::SharedPtr msg)
     {
-        _gait_msg = msg;
+        _update_level = (msg->data == _ground_gait);
     }
 
     void _odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
-        if (_gait_msg && _gait_msg->data == _ground_gait)
+        if (_update_level)
         {
             _ground_level = msg->pose.pose.position.z - _robot_height;
         }

@@ -69,6 +69,7 @@ class SELQIE(Node):
         self._init_legs()
         self._init_sensors()
         self._init_localization()
+        self._init_mapping()
         self._init_control()
         self._init_vision()
         self._init_recording()
@@ -142,6 +143,10 @@ class SELQIE(Node):
         self._set_pose_client = self.create_client(SetPose, 'set_pose')
 
         self._imu_calibrate_pub = self.create_publisher(Empty, 'imu/calibrate', QOS_RELIABLE())
+
+    def _init_mapping(self):
+        """Initialize the mapping publishers and subscribers"""
+        self._reset_map_pub = self.create_publisher(Empty, "map/reset", QOS_RELIABLE())
 
     def _init_control(self):
         """Initialize the control publishers and subscribers."""
@@ -408,6 +413,13 @@ class SELQIE(Node):
         """Send an Empty message to the imu/calibrate topic."""
         self._imu_calibrate_pub.publish(Empty())
     
+    #########################
+    ### Mapping Functions ###
+    #########################
+
+    def send_mapping_reset(self):
+        self._reset_map_pub.publish(Empty())
+
     #########################
     ### Control Functions ###
     #########################

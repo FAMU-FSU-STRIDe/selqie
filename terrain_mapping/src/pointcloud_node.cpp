@@ -89,14 +89,14 @@ private:
         for (const auto &point : _cloud.points)
         {
             grid_map::Index index;
-            grid_map.getIndex(grid_map::Position(point.x, point.y), index);
-            if (grid_map.isValid(index))
+            if (grid_map.getIndex(grid_map::Position(point.x, point.y), index))
             {
                 grid_map.at(_layer_name, index) = 1.0;
 
-                if (grid_map.at("elevation", index) < point.z)
+                auto &elevation = grid_map.at("elevation", index);
+                if (std::isnan(elevation) || elevation < point.z)
                 {
-                    grid_map.at("elevation", index) = point.z;
+                    elevation = point.z;
                 }
             }
         }
@@ -127,7 +127,10 @@ public:
 
         _map_pub = this->create_publisher<grid_map_msgs::msg::GridMap>("map", 10);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        _timer = this->create_wall_timer(
+            std::chrono::milliseconds(time_t(1E3 / frequency)),
+            std::bind(&PointCloudNode::_update_map, this));
+
         RCLCPP_INFO(this->get_logger(), "PointCloud Mapping Node Initialized.");
     }
 };
