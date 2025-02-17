@@ -21,7 +21,8 @@ def GaitPlanningNode(use_sim_time : str):
         executable='gait_planning_node',
         name='gait_planning_node',
         parameters=[os.path.join(CONFIG_FOLDER, 'gait_planning_config.yaml'),
-                    {'use_sim_time': use_sim_time}]
+                    {'use_sim_time': use_sim_time}],
+        # prefix=['xterm -e gdb -ex run --args']
     )
 
 def generate_launch_description():

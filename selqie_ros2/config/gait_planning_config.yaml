@@ -3,7 +3,7 @@
     solve_frequency: 1.0
     publish_all: true
     horizon_time: 4.0
-    integration_steps: 5
+    integration_steps: 10
     robot_height: 0.25
     walk_cost_of_transport: 1.0
     walk_cost_of_reverse: 2.0

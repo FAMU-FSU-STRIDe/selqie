@@ -11,8 +11,6 @@ Panels:
         - /Localization1/Robot Odometry1/Shape1
         - /Local Planning1/Goal Pose1
         - /Local Planning1/Goal Pose1/Topic1
-        - /Mapping1
-        - /Mapping1/Terrain Map1
         - /Gait Planning1/Goal Pose1
       Splitter Ratio: 0.6944444179534912
     Tree Height: 499
@@ -726,7 +724,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 4.1849894523620605
+      Distance: 2.358097791671753
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -741,10 +739,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2000005543231964
+      Pitch: 0.22500072419643402
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.7465338706970215
+      Yaw: 3.0015313625335693
     Saved: ~
 Window Geometry:
   Displays:

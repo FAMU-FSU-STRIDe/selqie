@@ -17,13 +17,14 @@ private:
     GaitPlanningParams _params;
 
 public:
-    GaitPlanningModel(const GaitPlanningParams &params, GaitDynamicsOptions &options) : _params(params)
+    GaitPlanningModel(const GaitPlanningParams &params,
+                      GaitDynamicsOptions &options, grid_map::GridMap &map) : _params(params)
     {
         _gait_dynamics.emplace_back(nullptr);
-        _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>(options));
-        _gait_dynamics.emplace_back(std::make_unique<SwimmingDynamics>(options));
-        _gait_dynamics.emplace_back(std::make_unique<JumpingDynamics>(options));
-        _gait_dynamics.emplace_back(std::make_unique<SinkingDynamics>(options));
+        _gait_dynamics.emplace_back(std::make_unique<WalkingDynamics>(options, map));
+        _gait_dynamics.emplace_back(std::make_unique<SwimmingDynamics>(options, map));
+        _gait_dynamics.emplace_back(std::make_unique<JumpingDynamics>(options, map));
+        _gait_dynamics.emplace_back(std::make_unique<SinkingDynamics>(options, map));
     }
 
     /*

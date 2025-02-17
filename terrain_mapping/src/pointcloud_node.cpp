@@ -14,6 +14,7 @@ class PointCloudNode : public rclcpp::Node
 {
 private:
     std::string _layer_name;
+    int _thickness;
 
     std::unique_ptr<tf2_ros::TransformListener> _tf_listener;
     std::unique_ptr<tf2_ros::Buffer> _tf_buffer;
@@ -91,12 +92,22 @@ private:
             grid_map::Index index;
             if (grid_map.getIndex(grid_map::Position(point.x, point.y), index))
             {
-                grid_map.at(_layer_name, index) = 1.0;
-
-                auto &elevation = grid_map.at("elevation", index);
-                if (std::isnan(elevation) || elevation < point.z)
+                for (int i = -_thickness; i <= _thickness; i++)
                 {
-                    elevation = point.z;
+                    for (int j = -_thickness; j <= _thickness; j++)
+                    {
+                        grid_map::Index index_offset = index + grid_map::Index(i, j);
+                        if (grid_map.isValid(index_offset))
+                        {
+                            grid_map.at(_layer_name, index_offset) = 1.0;
+
+                            auto &elevation = grid_map.at("elevation", index_offset);
+                            if (std::isnan(elevation) || elevation < point.z)
+                            {
+                                elevation = point.z;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -112,6 +123,9 @@ public:
     {
         this->declare_parameter<std::string>("layer_name", "visible");
         this->get_parameter("layer_name", _layer_name);
+
+        this->declare_parameter("thickness", 1);
+        this->get_parameter("thickness", _thickness);
 
         this->declare_parameter("frequency", 2.0);
         const double frequency = this->get_parameter("frequency").as_double();

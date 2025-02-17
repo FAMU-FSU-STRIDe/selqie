@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sbmpo/types/types.hpp"
+#include <grid_map_ros/grid_map_ros.hpp>
 
 using namespace sbmpo;
 
@@ -39,7 +40,6 @@ struct GaitDynamicsOptions
     float horizon_time = 1.0F;
     int integration_steps = 5;
     float robot_height = 0.25F;
-    float ground_level = 0.0F;
 
     float walk_cost_of_transport = 1.0F;
     float walk_cost_of_reverse = 2.0F;
@@ -69,9 +69,10 @@ class GaitDynamics
 {
 protected:
     GaitDynamicsOptions &_options;
+    grid_map::GridMap &_map;
 
 public:
-    GaitDynamics(GaitDynamicsOptions &options) : _options(options) {}
+    GaitDynamics(GaitDynamicsOptions &options, grid_map::GridMap &map) : _options(options), _map(map) {}
 
     virtual State getNextState(const State &state, const Control &control)
     {
@@ -85,6 +86,9 @@ public:
             next_state[Y] += control[Vx] * std::sin(state[Q]) * dt;
             next_state[Z] += control[Vz] * dt;
             next_state[GAIT] = control[NEW_GAIT];
+
+            if (!isValid(next_state))
+                break;
         }
         next_state[Q] = wrap_angle(next_state[Q]);
         return next_state;
@@ -97,7 +101,14 @@ public:
 
     virtual bool isValid(const State &state)
     {
-        return state[Z] > _options.ground_level;
+        const grid_map::Position position(state[X], state[Y]);
+        grid_map::Index index;
+        if (_map.getIndex(position, index))
+        {
+            const float elevation = _map.at("elevation", index);
+            return state[Z] > elevation;
+        }
+        return false;
     }
 
     virtual std::vector<Control> getControls(const State &state) = 0;
@@ -107,7 +118,7 @@ public:
 class WalkingDynamics : public GaitDynamics
 {
 public:
-    WalkingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    WalkingDynamics(GaitDynamicsOptions &options, grid_map::GridMap &map) : GaitDynamics(options, map) {}
 
     float getCost(const State &, const State &, const Control &control) override
     {
@@ -132,13 +143,26 @@ public:
 
                 {0.000, 0.000, 0.0, JUMP}};
     }
+
+    bool isValid(const State &state)
+    {
+        const grid_map::Position position(state[X], state[Y]);
+        grid_map::Index index;
+        if (_map.getIndex(position, index))
+        {
+            const bool rock = _map.at("rock", index) == 1.0;
+            const bool wall = _map.at("wall", index) == 1.0;
+            return !rock && !wall;
+        }
+        return true;
+    }
 };
 
 // Swimming dynamics model
 class SwimmingDynamics : public GaitDynamics
 {
 public:
-    SwimmingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    SwimmingDynamics(GaitDynamicsOptions &options, grid_map::GridMap &map) : GaitDynamics(options, map) {}
 
     float getCost(const State &, const State &, const Control &control) override
     {
@@ -148,7 +172,14 @@ public:
 
     bool isValid(const State &state)
     {
-        return GaitDynamics::isValid(state) && state[Z] > _options.robot_height + _options.ground_level;
+        const grid_map::Position position(state[X], state[Y]);
+        grid_map::Index index;
+        if (_map.getIndex(position, index))
+        {
+            const float elevation = _map.at("elevation", index);
+            return state[Z] > elevation + _options.robot_height;
+        }
+        return false;
     }
 
     std::vector<Control> getControls(const State &) override
@@ -174,7 +205,7 @@ public:
 class JumpingDynamics : public GaitDynamics
 {
 public:
-    JumpingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    JumpingDynamics(GaitDynamicsOptions &options, grid_map::GridMap &map) : GaitDynamics(options, map) {}
 
     State getNextState(const State &state, const Control &control) override
     {
@@ -204,11 +235,17 @@ public:
 class SinkingDynamics : public GaitDynamics
 {
 public:
-    SinkingDynamics(GaitDynamicsOptions &options) : GaitDynamics(options) {}
+    SinkingDynamics(GaitDynamicsOptions &options, grid_map::GridMap &map) : GaitDynamics(options, map) {}
 
     State getNextState(const State &state, const Control &control) override
     {
-        const float z_final = _options.ground_level + _options.robot_height;
+        const grid_map::Position position(state[X], state[Y]);
+        grid_map::Index index;
+        if (!_map.getIndex(position, index))
+        {
+            throw std::runtime_error("Invalid state");
+        }
+        const float z_final = _map.at("elevation", index) + _options.robot_height;
         State next_state = state;
         next_state[TIME] += std::min((state[Z] - z_final) / _options.sinking_speed, 0.F);
         next_state[Z] = z_final;
