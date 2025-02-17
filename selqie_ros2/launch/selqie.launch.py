@@ -27,5 +27,6 @@ def generate_launch_description():
         IncludeLaunchFile('gait_planning.launch.py'),
         IncludeLaunchFile('tf.launch.py'),
         IncludeLaunchFile('ekf.launch.py'),
+        IncludeLaunchFile('urdf.launch.py'),
         # IncludeLaunchFile('visualization.launch.py'),
     ])
