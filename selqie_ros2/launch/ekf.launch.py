@@ -24,6 +24,7 @@ def RobotLocalizationNode(use_sim_time):
         output='screen',
         parameters=[EKF_CONFIG_FILE,
         {'use_sim_time': use_sim_time}],
+        remappings=[('odometry/filtered', 'odom')]
     )
 
 def generate_launch_description():

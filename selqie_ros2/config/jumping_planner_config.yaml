@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    solve_frequency: 20.0
+    goal_threshold: 0.15
+ 

@@ -10,17 +10,27 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(grid_map_ros REQUIRED)
 find_package(pcl_ros REQUIRED)
 
-add_executable(terrain_mapping_node src/terrain_mapping_node.cpp)
-ament_target_dependencies(terrain_mapping_node rclcpp sensor_msgs tf2_ros grid_map_ros pcl_ros)
+add_executable(default_map_node src/default_map_node.cpp)
+ament_target_dependencies(default_map_node rclcpp std_msgs grid_map_ros)
+
+add_executable(ground_level_node src/ground_level_node.cpp)
+ament_target_dependencies(ground_level_node rclcpp nav_msgs grid_map_ros)
+
+add_executable(pointcloud_node src/pointcloud_node.cpp)
+ament_target_dependencies(pointcloud_node rclcpp sensor_msgs tf2_ros grid_map_ros pcl_ros)
 
 # install targets
 install(TARGETS
-  terrain_mapping_node
+  default_map_node
+  ground_level_node
+  pointcloud_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

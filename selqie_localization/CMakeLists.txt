@@ -17,8 +17,12 @@ find_package(tf2_geometry_msgs REQUIRED)
 add_executable(imu_bias_correction_node src/imu_bias_correction_node.cpp)
 ament_target_dependencies(imu_bias_correction_node rclcpp sensor_msgs tf2_ros tf2_geometry_msgs)
 
+add_executable(imu_calibration_node src/imu_calibration_node.cpp)
+ament_target_dependencies(imu_calibration_node rclcpp sensor_msgs tf2_ros tf2_geometry_msgs)
+
 install(TARGETS
   imu_bias_correction_node
+  imu_calibration_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -8,7 +8,7 @@
     world_frame: 'odom'
     publish_tf: true
 
-    imu0: 'imu/data_corrected' # imu_link frame
+    imu0: 'imu/data/calibrated' # imu_link frame
     imu0_config: [false, false, false,
                   true, true, true,
                   false, false, false,
@@ -28,4 +28,12 @@
     pose0_queue_size: 10
     pose0_differential: false
     pose0_relative: false
+
+    twist0: 'gait/vel_estimate'
+    twist0_config: [false, false, false,
+                    false, false, false,
+                    true, true, true,
+                    true, true, true,
+                    false, false, false]
+    twist0_queue_size: 10
     

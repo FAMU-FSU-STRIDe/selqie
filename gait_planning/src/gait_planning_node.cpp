@@ -51,6 +51,8 @@ GaitType string_to_gait(const std::string &gait)
         return JUMP;
     if (gait == "sink")
         return SINK;
+    if (gait == "stand")
+        return STAND;
     return NONE;
 }
 
@@ -294,13 +296,13 @@ public:
 
         if (exit_code != sbmpo::SOLUTION_FOUND)
         {
-            _publish_transition_gait(GaitType::NONE);
+            _publish_transition_gait(GaitType::STAND);
             RCLCPP_WARN(this->get_logger(), "Gait Planner Failed with Exit Code %d: %s",
                         exit_code, exit_code_to_string(exit_code).c_str());
         }
         else if (int(_sbmpo->results()->state_path.size()) <= _local_lookahead)
         {
-            _publish_transition_gait(GaitType::NONE);
+            _publish_transition_gait(GaitType::STAND);
             _publish_local_goal(_sbmpo_params.goal_state);
         }
         else

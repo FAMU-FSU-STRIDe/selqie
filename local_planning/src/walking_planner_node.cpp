@@ -155,7 +155,7 @@ public:
     WalkingPlanner() : Node("walking_planner_node")
     {
         this->declare_parameter("solve_frequency", 1.0);
-        _solve_frequency = this->get_parameter("solve_frequency").as_double();
+        this->get_parameter("solve_frequency", _solve_frequency);
 
         this->declare_parameter("publish_all", false);
         this->get_parameter("publish_all", _publish_all);

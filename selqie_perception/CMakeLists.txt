@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(stride_maker)
+project(selqie_perception)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -8,35 +8,14 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(robot_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
-include_directories(include)
-
-add_executable(command_velocity_filter_node src/command_velocity_filter_node.cpp)
-ament_target_dependencies(command_velocity_filter_node rclcpp geometry_msgs)
-
-add_executable(walk_node src/walk_node.cpp)
-ament_target_dependencies(walk_node rclcpp robot_msgs)
-
-add_executable(swim_node src/swim_node.cpp)
-ament_target_dependencies(swim_node rclcpp robot_msgs)
-
-add_executable(jump_node src/jump_node.cpp)
-ament_target_dependencies(jump_node rclcpp robot_msgs)
-
-add_executable(sink_node src/sink_node.cpp)
-ament_target_dependencies(sink_node rclcpp robot_msgs)
-
-add_executable(stand_node src/stand_node.cpp)
-ament_target_dependencies(stand_node rclcpp robot_msgs)
+add_executable(pointcloud_rgb_filter_node src/pointcloud_rgb_filter_node.cpp)
+ament_target_dependencies(pointcloud_rgb_filter_node rclcpp sensor_msgs pcl_conversions)
 
 install(TARGETS
-  command_velocity_filter_node
-  walk_node
-  swim_node
-  jump_node
-  sink_node
-  stand_node
+  pointcloud_rgb_filter_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

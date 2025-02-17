@@ -16,7 +16,7 @@ class IMUPlotter(Node):
         # Create a subscriber to the IMU topic
         self.subscription = self.create_subscription(
             Imu,
-            '/imu/data_corrected',
+            '/imu/data',
             self.listener_callback,
             10)
         
@@ -45,7 +45,7 @@ class IMUPlotter(Node):
         self.timer = self.create_timer(0.1, self.update_plot)
         self.print_timer = self.create_timer(5.0, self.print_averages)  # Print averages every 5 seconds
 
-    def listener_callback(self, msg):
+    def listener_callback(self, msg : Imu):
         current_time = self.get_clock().now().nanoseconds / 1E9 - self.start_time
         
         # Extract the IMU orientation quaternion
@@ -99,7 +99,7 @@ class IMUPlotter(Node):
             avg_y = np.mean(self.accel_y_map)
             avg_z = np.mean(self.accel_z_map)
             self.get_logger().info(f"Average Accelerations (map frame): "
-                                   f"X: {avg_x:.3f}, Y: {avg_y:.3f}, Z: {avg_z:.3f}")
+                                   f"X: {avg_x}, Y: {avg_y}, Z: {avg_z}")
 
 def main(args=None):
     rclpy.init(args=args)

@@ -268,6 +268,14 @@ class SELQIETerminal(Cmd):
     def do_sink(self, line : str):
         """ Sink the robot """
         self._selqie.set_control_gait('sink')
+        time.sleep(0.1)
+        self._selqie.set_control_command_velocity(0.0, 0.0, 0.0)
+
+    def do_stand(self, line : str):
+        """ Stand the robot """
+        self._selqie.set_control_gait('stand')
+        time.sleep(0.1)
+        self._selqie.set_control_command_velocity(0.0, 0.0, 0.0)
 
     def do_set_goal(self, line : str):
         """ Set the goal position for the robot """
@@ -280,6 +288,18 @@ class SELQIETerminal(Cmd):
         except ValueError:
             print("Invalid values")
             return
+        
+    def do_calibrate_imu(self, line : str):
+        """ Calibrate the IMU """
+        self._selqie.send_localization_calibrate_imu()
+
+    def do_reset_localization(self, line : str):
+        """ Reset the localization """
+        self._selqie.set_localization_pose_zero()
+
+    def do_reset_map(self, line : str):
+        """ Reset the map """
+        self._selqie.send_mapping_reset()
         
 def main():
     rclpy.init()

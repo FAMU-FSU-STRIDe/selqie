@@ -30,7 +30,8 @@ enum GaitType : uint8_t
     WALK,
     SWIM,
     JUMP,
-    SINK
+    SINK,
+    STAND
 };
 
 struct GaitDynamicsOptions
