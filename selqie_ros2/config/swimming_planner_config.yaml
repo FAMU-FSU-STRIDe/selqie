@@ -1,9 +1,0 @@
-/**:
-  ros__parameters:
-    solve_frequency: 3.0
-    max_linear_velocity: 0.25
-    max_angular_velocity: 0.1
-    approach_distance: 0.25
-    approach_angle: 0.1
-    goal_threshold: 0.15
- 

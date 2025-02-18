@@ -4,7 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
         - /TF1/Frames1
         - /Localization1/Robot Odometry1
         - /Localization1/Robot Odometry1/Shape1
@@ -32,7 +31,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -45,7 +44,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Alpha: 0.8999999761581421
       Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
@@ -586,9 +585,9 @@ Visualization Manager:
           Height Transformer: GridMapLayer
           History Length: 1
           Invert Rainbow: false
-          Max Color: 255; 255; 255
+          Max Color: 99; 69; 44
           Max Intensity: 10
-          Min Color: 0; 0; 0
+          Min Color: 153; 193; 241
           Min Intensity: 0
           Name: Terrain Map
           Show Grid Lines: false
@@ -599,7 +598,7 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /map
-          Use Rainbow: true
+          Use Rainbow: false
           Value: true
       Enabled: true
       Name: Mapping
@@ -785,7 +784,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.5779123306274414
+      Distance: 4.386322498321533
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -800,10 +799,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.39000076055526733
+      Pitch: 0.4550001621246338
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.681516170501709
+      Yaw: 2.60652756690979
     Saved: ~
 Window Geometry:
   Displays:
