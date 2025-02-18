@@ -178,8 +178,9 @@ class SELQIE(Node):
         self.ROSBAG_RECORD_TOPICS = ["odrive0/estimate","odrive1/estimate","odrive2/estimate","odrive3/estimate","odrive4/estimate", "odrive5/estimate", "odrive6/estimate", "odrive7/estimate",
                                      "odrive0/info", "odrive1/info", "odrive2/info", "odrive3/info", "odrive4/info", "odrive5/info", "odrive6/info", "odrive7/info",
                                      "legFL/command", "legRL/command", "legRR/command", "legFR/command",
-                                     "stereo/left/image_raw", "stereo/right/image_raw",
-                                     "imu/data", "lights/pwm", "bar100/depth", "bar100/temperature"]
+                                     "stereo/left/image_raw", "stereo/right/image_raw", "lights/pwm",
+                                     "imu/data", "bar100/depth", "bar100/temperature",
+                                     "gait", "cmd_vel/raw", "goal_pose"]
         self.ROSBAG_SAVE_FOLDER = '/home/selqie/rosbags'
         self._rosbag_process = None
 

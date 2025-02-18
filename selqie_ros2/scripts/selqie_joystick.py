@@ -9,13 +9,12 @@ from robot_msgs.msg import ODriveConfig
 from selqie_ros2.selqie import SELQIE
 
 STANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
-LANDING_LEG_POSITION = [0.0, 0.0, -0.18914]
 
 STANDING_GAINS = [50.0, 0.025, 0.05]
 WALKING_GAINS = [50.0, 0.025, 0.05]
 JUMPING_GAINS = [150.0, 0.015, 0.03]
 SWIMMING_GAINS = [150.0, 0.015, 0.03]
-LANDING_GAINS = [10.0, 0.05, 0.1]
+SINKING_GAINS = [10.0, 0.05, 0.1]
 
 class SELQIEJoystick():
     def __init__(self):
@@ -37,48 +36,32 @@ class SELQIEJoystick():
             pass
         elif msg.buttons[0] == 1 and self.last_msg.buttons[0] == 0:
             # 1 : Walk
-            for m in range(self._selqie.NUM_MOTORS):
-                self._selqie.set_motor_gains(m, *WALKING_GAINS)
             self._selqie.set_control_gait('walk')
             self._selqie.get_logger().info('Walking...')
         elif msg.buttons[1] == 1 and self.last_msg.buttons[1] == 0:
             # 2 : Jump
-            for m in range(self._selqie.NUM_MOTORS):
-                self._selqie.set_motor_gains(m, *JUMPING_GAINS)
             self._selqie.set_control_gait('jump')
             self._selqie.get_logger().info('Jumping...')
         elif msg.buttons[2] == 1 and self.last_msg.buttons[2] == 0:
             # 3 : Swim
-            for m in range(self._selqie.NUM_MOTORS):
-                self._selqie.set_motor_gains(m, *SWIMMING_GAINS)
-            self._selqie.set_control_gait('swim')
             self._selqie.get_logger().info('Swimming...')
         elif msg.buttons[3] == 1 and self.last_msg.buttons[3] == 0:
-            # 4 : Crawl
-            for m in range(self._selqie.NUM_MOTORS):
-                self._selqie.set_motor_gains(m, *WALKING_GAINS)
-            self._selqie.set_control_gait('crawl')
-            self._selqie.get_logger().info('Crawling...')
+            # 4 : Sink
+            self._selqie.set_control_gait('sink')
+            self._selqie.get_logger().info('Sinking...')
         elif msg.buttons[4] == 1 and self.last_msg.buttons[4] == 0:
-            # LB : Stand
-            for m in range(self._selqie.NUM_MOTORS):
-                self._selqie.set_motor_gains(m, *STANDING_GAINS)
-            for l in range(self._selqie.NUM_LEGS):
-                self._selqie.set_leg_position_default(l)
-            self._selqie.get_logger().info('Standing...')
-        elif msg.buttons[5] == 1 and self.last_msg.buttons[5] == 0:
-            # RB : Land
-            for m in range(self._selqie.NUM_MOTORS):
-                self._selqie.set_motor_gains(m, *LANDING_GAINS)
-            for l in range(self._selqie.NUM_LEGS):
-                self._selqie.set_leg_position_default(l)
-            self._selqie.get_logger().info('Landing...')
-        elif msg.buttons[6] == 1 and self.last_msg.buttons[6] == 0:
-            # LT
+            # LB : Zero
             for m in range(self._selqie.NUM_MOTORS):
                 self._selqie.set_motor_gains(m, *STANDING_GAINS)
                 self._selqie.set_motor_position(m, 0.0)
             self._selqie.get_logger().info('Zeroed ODrives')
+        elif msg.buttons[5] == 1 and self.last_msg.buttons[5] == 0:
+            # RB : Stand
+            self._selqie.set_control_gait('stand')
+            self._selqie.get_logger().info('Standing...')
+        elif msg.buttons[6] == 1 and self.last_msg.buttons[6] == 0:
+            # LT
+            pass
         elif msg.buttons[7] == 1 and self.last_msg.buttons[7] == 0:
             # RT
             pass
@@ -96,14 +79,17 @@ class SELQIEJoystick():
                 self._selqie.set_motor_state(m, ODriveConfig.AXIS_STATE_IDLE)
             self._selqie.get_logger().info('Idled ODrives')
         elif msg.axes[4] >= 0.5 and self.last_msg.axes[4] < 0.5:
-            # Cross left
-            pass
+            # Cross left : Reset Map
+            self._selqie.send_mapping_reset()
+            self._selqie.get_logger().info('Reset Map')
         elif msg.axes[4] <= -0.5 and self.last_msg.axes[4] > -0.5:
-            # Cross right
-            pass
+            # Cross right : Calibrate IMU
+            self._selqie.send_localization_calibrate_imu()
+            self._selqie.get_logger().info('Calibrating IMU')
         elif msg.axes[5] >= 0.5 and self.last_msg.axes[5] < 0.5:
-            # Cross up
-            pass
+            # Cross up : Reset Localization
+            self._selqie.set_localization_pose_zero()
+            self._selqie.get_logger().info('Reset Localization')
         elif msg.axes[5] <= -0.5 and self.last_msg.axes[5] > -0.5:
             # Cross down
             pass
