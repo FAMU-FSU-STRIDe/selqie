@@ -68,6 +68,8 @@ std::string gait_to_string(const GaitType gait)
         return "jump";
     case SINK:
         return "sink";
+    case STAND:
+        return "stand";
     default:
         return "none";
     }
@@ -122,7 +124,7 @@ private:
 
     bool _publish_all = false;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _path_pub;
-    rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr _pose_array_pub;
+    std::vector<rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr> _pose_array_pubs;
 
     geometry_msgs::msg::PoseStamped::SharedPtr _goal_msg;
     nav_msgs::msg::Odometry::SharedPtr _odom_msg;
@@ -180,14 +182,27 @@ private:
 
     void _publish_states(const sbmpo::SearchResults &results)
     {
-        geometry_msgs::msg::PoseArray pose_array_msg;
-        pose_array_msg.header.stamp = this->now();
-        pose_array_msg.header.frame_id = "map";
-        for (const auto &node : results.nodes)
+        std::vector<geometry_msgs::msg::PoseArray> pose_array_msgs;
+        for (uint8_t g = GaitType::WALK; g <= GaitType::SINK; g++)
         {
-            pose_array_msg.poses.push_back(state_to_pose(node->state));
+            geometry_msgs::msg::PoseArray msg;
+            msg.header.stamp = this->now();
+            msg.header.frame_id = "map";
+            for (const auto &node : results.nodes)
+            {
+                if (node->state[GAIT] != g)
+                    continue;
+
+                msg.poses.push_back(state_to_pose(node->state));
+            }
+            pose_array_msgs.push_back(msg);
         }
-        _pose_array_pub->publish(pose_array_msg);
+
+        assert(pose_array_msgs.size() == _pose_array_pubs.size());
+        for (std::size_t i = 0; i < _pose_array_pubs.size(); i++)
+        {
+            _pose_array_pubs[i]->publish(pose_array_msgs[i]);
+        }
     }
 
 public:
@@ -280,7 +295,13 @@ public:
         _path_pub = this->create_publisher<nav_msgs::msg::Path>("gait_planner/path", 10);
 
         if (_publish_all)
-            _pose_array_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("gait_planner/states", 10);
+        {
+            for (uint8_t g = GaitType::WALK; g <= GaitType::SINK; g++)
+            {
+                _pose_array_pubs.push_back(this->create_publisher<geometry_msgs::msg::PoseArray>(
+                    "gait_planner/states/" + gait_to_string(static_cast<GaitType>(g)), 10));
+            }
+        }
 
         _solve_timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / solve_frequency)),
                                                std::bind(&GaitPlanningNode::solve, this));

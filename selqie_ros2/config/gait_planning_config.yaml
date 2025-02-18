@@ -14,7 +14,7 @@
     jump_height: 0.5
     sink_cost_of_transport: 0.1
     sinking_speed: 0.25
-    goal_threshold: 0.5
+    goal_threshold: 2.0
     max_iterations: 1000000
     max_generations: 1000
     time_limit_us: 5000000

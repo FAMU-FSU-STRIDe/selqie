@@ -108,7 +108,7 @@ public:
             const float elevation = _map.at("elevation", index);
             return state[Z] > elevation;
         }
-        return false;
+        return true;
     }
 
     virtual std::vector<Control> getControls(const State &state) = 0;
@@ -179,7 +179,7 @@ public:
             const float elevation = _map.at("elevation", index);
             return state[Z] > elevation + _options.robot_height;
         }
-        return false;
+        return true;
     }
 
     std::vector<Control> getControls(const State &) override

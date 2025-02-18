@@ -191,7 +191,14 @@ public:
         _sbmpo_params.grid_resolution = std::vector<float>(grid_resolution.begin(), grid_resolution.end());
 
         _sbmpo_params.fixed_samples = {
-            {-0.25, +0.00}, {+0.25, +0.00}, {-0.10, -0.10}, {-0.10, +0.10}, {+0.10, -0.10}, {+0.10, +0.10}, {+0.00, -0.30}, {+0.00, +0.30}};
+            {-0.25, +0.00}, {+0.25, +0.00},
+            {-0.15, -0.05}, {-0.15, +0.05}, 
+            {+0.15, -0.05}, {+0.15, +0.05}, 
+            {-0.10, -0.10}, {-0.10, +0.10}, 
+            {+0.10, -0.10}, {+0.10, +0.10},
+            {-0.05, -0.15}, {-0.05, +0.15}, 
+            {+0.05, -0.15}, {+0.05, +0.15}, 
+            {+0.00, -0.25}, {+0.00, +0.25}};
 
         _model = std::make_shared<WalkingPlannerModel>(_model_params);
         _sbmpo = std::make_unique<SBMPO>(_model);

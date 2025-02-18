@@ -34,6 +34,7 @@ def WalkNode(use_sim_time : str):
         executable='walk_node',
         name='walk_node',
         parameters=[WALK_CONFIG, {'use_sim_time': use_sim_time}],
+        # prefix=['xterm -e gdb -ex run --args']
     )
     
 def SwimNode(use_sim_time : str):

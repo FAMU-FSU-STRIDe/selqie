@@ -25,6 +25,7 @@ private:
     double _step_height;
     double _duty_factor;
     double _max_stance_length;
+    double _min_velocity;
 
     double _frequency;
 
@@ -113,7 +114,15 @@ private:
 
         const double vel_left = vel_x - 0.5 * _robot_width * omega_z;
         const double vel_right = vel_x + 0.5 * _robot_width * omega_z;
-        _frequency = std::max(std::abs(vel_left), std::abs(vel_right)) / _max_stance_length * _duty_factor;
+
+        const double vel = std::max(std::abs(vel_left), std::abs(vel_right));
+        if (vel < _min_velocity)
+        {
+            _make_default_stride();
+            return;
+        }
+
+        _frequency = vel / _max_stance_length * _duty_factor;
 
         double stance_length_left, stance_length_right;
         if (std::abs(vel_left) > std::abs(vel_right))
@@ -155,6 +164,9 @@ public:
 
         this->declare_parameter("max_stance_length", 0.15);
         this->get_parameter("max_stance_length", _max_stance_length);
+
+        this->declare_parameter("min_velocity", 0.05);
+        this->get_parameter("min_velocity", _min_velocity);
 
         RCLCPP_INFO(this->get_logger(), "Walk Node Initialized.");
     }

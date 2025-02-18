@@ -6,12 +6,10 @@ Panels:
       Expanded:
         - /Global Options1
         - /TF1/Frames1
-        - /TF1/Tree1
         - /Localization1/Robot Odometry1
         - /Localization1/Robot Odometry1/Shape1
         - /Local Planning1/Goal Pose1
         - /Local Planning1/Goal Pose1/Topic1
-        - /Gait Planning1/Goal Pose1
       Splitter Ratio: 0.6944444179534912
     Tree Height: 499
   - Class: rviz_common/Selection
@@ -48,7 +46,7 @@ Visualization Manager:
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 1
+    - Alpha: 0.8999999761581421
       Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
       Description File: ""
@@ -187,13 +185,13 @@ Visualization Manager:
         base_link:
           Value: true
         camera_left:
-          Value: true
+          Value: false
         camera_link:
           Value: true
         camera_right:
-          Value: true
+          Value: false
         imu_link:
-          Value: true
+          Value: false
         legFL_calfA:
           Value: false
         legFL_calfB:
@@ -240,7 +238,7 @@ Visualization Manager:
           Value: false
       Marker Scale: 0.5
       Name: TF
-      Show Arrows: true
+      Show Arrows: false
       Show Axes: true
       Show Names: true
       Tree:
@@ -655,16 +653,16 @@ Visualization Manager:
             Reliability Policy: Reliable
             Value: /gait_planner/path
           Value: true
-        - Alpha: 0.5
-          Arrow Length: 0.019999999552965164
+        - Alpha: 0.75
+          Arrow Length: 0.03999999910593033
           Axes Length: 0.30000001192092896
           Axes Radius: 0.009999999776482582
           Class: rviz_default_plugins/PoseArray
-          Color: 255; 25; 0
+          Color: 246; 97; 81
           Enabled: true
           Head Length: 0.07000000029802322
           Head Radius: 0.029999999329447746
-          Name: SBMPO Samples
+          Name: Walk Samples
           Shaft Length: 0.23000000417232513
           Shaft Radius: 0.009999999776482582
           Shape: Arrow (Flat)
@@ -674,7 +672,70 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /gait_planner/states
+            Value: /gait_planner/states/walk
+          Value: true
+        - Alpha: 0.75
+          Arrow Length: 0.05000000074505806
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
+          Class: rviz_default_plugins/PoseArray
+          Color: 249; 240; 107
+          Enabled: true
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
+          Name: Jump Samples
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
+          Shape: Arrow (Flat)
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /gait_planner/states/jump
+          Value: true
+        - Alpha: 0.75
+          Arrow Length: 0.03999999910593033
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
+          Class: rviz_default_plugins/PoseArray
+          Color: 51; 209; 122
+          Enabled: true
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
+          Name: Swim Samples
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
+          Shape: Arrow (Flat)
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /gait_planner/states/swim
+          Value: true
+        - Alpha: 0.75
+          Arrow Length: 0.05000000074505806
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
+          Class: rviz_default_plugins/PoseArray
+          Color: 192; 97; 203
+          Enabled: true
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
+          Name: Sink Samples
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
+          Shape: Arrow (Flat)
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /gait_planner/states/sink
           Value: true
       Enabled: true
       Name: Gait Planning
@@ -724,7 +785,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.358097791671753
+      Distance: 2.5779123306274414
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -739,10 +800,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.22500072419643402
+      Pitch: 0.39000076055526733
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.0015313625335693
+      Yaw: 3.681516170501709
     Saved: ~
 Window Geometry:
   Displays:
