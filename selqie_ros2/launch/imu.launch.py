@@ -8,6 +8,7 @@ CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config'
 
 MICROSTRAIN_LAUNCH_FILE = os.path.join(get_package_share_directory('microstrain_inertial_driver'), 'launch', 'microstrain_launch.py')
 IMU_CONFIG_FILE = os.path.join(CONFIG_FOLDER, 'imu_config.yaml')
+IMU_CALIBRATION_FILE = os.path.join(CONFIG_FOLDER, 'imu_calibration.txt')
 
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -22,7 +23,20 @@ def MicroStrainIMULaunch():
         }.items()
     )
 
+def IMUCalibrationNode():
+    return Node(
+        package='selqie_localization',
+        executable='imu_calibration_node',
+        name='imu_calibration_node',
+        output='screen',
+        parameters=[{
+            'sample_size': 500,
+            'calibration_file': IMU_CALIBRATION_FILE
+        }],
+    )
+
 def generate_launch_description():
     return LaunchDescription([
         MicroStrainIMULaunch(),
+        IMUCalibrationNode()
     ])

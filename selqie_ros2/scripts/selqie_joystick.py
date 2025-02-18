@@ -20,6 +20,7 @@ class SELQIEJoystick():
     def __init__(self):
         self._selqie = SELQIE()
 
+        self._raw_cmd = True
         self.last_msg = None
         self.joy_sub = self._selqie.create_subscription(
             Joy, 'joy', self._joy_callback, 10)
@@ -38,13 +39,17 @@ class SELQIEJoystick():
             # 1 : Walk
             self._selqie.set_control_gait('walk')
             self._selqie.get_logger().info('Walking...')
+            self._raw_cmd = True
         elif msg.buttons[1] == 1 and self.last_msg.buttons[1] == 0:
             # 2 : Jump
             self._selqie.set_control_gait('jump')
             self._selqie.get_logger().info('Jumping...')
+            self._raw_cmd = False
         elif msg.buttons[2] == 1 and self.last_msg.buttons[2] == 0:
             # 3 : Swim
+            self._selqie.set_control_gait('swim')
             self._selqie.get_logger().info('Swimming...')
+            self._raw_cmd = True
         elif msg.buttons[3] == 1 and self.last_msg.buttons[3] == 0:
             # 4 : Sink
             self._selqie.set_control_gait('sink')
@@ -112,7 +117,10 @@ class SELQIEJoystick():
         cmd_wz = n_wz / (abs(n_vx) + 1) * ALPHA * max(abs(n_vx), abs(n_wz))
         cmd_vz = ra_x * ALPHA
         
-        self._selqie.set_control_command_velocity(cmd_vx, cmd_wz, cmd_vz)
+        if (self._raw_cmd):
+            self._selqie.set_control_command_velocity_raw(cmd_vx, cmd_vz, cmd_wz)
+        else:
+            self._selqie.set_control_command_velocity(cmd_vx, cmd_vz, cmd_wz)
             
         self.last_msg = msg
 
