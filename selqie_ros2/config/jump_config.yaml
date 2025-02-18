@@ -2,7 +2,7 @@
   ros__parameters:
     leg_names: ['FL', 'RL', 'RR', 'FR']
     default_height: 0.175
-    covariances: [0.01, 0.1, 0.05, 0.1, 0.1, 0.1]
+    covariances: [0.01, 0.01, 0.05, 0.1, 0.1, 0.1]
     leg_command_rate: 50.0
     z_crouch: -0.105
     z_jump: -0.195

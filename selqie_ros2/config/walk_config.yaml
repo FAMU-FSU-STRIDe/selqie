@@ -2,7 +2,7 @@
   ros__parameters:
     leg_names: ['FL', 'RL', 'RR', 'FR']
     default_height: 0.175
-    covariances: [0.01, 0.1, 0.1, 0.1, 0.1, 0.01]
+    covariances: [0.01, 0.01, 0.01, 0.1, 0.1, 0.1]
     leg_command_rate: 250.0
     robot_width: 0.25
     center_shift: -0.5
@@ -10,3 +10,5 @@
     duty_factor: 0.50
     max_stance_length: 0.15
     min_velocity: 0.025
+    vel_x_correction_factor: 0.4
+    omega_z_correction_factor: 1.0

@@ -27,6 +27,9 @@ private:
     double _max_stance_length;
     double _min_velocity;
 
+    double _vel_x_correction_factor;
+    double _omega_z_correction_factor;
+
     double _frequency;
 
     void _make_walk_stride(const std::vector<double> stance_lengths, const std::vector<double> &offsets)
@@ -88,8 +91,8 @@ private:
         for (size_t i = 0; i < _timing.size(); i++)
         {
             geometry_msgs::msg::TwistWithCovarianceStamped odometry;
-            odometry.twist.twist.linear.x = vel_x;
-            odometry.twist.twist.angular.z = omega_z;
+            odometry.twist.twist.linear.x = vel_x * _vel_x_correction_factor;
+            odometry.twist.twist.angular.z = omega_z * _omega_z_correction_factor;
             _gait_odometry.push_back(odometry);
         }
     }
@@ -167,6 +170,12 @@ public:
 
         this->declare_parameter("min_velocity", 0.05);
         this->get_parameter("min_velocity", _min_velocity);
+
+        this->declare_parameter("vel_x_correction_factor", 1.0);
+        this->get_parameter("vel_x_correction_factor", _vel_x_correction_factor);
+
+        this->declare_parameter("omega_z_correction_factor", 1.0);
+        this->get_parameter("omega_z_correction_factor", _omega_z_correction_factor);
 
         RCLCPP_INFO(this->get_logger(), "Walk Node Initialized.");
     }
