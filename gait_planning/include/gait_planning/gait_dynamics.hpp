@@ -148,11 +148,10 @@ public:
     {
         const grid_map::Position position(state[X], state[Y]);
         grid_map::Index index;
-        if (_map.getIndex(position, index))
+        if (_map.getIndex(position, index) && _map.exists("rock"))
         {
             const bool rock = _map.at("rock", index) == 1.0;
-            const bool wall = _map.at("wall", index) == 1.0;
-            return !rock && !wall;
+            return !rock;
         }
         return true;
     }

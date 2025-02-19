@@ -25,6 +25,7 @@ private:
     double _robot_height;
     bool _on_ground = false;
     double _ground_level = 0.0;
+    double _robot_x = 0.0, _robot_y = 0.0;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_sub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odom_sub;
 
@@ -54,10 +55,17 @@ private:
 
     void _odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
+        _robot_x = msg->pose.pose.position.x;
+        _robot_y = msg->pose.pose.position.y;
         if (_on_ground)
         {
             _ground_level = msg->pose.pose.position.z - _robot_height;
         }
+    }
+
+    void _update_center()
+    {
+        _grid_map.move(grid_map::Position(_robot_x, _robot_y));
     }
 
     void _update_ground()
@@ -67,7 +75,12 @@ private:
             for (Eigen::Index j = 0; j < _grid_map.getSize().y(); j++)
             {
                 grid_map::Index index(i, j);
-                if (_grid_map.at("ground", index) == 1.0)
+                auto &ground = _grid_map.at("ground", index);
+                if (std::isnan(ground))
+                {
+                    ground = 1.0;
+                }
+                if (ground == 1.0)
                 {
                     _grid_map.at("elevation", index) = _ground_level;
                 }
@@ -134,6 +147,7 @@ private:
 
     void _update_map()
     {
+        _update_center();
         _update_ground();
         _publish_map();
     }
