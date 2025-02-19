@@ -1,0 +1,19 @@
+rock_pointcloud_rgb_filter_node:
+  ros__parameters:
+    rgb: [145, 110, 100]
+    rgb_deviation: [5, 5, 5]
+
+wall_pointcloud_rgb_filter_node:
+  ros__parameters:
+    rgb: [115, 165, 170]
+    rgb_deviation: [5, 5, 5]
+
+terrain_mapping_node:
+  ros__parameters:
+    map_frame_id: "map"
+    map_resolution: 0.1
+    map_length: 5.0
+    frequency: 3.0
+    robot_height: 0.18
+    point_thickness: 1
+    pointcloud_layers: ["rock", "wall"]

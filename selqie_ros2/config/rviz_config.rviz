@@ -7,7 +7,6 @@ Panels:
         - /TF1/Frames1
         - /Localization1/Robot Odometry1
         - /Localization1/Robot Odometry1/Shape1
-        - /Local Planning1/Goal Pose1
         - /Local Planning1/Goal Pose1/Topic1
       Splitter Ratio: 0.6944444179534912
     Tree Height: 499
@@ -446,7 +445,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /stereo/points/rock
+            Value: /points/rock
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -480,7 +479,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /stereo/points/wall
+            Value: /points/wall
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -784,7 +783,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 4.386322498321533
+      Distance: 4.212875843048096
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -799,10 +798,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4550001621246338
+      Pitch: 0.5400003790855408
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.60652756690979
+      Yaw: 2.501530647277832
     Saved: ~
 Window Geometry:
   Displays:
