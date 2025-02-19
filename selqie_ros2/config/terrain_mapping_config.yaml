@@ -16,4 +16,5 @@ terrain_mapping_node:
     frequency: 3.0
     robot_height: 0.18
     point_thickness: 1
+    cast_radius: 0.5
     pointcloud_layers: ["rock"]
