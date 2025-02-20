@@ -180,7 +180,9 @@ class SELQIE(Node):
                                      "legFL/command", "legRL/command", "legRR/command", "legFR/command",
                                      "stereo/left/image_raw", "stereo/right/image_raw", "lights/pwm",
                                      "imu/data", "bar100/depth", "bar100/temperature",
-                                     "gait", "cmd_vel/raw", "goal_pose"]
+                                     "gait", "cmd_vel/raw", "cmd_vel", "goal_pose", "goal_pose/local",
+                                     "gait/transition", "gait/vel_estimate", "gait_planner/path",
+                                     "odom", "set_pose", "walk_planner/path"]
         self.ROSBAG_SAVE_FOLDER = '/home/selqie/rosbags'
         self._rosbag_process = None
 

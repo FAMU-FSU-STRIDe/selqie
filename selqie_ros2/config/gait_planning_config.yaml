@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    solve_frequency: 1.0
+    solve_frequency: 0.2
     publish_all: true
     horizon_time: 4.0
     integration_steps: 10

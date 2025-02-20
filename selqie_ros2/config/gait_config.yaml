@@ -14,7 +14,7 @@ walk_node:
     duty_factor: 0.50
     max_stance_length: 0.15
     min_velocity: 0.025
-    vel_x_correction_factor: 0.4
+    vel_x_correction_factor: 0.75
     omega_z_correction_factor: 1.0
 
 swim_node:
