@@ -6,8 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /TF1/Frames1
-        - /Localization1/Robot Odometry1
         - /Localization1/Robot Odometry1/Shape1
+        - /Local Planning1
+        - /Local Planning1/SBMPO Samples1
         - /Local Planning1/Goal Pose1/Topic1
         - /Mapping1/Terrain Map1
       Splitter Ratio: 0.6786632537841797
@@ -535,7 +536,7 @@ Visualization Manager:
           Axes Length: 0.30000001192092896
           Axes Radius: 0.009999999776482582
           Class: rviz_default_plugins/PoseArray
-          Color: 26; 95; 180
+          Color: 97; 53; 131
           Enabled: true
           Head Length: 0.07000000029802322
           Head Radius: 0.029999999329447746
@@ -785,7 +786,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.711638927459717
+      Distance: 4.515512943267822
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -800,10 +801,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5300005078315735
+      Pitch: 0.6750004887580872
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.4265291690826416
+      Yaw: 2.301525592803955
     Saved: ~
 Window Geometry:
   Displays:

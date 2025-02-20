@@ -23,6 +23,7 @@ install(PROGRAMS
   scripts/tests/plot_imu_data.py
   scripts/tests/test_imu.py
   scripts/tests/test_leg_control.py
+  scripts/tests/odom_tf_publisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
