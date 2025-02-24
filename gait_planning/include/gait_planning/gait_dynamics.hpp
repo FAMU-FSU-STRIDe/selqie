@@ -146,6 +146,12 @@ public:
 
     bool isValid(const State &state)
     {
+        // Force jump over rock
+        // if (std::abs(state[Y]) > 0.5)
+        // {
+        //     return false;
+        // }
+
         const grid_map::Position position(state[X], state[Y]);
         grid_map::Index index;
         if (_map.getIndex(position, index) && _map.exists("rock"))
@@ -153,6 +159,7 @@ public:
             const bool rock = _map.at("rock", index) == 1.0;
             return !rock;
         }
+
         return true;
     }
 };
@@ -171,6 +178,12 @@ public:
 
     bool isValid(const State &state)
     {
+        // Force jump over rock
+        if (std::abs(state[Y]) > 0.5)
+        {
+            return false;
+        }
+
         const grid_map::Position position(state[X], state[Y]);
         grid_map::Index index;
         if (_map.getIndex(position, index))
