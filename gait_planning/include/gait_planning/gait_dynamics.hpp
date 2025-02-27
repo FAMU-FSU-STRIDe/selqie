@@ -223,7 +223,8 @@ public:
     {
         State next_state = state;
         next_state[TIME] += _options.horizon_time + _options.jumping_loadup_time;
-        next_state[X] += control[Vx] * _options.jump_height;
+        next_state[X] += control[Vx] * std::cos(state[Q]) * _options.jump_height;
+        next_state[Y] += control[Vx] * std::sin(state[Q]) * _options.jump_height;
         next_state[Z] += control[Vz] * _options.jump_height;
         next_state[GAIT] = control[NEW_GAIT];
         return next_state;

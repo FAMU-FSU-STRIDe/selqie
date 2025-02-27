@@ -138,6 +138,8 @@ public:
         const double dx = goal_x - state_x;
         const double dz = goal_z - state_z;
         const double dpitch = wrap_angle(goal_pitch - state_pitch);
+        // Need to fix this because the state and goal are in the map frame, but the
+        // velocities are in the base_link frame
 
         const double distance = std::sqrt(dx * dx + dz * dz);
         const double angle = std::abs(dpitch);
