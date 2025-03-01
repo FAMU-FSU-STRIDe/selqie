@@ -1,9 +1,9 @@
 /**:
   ros__parameters:
-    solve_frequency: 1.0
+    solve_frequency: 0.2
     publish_all: true
     horizon_time: 4.0
-    integration_steps: 5
+    integration_steps: 10
     robot_height: 0.25
     walk_cost_of_transport: 1.0
     walk_cost_of_reverse: 2.0
@@ -14,7 +14,7 @@
     jump_height: 0.5
     sink_cost_of_transport: 0.1
     sinking_speed: 0.25
-    goal_threshold: 0.5
+    goal_threshold: 0.75
     max_iterations: 1000000
     max_generations: 1000
     time_limit_us: 5000000

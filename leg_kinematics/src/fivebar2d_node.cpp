@@ -25,11 +25,11 @@ public:
         const float thetaA = _YA * joint_angles(0);
         const float thetaB = _YA * joint_angles(1);
 
-        const float alpha = 0.5f * (M_PI - thetaA - thetaB);
+        const float alpha = 0.5f * (+M_PI - thetaA - thetaB);
         const float gamma = std::asin(_L1 * std::sin(alpha) / _L2);
         const float phi = M_PI - alpha - gamma;
 
-        const float theta = -(thetaA + alpha);
+        const float theta = 0.5f * (-M_PI - thetaA + thetaB);
         const float R = _L2 * std::sin(phi) / std::sin(alpha);
 
         const float X = R * std::cos(theta);
@@ -65,41 +65,61 @@ public:
 
     Matrix3f getJacobian(const Vector3f &joint_angles) const override
     {
-        using namespace std;
+        // Evaluate forward kinematics
+        const float thetaA = _YA * joint_angles(0);
+        const float thetaB = _YA * joint_angles(1);
 
-        const float A = joint_angles(0);
-        const float B = joint_angles(1);
+        const float alpha = 0.5f * (+M_PI - thetaA - thetaB);
+        const float sin_alpha = std::sin(alpha);
+        const float cos_alpha = std::cos(alpha);
 
-        const float Y_2 = _YA / 2.0;
-        const float Y_2A = Y_2 * A;
-        const float Y_2B = Y_2 * B;
-        const float s1 = sin(Y_2A + Y_2B);
-        const float c1 = cos(Y_2A + Y_2B);
-        const float s2 = sin(Y_2A - Y_2B);
-        const float c2 = cos(Y_2A - Y_2B);
+        const float gamma = std::asin(_L1 * sin_alpha / _L2);
 
-        const float as1 = Y_2A + Y_2B - asin((_L1 * c1) / _L2);
+        const float phi = M_PI - alpha - gamma;
+        const float sin_phi = std::sin(phi);
+        const float cos_phi = std::cos(phi);
 
-        const float t1 = sin(as1) * (Y_2 + (_L1 * Y_2 * s1) / (_L2 * sqrt(-(_L1 * _L1 * c1 * c1 - _L2 * _L2) / (_L2 * _L2))));
+        const float theta = 0.5f * (-M_PI - thetaA + thetaB);
+        const float sin_theta = std::sin(theta);
+        const float cos_theta = std::cos(theta);
 
-        const float t2 = _L2 * t1 / c1;
-        const float t3 = _L2 * Y_2 * cos(as1) / c1;
-        const float t4 = t3 * s1 / c1;
+        const float R = _L2 * sin_phi / sin_alpha;
 
-        const float dXdA = t2 * s2 - t3 * c2 - t4 * s2;
-        const float dXdB = t2 * s2 + t3 * c2 - t4 * s2;
-        const float dXdC = 0.0;
-        const float dYdA = 0.0;
-        const float dYdB = 0.0;
-        const float dYdC = 1.0;
-        const float dZdA = t2 * c2 + t3 * s2 - t4 * c2;
-        const float dZdB = t2 * c2 - t3 * s2 - t4 * c2;
-        const float dZdC = 0.0;
+        // Get partial derivatives
+        const float dXdR = cos_theta;
+        const float dXdT = -R * sin_theta;
+        const float dZdR = sin_theta;
+        const float dZdT = R * cos_theta;
+
+        const float dRdA = -_L2 * sin_phi * cos_alpha / (sin_alpha * sin_alpha);
+        const float dRdP = _L2 * cos_phi / sin_alpha;
+
+        const float dPdA = -1;
+        const float dPdG = -1;
+
+        const float L1L2 = _L1 / _L2;
+        const float dGdA = L1L2 * cos_alpha / std::sqrt(1.0f - L1L2 * L1L2 * sin_alpha * sin_alpha);
+
+        const float dAd0 = -0.5f * _YA;
+        const float dAd1 = -0.5f * _YA;
+        const float dTd0 = -0.5f * _YA;
+        const float dTd1 = +0.5f * _YA;
+
+        // Evaluate jacobian
+        const float dXd0 = dXdR * (dRdA * dAd0 + dRdP * (dPdA * dAd0 + dPdG * dGdA * dAd0)) + dXdT * dTd0;
+        const float dXd1 = dXdR * (dRdA * dAd1 + dRdP * (dPdA * dAd1 + dPdG * dGdA * dAd1)) + dXdT * dTd1;
+        const float dXd2 = 0.0;
+        const float dYd0 = 0.0;
+        const float dYd1 = 0.0;
+        const float dYd2 = 1.0;
+        const float dZd0 = dZdR * (dRdA * dAd0 + dRdP * (dPdA * dAd0 + dPdG * dGdA * dAd0)) + dZdT * dTd0;
+        const float dZd1 = dZdR * (dRdA * dAd1 + dRdP * (dPdA * dAd1 + dPdG * dGdA * dAd1)) + dZdT * dTd1;
+        const float dZd2 = 0.0;
 
         Matrix3f jacobian;
-        jacobian << dXdA, dXdB, dXdC,
-            dYdA, dYdB, dYdC,
-            dZdA, dZdB, dZdC;
+        jacobian << dXd0, dXd1, dXd2,
+            dYd0, dYd1, dYd2,
+            dZd0, dZd1, dZd2;
 
         return jacobian;
     }

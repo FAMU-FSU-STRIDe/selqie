@@ -12,23 +12,19 @@ private:
 public:
     PointCloudRGBFilterNode() : Node("pointcloud_rgb_filter_node")
     {
-        this->declare_parameter("r", 0);
-        this->get_parameter("r", _r);
+        this->declare_parameter("rgb", std::vector<int>{0, 0, 0});
+        const auto rgb = this->get_parameter("rgb").as_integer_array();
+        assert(rgb.size() == 3);
+        _r = rgb[0];
+        _g = rgb[1];
+        _b = rgb[2];
 
-        this->declare_parameter("g", 0);
-        this->get_parameter("g", _g);
-
-        this->declare_parameter("b", 0);
-        this->get_parameter("b", _b);
-
-        this->declare_parameter("r_deviation", 0);
-        this->get_parameter("r_deviation", _rdev);
-
-        this->declare_parameter("g_deviation", 0);
-        this->get_parameter("g_deviation", _gdev);
-
-        this->declare_parameter("b_deviation", 0);
-        this->get_parameter("b_deviation", _bdev);
+        this->declare_parameter("rgb_deviation", std::vector<int>{0, 0, 0});
+        const auto rgb_deviation = this->get_parameter("rgb_deviation").as_integer_array();
+        assert(rgb_deviation.size() == 3);
+        _rdev = rgb_deviation[0];
+        _gdev = rgb_deviation[1];
+        _bdev = rgb_deviation[2];
 
         _sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "points/in", 10, std::bind(&PointCloudRGBFilterNode::callback, this, std::placeholders::_1));

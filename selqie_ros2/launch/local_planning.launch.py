@@ -14,17 +14,14 @@ import os
 from ament_index_python.packages import get_package_share_directory
 PACKAGE_NAME = 'selqie_ros2'
 CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
-
-WALKING_PLANNER_CONFIG = os.path.join(CONFIG_FOLDER, 'walking_planner_config.yaml')
-SWIMMING_PLANNER_CONFIG = os.path.join(CONFIG_FOLDER, 'swimming_planner_config.yaml')
-JUMPING_PLANNER_CONFIG = os.path.join(CONFIG_FOLDER, 'jumping_planner_config.yaml')
+LOCAL_PLANNING_CONFIG = os.path.join(CONFIG_FOLDER, 'local_planning_config.yaml')
     
 def WalkingPlannerNode(use_sim_time : str):
     return Node(
         package='local_planning',
         executable='walking_planner_node',
         name='walking_planner_node',
-        parameters=[WALKING_PLANNER_CONFIG, {'use_sim_time': use_sim_time}]
+        parameters=[LOCAL_PLANNING_CONFIG, {'use_sim_time': use_sim_time}]
     )
 
 def SwimmingPlannerNode(use_sim_time : str):
@@ -32,7 +29,7 @@ def SwimmingPlannerNode(use_sim_time : str):
         package='local_planning',
         executable='swimming_planner_node',
         name='swimming_planner_node',
-        parameters=[SWIMMING_PLANNER_CONFIG, {'use_sim_time': use_sim_time}]
+        parameters=[LOCAL_PLANNING_CONFIG, {'use_sim_time': use_sim_time}]
     )
     
 def JumpingPlannerNode(use_sim_time : str):
@@ -40,7 +37,7 @@ def JumpingPlannerNode(use_sim_time : str):
         package='local_planning',
         executable='jumping_planner_node',
         name='jumping_planner_node',
-        parameters=[JUMPING_PLANNER_CONFIG, {'use_sim_time': use_sim_time}]
+        parameters=[LOCAL_PLANNING_CONFIG, {'use_sim_time': use_sim_time}]
     )
 
 def generate_launch_description():

@@ -29,23 +29,28 @@ class IMUPlotter(Node):
         # Plotting setup
         plt.ion()
         self.fig, self.ax = plt.subplots()
-        self.line_x, = self.ax.plot([], [], label='Accel X (map)')
-        self.line_y, = self.ax.plot([], [], label='Accel Y (map)')
-        self.line_z, = self.ax.plot([], [], label='Accel Z (map)')
+        self.line_x, = self.ax.plot([], [], label='X')
+        self.line_y, = self.ax.plot([], [], label='Y')
+        self.line_z, = self.ax.plot([], [], label='Z')
         
-        self.ax.legend()
-        self.ax.set_xlabel('Time (s)')
-        self.ax.set_ylabel('Acceleration (m/s^2)')
-        self.ax.set_title('Transformed IMU Acceleration Data Over Time')
+        self.ax.legend(prop={'family': 'serif', 'size': 18})  # Set legend font size and family
+        self.ax.set_xlabel('Time [s]', fontsize=24, fontdict={'family': 'serif'})
+        self.ax.set_ylabel('Acceleration [m/s²]', fontsize=24, fontdict={'family': 'serif'})
+        # self.ax.set_title('IMU Acceleration Data', fontsize=28, fontdict={'family': 'serif'})
+        self.ax.tick_params(axis='both', which='major', labelsize=18)
+        self.ax.grid()
         
         # Start time for relative time calculation
-        self.start_time = self.get_clock().now().nanoseconds / 1E9
+        self.start_time = None
         
         # Call the plotting function periodically
         self.timer = self.create_timer(0.1, self.update_plot)
         self.print_timer = self.create_timer(5.0, self.print_averages)  # Print averages every 5 seconds
 
     def listener_callback(self, msg : Imu):
+        if self.start_time is None:
+            self.start_time = self.get_clock().now().nanoseconds / 1E9
+        
         current_time = self.get_clock().now().nanoseconds / 1E9 - self.start_time
         
         # Extract the IMU orientation quaternion
@@ -71,21 +76,25 @@ class IMUPlotter(Node):
         self.time.append(current_time)
         
     def update_plot(self):
+        x_data = self.accel_x_map - np.mean(self.accel_x_map)
+        y_data = self.accel_y_map - np.mean(self.accel_y_map)
+        z_data = self.accel_z_map - np.mean(self.accel_z_map)
+        
         # Update plot data
-        self.line_x.set_data(self.time, self.accel_x_map)
-        self.line_y.set_data(self.time, self.accel_y_map)
-        self.line_z.set_data(self.time, self.accel_z_map)
+        self.line_x.set_data(self.time, x_data)
+        self.line_y.set_data(self.time, y_data)
+        self.line_z.set_data(self.time, z_data)
         
         # Update plot limits
         if self.time:
             self.ax.set_xlim(min(self.time), max(self.time))
             self.ax.set_ylim(
-                min(min(self.accel_x_map, default=0), 
-                    min(self.accel_y_map, default=0), 
-                    min(self.accel_z_map, default=0)) - 1,
-                max(max(self.accel_x_map, default=0), 
-                    max(self.accel_y_map, default=0), 
-                    max(self.accel_z_map, default=0)) + 1
+                min(min(x_data, default=0), 
+                    min(y_data, default=0), 
+                    min(z_data, default=0)) - 0.025,
+                max(max(x_data, default=0), 
+                    max(y_data, default=0), 
+                    max(z_data, default=0)) + 0.025
             )
         
         # Refresh plot
@@ -98,8 +107,13 @@ class IMUPlotter(Node):
             avg_x = np.mean(self.accel_x_map)
             avg_y = np.mean(self.accel_y_map)
             avg_z = np.mean(self.accel_z_map)
+            var_x = np.var(self.accel_x_map)
+            var_y = np.var(self.accel_y_map)
+            var_z = np.var(self.accel_z_map)    
             self.get_logger().info(f"Average Accelerations (map frame): "
                                    f"X: {avg_x}, Y: {avg_y}, Z: {avg_z}")
+            self.get_logger().info(f"Variance of Accelerations (map frame): "
+                                   f"X: {var_x}, Y: {var_y}, Z: {var_z}")
 
 def main(args=None):
     rclpy.init(args=args)
