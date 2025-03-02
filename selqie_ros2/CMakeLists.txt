@@ -24,6 +24,8 @@ install(PROGRAMS
   scripts/tests/test_imu.py
   scripts/tests/test_leg_control.py
   scripts/tests/odom_tf_publisher.py
+  scripts/tests/walk_stride_tracking.py
+  scripts/tests/walk_stride_sweep.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

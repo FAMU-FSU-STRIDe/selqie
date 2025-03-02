@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
+
+import time
+import numpy as np
+import matplotlib.pyplot as plt
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
+from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from robot_utils.utils.ros_util_functions import *
-import matplotlib.pyplot as plt
-import numpy as np
 
 FREQUENCY = 50.0
 
@@ -17,7 +21,7 @@ class SELQIERobotNode(Node):
         self.declare_parameter('angular_velocities', [-2.0, -1.0, -0.5, -0.25, 0.0, 0.25, 0.5, 1.0, 2.0])
         self.angular_velocities = self.get_parameter('angular_velocities').value
         
-        self.declare_parameter('sample_time', 30.0)
+        self.declare_parameter('sample_time', 15.0)
         self.sample_time = self.get_parameter('sample_time').value
 
         self.num_samples = len(self.linear_velocities) * len(self.angular_velocities)
@@ -25,12 +29,15 @@ class SELQIERobotNode(Node):
         
         self.odom = Odometry()
         odom_callback = lambda msg: setattr(self, 'odom', msg)
-        self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, qos_reliable())
+        self.odom_sub = self.create_subscription(Odometry, 'odom', odom_callback, 10)
         
-        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', qos_reliable())
+        self.gait_pub = self.create_publisher(String, 'gait', 10)
+        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         
-        wait_for_subs([self.cmd_vel_pub])
-        
+        time.sleep(2.0)
+        self.gait_pub.publish(String(data='walk'))
+        rclpy.spin_once(self)
+
         self.timer = self.create_timer(1.0 / FREQUENCY, self.timer_callback)
         
         self.vel_x_cmd = []
@@ -51,7 +58,8 @@ class SELQIERobotNode(Node):
 
             plt.figure()
             plt.subplot(2, 1, 1)
-            plt.title('Linear Velocity Actual vs Commanded')
+            plt.xlabel('Commanded Linear Velocity [m/s]', fontsize=18, fontdict={'family': 'serif'})
+            plt.ylabel('Actual Linear Velocity [m/s]', fontsize=18, fontdict={'family': 'serif'})
             for i in range(len(self.angular_velocities)):
                 omega = self.angular_velocities[i]
                 vel_x_cmd = []
@@ -60,11 +68,13 @@ class SELQIERobotNode(Node):
                     idx = j * len(self.angular_velocities) + i
                     vel_x_cmd.append(self.vel_x_cmd[idx])
                     vel_x.append(self.vel_x[idx])
-                plt.plot(self.linear_velocities, vel_x, label=f'Yaw Rate: {omega}')
-            plt.legend()
+                plt.plot(self.linear_velocities, vel_x, label=f'Yaw Rate: {omega}', linewidth=3)
+            plt.legend(prop={'family': 'serif', 'size': 14})
+            plt.grid()
 
             plt.subplot(2, 1, 2)
-            plt.title('Yaw Rate Actual vs Commanded')
+            plt.xlabel('Commanded Yaw Rate [rad/s]', fontsize=18, fontdict={'family': 'serif'})
+            plt.ylabel('Actual Yaw Rate [rad/s]', fontsize=18, fontdict={'family': 'serif'})
             for i in range(len(self.linear_velocities)):
                 v = self.linear_velocities[i]
                 yaw_rate_cmd = []
@@ -73,8 +83,9 @@ class SELQIERobotNode(Node):
                     idx = j + i * len(self.angular_velocities)
                     yaw_rate_cmd.append(self.yaw_rate_cmd[idx])
                     yaw_rate.append(self.yaw_rate[idx])
-                plt.plot(self.angular_velocities, yaw_rate, label=f'Linear Velocity: {v}')
-            plt.legend()
+                plt.plot(self.angular_velocities, yaw_rate, label=f'Linear Velocity: {v}', linewidth=3)
+            plt.legend(prop={'family': 'serif', 'size': 14})
+            plt.grid()
             plt.show()
             
             rclpy.shutdown()
@@ -90,6 +101,7 @@ class SELQIERobotNode(Node):
             print(f'Sample: {self.current_sample}/{self.num_samples}')
             print(f'Linear Velocity Commanded: {vel_x_cmd}')
             print(f'Yaw Rate Commanded: {yaw_rate_cmd}')
+            time.sleep(0.5)
         elif self.current_t >= self.sample_time:
             self.vel_x_cmd.append(vel_x_cmd)
             self.vel_x.append(np.mean(self.current_vel_x))
@@ -110,3 +122,6 @@ def main(args=None):
     node = SELQIERobotNode()
     rclpy.spin(node)
     rclpy.shutdown()
+    
+if __name__ == '__main__':
+    main()

@@ -1,21 +1,5 @@
 #include "stride_maker/stride_maker_node.hpp"
 
-// mapping obtained from walk stride sweep experiment
-void map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
-{
-    const double a = 64 * des_v * des_v - 192 * des_v * des_w - 80 * des_v + 144 * des_w * des_w - 120 * des_w + 25;
-    if (a < 0)
-    {
-        cmd_v = std::numeric_limits<double>::quiet_NaN();
-        cmd_w = std::numeric_limits<double>::quiet_NaN();
-        return;
-    }
-
-    const double sqrta = std::sqrt(a);
-    cmd_v = 0.5 * des_v - 0.75 * des_w - 0.0625 * sqrta + 0.3125;
-    cmd_w = 4.0 * des_w + (-8.0 * des_v - sqrta + 5.0) / 3.0;
-}
-
 class WalkNode : public StrideMakerNode
 {
 private:
@@ -32,12 +16,39 @@ private:
 
     double _frequency;
 
+    double _map_A, _map_B, _map_C, _map_D;
+    // mapping obtained from walk stride sweep experiment
+    void _map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
+    {
+        const double abs_v = std::abs(des_v);
+        const double abs_w = std::abs(des_w);
+        const double sign_v = des_v > 0 ? 1.0 : -1.0;
+        const double sign_w = des_w > 0 ? 1.0 : -1.0;
+
+        const double b = _map_A * _map_C + _map_B * abs_w + _map_D * abs_v;
+        const double a_v = _map_A * _map_D * sign_v;
+        const double a_w = _map_B * _map_C * sign_w;
+        const double c_v = _map_B * des_v * abs_w / _map_A;
+        // const double c_w = _map_D * des_w * abs_v / _map_C;
+
+        const double root = b * b - 4 * a_v * c_v; // same as b * b - 4 * a_w * c_w (can be proved)
+        if (root < 0)
+        {
+            cmd_v = std::numeric_limits<double>::quiet_NaN();
+            cmd_w = std::numeric_limits<double>::quiet_NaN();
+            return;
+        }
+
+        cmd_v = (-b - std::sqrt(root)) / (2*a_v);
+        cmd_w = (-b - std::sqrt(root)) / (2*a_w);
+    }
+
     void _make_walk_stride(const std::vector<double> stance_lengths, const std::vector<double> &offsets)
     {
         assert(stance_lengths.size() == 4);
         assert(offsets.size() == 4);
 
-        const int num_points = _leg_command_rate / _frequency;
+        const int num_points = int(0.5 * _leg_command_rate / _frequency) * 2;
         const int points_per_half = num_points / 2;
         const double duration = 1.0 / _frequency;
         const double stance_duration = duration * _duty_factor;
@@ -105,9 +116,8 @@ private:
             return;
         }
 
-        double vel_x;
-        double omega_z;
-        map_des2cmd(msg->linear.x, msg->angular.z, vel_x, omega_z);
+        double vel_x, omega_z;
+        _map_des2cmd(msg->linear.x, msg->angular.z, vel_x, omega_z);
 
         if (std::isnan(vel_x) || std::isnan(omega_z))
         {
@@ -176,6 +186,18 @@ public:
 
         this->declare_parameter("omega_z_correction_factor", 1.0);
         this->get_parameter("omega_z_correction_factor", _omega_z_correction_factor);
+
+        this->declare_parameter("map_A", 0.0);
+        this->get_parameter("map_A", _map_A);
+
+        this->declare_parameter("map_B", 0.0);
+        this->get_parameter("map_B", _map_B);
+
+        this->declare_parameter("map_C", 0.0);
+        this->get_parameter("map_C", _map_C);
+
+        this->declare_parameter("map_D", 0.0);
+        this->get_parameter("map_D", _map_D);
 
         RCLCPP_INFO(this->get_logger(), "Walk Node Initialized.");
     }

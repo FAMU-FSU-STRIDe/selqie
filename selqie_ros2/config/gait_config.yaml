@@ -16,6 +16,10 @@ walk_node:
     min_velocity: 0.025
     vel_x_correction_factor: 0.75
     omega_z_correction_factor: 1.0
+    map_A: 0.6
+    map_B: -0.1
+    map_C: 0.1
+    map_D: -0.1
 
 swim_node:
   ros__parameters:
