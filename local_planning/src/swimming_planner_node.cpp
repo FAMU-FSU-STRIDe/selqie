@@ -21,7 +21,7 @@ float wrap_angle(float angle)
     return angle;
 }
 
-class JumpingPlannerNode : public rclcpp::Node
+class SwimmingPlannerNode : public rclcpp::Node
 {
 private:
     const std::string _gait_name = "swim";
@@ -77,7 +77,7 @@ private:
     }
 
 public:
-    JumpingPlannerNode() : Node("swimming_planner")
+    SwimmingPlannerNode() : Node("swimming_planner")
     {
         this->declare_parameter("solve_frequency", 1.0);
         this->get_parameter("solve_frequency", _solve_frequency);
@@ -98,23 +98,23 @@ public:
         this->get_parameter("goal_threshold", _goal_threshold);
 
         _gait_sub = this->create_subscription<std_msgs::msg::String>(
-            "gait", 10, std::bind(&JumpingPlannerNode::_gait_callback, this, std::placeholders::_1));
+            "gait", 10, std::bind(&SwimmingPlannerNode::_gait_callback, this, std::placeholders::_1));
 
         _gait_transition_sub = this->create_subscription<std_msgs::msg::String>(
-            "gait/transition", 10, std::bind(&JumpingPlannerNode::_gait_transition_callback, this, std::placeholders::_1));
+            "gait/transition", 10, std::bind(&SwimmingPlannerNode::_gait_transition_callback, this, std::placeholders::_1));
 
         _goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            "goal_pose/local", 10, std::bind(&JumpingPlannerNode::_goal_callback, this, std::placeholders::_1));
+            "goal_pose/local", 10, std::bind(&SwimmingPlannerNode::_goal_callback, this, std::placeholders::_1));
 
         _odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
-            "odom", 10, std::bind(&JumpingPlannerNode::_odom_callback, this, std::placeholders::_1));
+            "odom", 10, std::bind(&SwimmingPlannerNode::_odom_callback, this, std::placeholders::_1));
 
         _gait_pub = this->create_publisher<std_msgs::msg::String>("gait", 10);
 
         _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel/raw", 10);
 
         _solve_timer = this->create_wall_timer(std::chrono::milliseconds(time_t(1000.0 / _solve_frequency)),
-                                               std::bind(&JumpingPlannerNode::solve, this));
+                                               std::bind(&SwimmingPlannerNode::solve, this));
 
         RCLCPP_INFO(this->get_logger(), "Swimming Planner Node Initialized");
     }
@@ -165,7 +165,7 @@ public:
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<JumpingPlannerNode>());
+    rclcpp::spin(std::make_shared<SwimmingPlannerNode>());
     rclcpp::shutdown();
     return 0;
 }
