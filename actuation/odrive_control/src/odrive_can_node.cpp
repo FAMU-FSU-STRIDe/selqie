@@ -137,14 +137,14 @@ public:
 
         // Create motor publishers and subscriptions
         _command_sub = this->create_subscription<MotorCommand>(
-            "odrive/command", qos_reliable(), std::bind(&ODriveCanNode::command, this, std::placeholders::_1));
+            "motor/command", qos_reliable(), std::bind(&ODriveCanNode::command, this, std::placeholders::_1));
 
-        _estimate_pub = this->create_publisher<MotorEstimate>("odrive/estimate", qos_fast());
+        _estimate_pub = this->create_publisher<MotorEstimate>("motor/estimate", qos_fast());
 
         _config_sub = this->create_subscription<MotorConfig>(
-            "odrive/config", qos_reliable(), std::bind(&ODriveCanNode::config, this, std::placeholders::_1));
+            "motor/config", qos_reliable(), std::bind(&ODriveCanNode::config, this, std::placeholders::_1));
 
-        _info_pub = this->create_publisher<MotorInfo>("odrive/info", qos_fast());
+        _info_pub = this->create_publisher<MotorInfo>("motor/info", qos_fast());
 
         // Create estimate and info timers
         _estimate_timer = this->create_wall_timer(

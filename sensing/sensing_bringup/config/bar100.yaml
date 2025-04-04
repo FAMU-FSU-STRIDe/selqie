@@ -1,0 +1,11 @@
+bar100_node:
+  ros__parameters:
+    i2c_bus: 7
+    frequency: 20.0
+
+depth2pose_node:
+  ros__parameters:
+    frame_id: 'odom'
+    fluid_density: 997.0474
+    gravity: 9.80665
+    z_variance: 0.0004
