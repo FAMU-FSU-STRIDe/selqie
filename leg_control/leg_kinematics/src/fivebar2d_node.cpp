@@ -9,9 +9,7 @@
 class FiveBar2DModel : public LegKinematicsModel
 {
 private:
-    const float _L1 = 0.0; // Length of the first link
-    const float _L2 = 0.0; // Length of the second link
-    const float _YA = 1.0; // Y-axis direction factor (1.0 for normal, -1.0 for flipped)
+    const float _L1, _L2, _YA; // Five-bar leg parameters
 
 public:
     FiveBar2DModel(const float L1, const float L2, const float y_axis)

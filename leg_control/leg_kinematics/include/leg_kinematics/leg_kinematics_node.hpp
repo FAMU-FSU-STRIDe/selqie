@@ -108,7 +108,7 @@ private:
     /*
      * Get the latest motor positions in vector form from the stored motor estimate messages
      */
-    Vector3f get_latest_motor_positions() const
+    Vector3f _get_latest_motor_positions() const
     {
         Vector3f positions;
         for (std::size_t i = 0; i < _model->get_num_motors(); i++)
@@ -121,7 +121,7 @@ private:
     /*
      * Get the latest motor velocities in vector form from the stored motor estimate messages
      */
-    Vector3f get_latest_motor_velocities() const
+    Vector3f _get_latest_motor_velocities() const
     {
         Vector3f velocities;
         for (std::size_t i = 0; i < _model->get_num_motors(); i++)
@@ -134,7 +134,7 @@ private:
     /*
      * Get the latest motor torques in vector form from the stored motor estimate messages
      */
-    Vector3f get_latest_motor_torques() const
+    Vector3f _get_latest_motor_torques() const
     {
         Vector3f torques;
         for (std::size_t i = 0; i < _model->get_num_motors(); i++)
@@ -144,49 +144,10 @@ private:
         return torques;
     }
 
-public:
-    LegKinematicsNode(rclcpp::Node *node, LegKinematicsModel *model) : _node(node), _model(model)
-    {
-        const std::size_t num_motors = _model->get_num_motors();
-        assert(num_motors < 1 || num_motors > 3); // Ensure the number of motors is valid (1 to 3)
-
-        // Set the motor estimates vector size to the number of motors
-        _latest_motor_estimates.resize(num_motors);
-
-        // Create publisher and subscriber for leg commands and estimates
-        _leg_command_sub = node->create_subscription<LegCommand>(
-            "leg/command", qos_reliable(), std::bind(&LegKinematicsNode::leg_command_callback, this, std::placeholders::_1));
-        _leg_estimate_pub = node->create_publisher<LegEstimate>("leg/estimate", qos_fast());
-
-        for (std::size_t m = 0; m < num_motors; m++)
-        {
-            // Create a callback function for each motor estimate subscription
-            const auto estimate_callback = [this, m](const MotorEstimate::SharedPtr msg)
-            {
-                _latest_motor_estimates[m] = *msg;
-            };
-
-            // Create the subscibers and publishers for each motor
-            _motor_estimate_subs.push_back(
-                node->create_subscription<MotorEstimate>("motor" + std::to_string(m) + "/estimate", qos_fast(), estimate_callback));
-            _motor_command_pubs.push_back(
-                node->create_publisher<MotorCommand>("motor" + std::to_string(m) + "/command", qos_reliable()));
-        }
-
-        // Create a timer for periodic leg estimates
-        node->declare_parameter("estimate_rate", 50.0);
-        double estimate_rate = node->get_parameter("estimate_rate").as_double();
-        _motor_estimate_timer = node->create_wall_timer(
-            std::chrono::milliseconds(static_cast<int>(1000.0 / estimate_rate)),
-            std::bind(&LegKinematicsNode::leg_estimate_callback, this));
-
-        RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node Initialized");
-    }
-
     /*
      * Callback function for leg command messages
      */
-    void leg_command_callback(const LegCommand &msg)
+    void _leg_command_callback(const LegCommand &msg)
     {
         // Convert message setpoints to eigen vectors
         const Vector3f pos_setpoint = fromVector3(msg.pos_setpoint);
@@ -194,7 +155,7 @@ public:
         const Vector3f force_setpoint = fromVector3(msg.force_setpoint);
 
         // Compute the current jacobian matrix
-        const Matrix3f jacobian = _model->compute_jacobian_matrix(get_latest_motor_positions());
+        const Matrix3f jacobian = _model->compute_jacobian_matrix(_get_latest_motor_positions());
 
         // Make sure the jacobian is invertible
         if (jacobian.determinant() == 0.0)
@@ -225,10 +186,10 @@ public:
     /*
      * Callback function for periodic leg estimate updates
      */
-    void leg_estimate_callback()
+    void _leg_estimate_callback()
     {
         // Get the latest motor estimates
-        const Vector3f motor_positions = get_latest_motor_positions();
+        const Vector3f motor_positions = _get_latest_motor_positions();
 
         // Compute the current jacobian matrix
         const Matrix3f jacobian = _model->compute_jacobian_matrix(motor_positions);
@@ -242,8 +203,8 @@ public:
 
         // Compute the foot position, velocity, and force estimates
         const Vector3f foot_position = _model->compute_forward_kinematics(motor_positions);
-        const Vector3f foot_velocity = jacobian * get_latest_motor_velocities();
-        const Vector3f foot_force = jacobian.transpose().inverse() * get_latest_motor_torques();
+        const Vector3f foot_velocity = jacobian * _get_latest_motor_velocities();
+        const Vector3f foot_force = jacobian.transpose().inverse() * _get_latest_motor_torques();
 
         // Create leg estimate message
         LegEstimate msg;
@@ -253,5 +214,44 @@ public:
 
         // Publish the leg estimate message
         _leg_estimate_pub->publish(msg);
+    }
+
+public:
+    LegKinematicsNode(rclcpp::Node *node, LegKinematicsModel *model) : _node(node), _model(model)
+    {
+        const std::size_t num_motors = _model->get_num_motors();
+        assert(num_motors < 1 || num_motors > 3); // Ensure the number of motors is valid (1 to 3)
+
+        // Set the motor estimates vector size to the number of motors
+        _latest_motor_estimates.resize(num_motors);
+
+        // Create publisher and subscriber for leg commands and estimates
+        _leg_command_sub = node->create_subscription<LegCommand>(
+            "leg/command", qos_reliable(), std::bind(&LegKinematicsNode::_leg_command_callback, this, std::placeholders::_1));
+        _leg_estimate_pub = node->create_publisher<LegEstimate>("leg/estimate", qos_fast());
+
+        for (std::size_t m = 0; m < num_motors; m++)
+        {
+            // Create a callback function for each motor estimate subscription
+            const auto estimate_callback = [this, m](const MotorEstimate::SharedPtr msg)
+            {
+                _latest_motor_estimates[m] = *msg;
+            };
+
+            // Create the subscibers and publishers for each motor
+            _motor_estimate_subs.push_back(
+                node->create_subscription<MotorEstimate>("motor" + std::to_string(m) + "/estimate", qos_fast(), estimate_callback));
+            _motor_command_pubs.push_back(
+                node->create_publisher<MotorCommand>("motor" + std::to_string(m) + "/command", qos_reliable()));
+        }
+
+        // Create a timer for periodic leg estimates
+        node->declare_parameter("estimate_rate", 50.0);
+        double estimate_rate = node->get_parameter("estimate_rate").as_double();
+        _motor_estimate_timer = node->create_wall_timer(
+            std::chrono::milliseconds(static_cast<int>(1000.0 / estimate_rate)),
+            std::bind(&LegKinematicsNode::_leg_estimate_callback, this));
+
+        RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node Initialized");
     }
 };

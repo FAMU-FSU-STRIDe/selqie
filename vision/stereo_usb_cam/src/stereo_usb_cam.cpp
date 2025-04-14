@@ -6,7 +6,7 @@
 #include <opencv2/opencv.hpp>
 
 // CV bridge: Convert OpenCV images to ROS 2 image messages and vice versa
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h>
 
 // Image transport: Communication of images in ROS 2
 #include <image_transport/image_transport.hpp>
