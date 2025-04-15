@@ -6,7 +6,12 @@
 #include <opencv2/opencv.hpp>
 
 // CV bridge: Convert OpenCV images to ROS 2 image messages and vice versa
+// CV bridge uses hpp in ROS Jazzy, but h in Humble, so we use __has_include to check for the presence of the header file
+#if __has_include(<cv_bridge/cv_bridge.hpp>)
+#include <cv_bridge/cv_bridge.hpp>
+#else
 #include <cv_bridge/cv_bridge.h>
+#endif
 
 // Image transport: Communication of images in ROS 2
 #include <image_transport/image_transport.hpp>

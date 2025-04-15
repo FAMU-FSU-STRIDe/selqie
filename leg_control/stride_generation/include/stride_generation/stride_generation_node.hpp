@@ -159,7 +159,14 @@ private:
     {
         static double last_time = 0.0; // Last time the timer was called
 
-        if (_current_index >= _model->get_trajectory_size())
+        const int traj_size = _model->get_trajectory_size();
+        if (traj_size == 0)
+        {
+            // If the trajectory size is zero, return without executing any leg commands
+            return;
+        }
+
+        if (_current_index >= traj_size)
         {
             // If the current index is greater than the trajectory size, reset the index
             _current_index = 0;
