@@ -4,15 +4,6 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
-    # Gear ratio argument for the ODrive motor
-    gear_ratio_arg = DeclareLaunchArgument(
-        'gear_ratio',
-        default_value='1.0',
-        description='The gear ratio for the ODrive motor (default: 1.0)'
-    )
-    # Get the gear ratio from the launch configuration
-    gear_ratio = LaunchConfiguration('gear_ratio')
-
     # ODrive ID argument for the ODrive motor
     odrive_id_arg = DeclareLaunchArgument(
         'odrive_id',
@@ -31,11 +22,20 @@ def generate_launch_description():
     # Get the interface from the launch configuration
     interface = LaunchConfiguration('interface')
 
+    # Gear ratio argument for the ODrive motor
+    gear_ratio_arg = DeclareLaunchArgument(
+        'gear_ratio',
+        default_value='1.0',
+        description='The gear ratio for the ODrive motor (default: 1.0)'
+    )
+    # Get the gear ratio from the launch configuration
+    gear_ratio = LaunchConfiguration('gear_ratio')
+
     # Return the launch description with the node configuration
     return LaunchDescription([
-        gear_ratio_arg,
         odrive_id_arg,
         interface_arg,
+        gear_ratio_arg,
         Node(
             package='odrive_control',
             executable='odrive_can_node',

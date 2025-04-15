@@ -15,7 +15,7 @@ def generate_launch_description():
     # Frame rate argument for the simulation
     frame_rate_arg = DeclareLaunchArgument(
         'frame_rate',
-        default_value='60',
+        default_value='60.0',
         description='Frame rate for the simulation'
     )
     # Get the frame rate from the launch configuration
