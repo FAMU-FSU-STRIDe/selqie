@@ -89,6 +89,7 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr _odometry_pub;              // Publisher for odometry estimates
     rclcpp::TimerBase::SharedPtr _timer;                                                                     // Timer for publishing leg commands and odometry estimates
 
+    bool _active;       // Flag to indicate if the node is active
     int _current_index; // Current index in the stride trajectory
 
     /*
@@ -101,15 +102,10 @@ private:
         if (msg->data == _model->get_model_name())
         {
             // If so, activate the leg command timer if not already active
-            if (!_timer)
+            if (!_active)
             {
-                // Create a timer at the maximum poll rate
-                _timer = _node->create_wall_timer(
-                    std::chrono::nanoseconds(LEG_COMMAND_POLL_RATE_NS),
-                    std::bind(&StrideGenerationNode::_timer_callback, this));
-
-                // Reset the current index
-                _current_index = 0;
+                // Set active flag to true
+                _active = true;
 
                 // Give feedback to the user
                 RCLCPP_INFO(_node->get_logger(), "Stride Generation node activated gait: %s", msg->data.c_str());
@@ -118,8 +114,11 @@ private:
         else
         {
             // If not, deactivate the leg command timer if active
-            if (_timer)
+            if (_active)
             {
+                // Set active flag to false
+                _active = false;
+
                 // Cancel the timer
                 _timer->cancel();
 
@@ -138,17 +137,27 @@ private:
      */
     void _velocity_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
-        // Check if the timer is active
-        if (!_timer)
+        // Check if the node is active
+        if (!_active)
         {
-            // If not, return without processing the velocity command
-            // Note that this means the gait will need to be set some time before the velocity command
-            // is sent to ensure the timer is active
+            // If not, ignore the command
             return;
         }
 
         // Update the velocity of the stride generation model
         _model->update_velocity(*msg);
+
+        // Check if the timer needs to be activated
+        if (!_timer)
+        {
+            // Create a timer at the maximum poll rate
+            _timer = _node->create_wall_timer(
+                std::chrono::nanoseconds(LEG_COMMAND_POLL_RATE_NS),
+                std::bind(&StrideGenerationNode::_timer_callback, this));
+
+            // Reset the current index
+            _current_index = 0;
+        }
     }
 
     /*
@@ -213,13 +222,16 @@ private:
 
 public:
     StrideGenerationNode(rclcpp::Node *node, StrideGenerationModel *model)
-        : _node(node), _model(model), _current_index(0)
+        : _node(node), _model(model)
     {
         // Get ROS parameters
         std::vector<std::string> leg_names = {"FL", "RL", "RR", "FR"};
         _node->declare_parameter("leg_names", leg_names);
         _node->get_parameter("leg_names", leg_names);
         assert(leg_names.size() == 4);
+
+        _node->declare_parameter("default_active", false);
+        _node->get_parameter("default_active", _active);
 
         // Create the gait subscription
         _gait_sub = _node->create_subscription<std_msgs::msg::String>(
@@ -238,6 +250,12 @@ public:
 
         // Create the odometry publisher
         _odometry_pub = _node->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
-            "gait/vel_estimate", qos_reliable());
+            "vel_estimate/" + model->get_model_name(), qos_reliable());
+
+        if (_active)
+        {
+            // If active by default, initialize with a zero Twist message
+            _velocity_callback(std::make_shared<geometry_msgs::msg::Twist>());
+        }
     }
 };

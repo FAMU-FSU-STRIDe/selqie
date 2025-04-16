@@ -108,7 +108,7 @@ public:
             _angular_velocity = 0.0;
 
             // Give feedback to the user
-            RCLCPP_WARN(_node->get_logger(), "Invalid velocity command: (%f, %f)", velocity.linear.x, velocity.angular.z);
+            RCLCPP_WARN(_node->get_logger(), "Invalid walk velocity command: (%f, %f)", velocity.linear.x, velocity.angular.z);
         }
 
         // Calculate the velocities on the left and right sides of the robot
@@ -182,6 +182,7 @@ public:
         // Calculate the size of a single phase of the stride trajectory
         const int phase_size = _trajectory_size / 2;
 
+        double x, z;
         // Get the current phase of the stride trajectory
         if (index < phase_size)
         {
@@ -194,15 +195,8 @@ public:
             const double f = static_cast<double>(index) / phase_size;
 
             // Get the position of the leg in the stance phase
-            const double x = touchdown - stance_length * f;
-            const double z = -_params.default_height;
-
-            // Create and return the leg command message
-            leg_control_msgs::msg::LegCommand leg_command;
-            leg_command.control_mode = leg_control_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
-            leg_command.pos_setpoint.x = x;
-            leg_command.pos_setpoint.z = z;
-            return leg_command;
+            x = touchdown - stance_length * f;
+            z = -_params.default_height;
         }
         else
         {
@@ -216,16 +210,16 @@ public:
             const double z0 = _params.default_height;
 
             // Get the position of the leg in the swing phase
-            const double x = x0 - 0.5 * stance_length * std::cos(M_PI * f);
-            const double z = z0 + _params.step_height * std::sin(M_PI * f);
-
-            // Create and return the leg command message
-            leg_control_msgs::msg::LegCommand leg_command;
-            leg_command.control_mode = leg_control_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
-            leg_command.pos_setpoint.x = x;
-            leg_command.pos_setpoint.z = z;
-            return leg_command;
+            x = x0 - 0.5 * stance_length * std::cos(M_PI * f);
+            z = z0 + _params.step_height * std::sin(M_PI * f);
         }
+
+        // Create and return the leg command message
+        leg_control_msgs::msg::LegCommand leg_command;
+        leg_command.control_mode = leg_control_msgs::msg::LegCommand::CONTROL_MODE_POSITION;
+        leg_command.pos_setpoint.x = x;
+        leg_command.pos_setpoint.z = z;
+        return leg_command;
     }
 
     /*

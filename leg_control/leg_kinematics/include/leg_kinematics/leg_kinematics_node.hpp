@@ -220,7 +220,7 @@ public:
     LegKinematicsNode(rclcpp::Node *node, LegKinematicsModel *model) : _node(node), _model(model)
     {
         const std::size_t num_motors = _model->get_num_motors();
-        assert(num_motors < 1 || num_motors > 3); // Ensure the number of motors is valid (1 to 3)
+        assert(num_motors > 0 && num_motors < 4); // Ensure the number of motors is valid (1 to 3)
 
         // Set the motor estimates vector size to the number of motors
         _latest_motor_estimates.resize(num_motors);
@@ -252,6 +252,6 @@ public:
             std::chrono::milliseconds(static_cast<int>(1000.0 / estimate_rate)),
             std::bind(&LegKinematicsNode::_leg_estimate_callback, this));
 
-        RCLCPP_INFO(_node->get_logger(), "Leg Kinematics node Initialized");
+        RCLCPP_INFO(_node->get_logger(), "Leg Kinematics Node Initialized");
     }
 };
