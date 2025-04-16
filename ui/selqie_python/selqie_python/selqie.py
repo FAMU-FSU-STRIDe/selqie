@@ -7,7 +7,6 @@ from datetime import datetime
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
-from ament_index_python.packages import get_package_share_directory
 
 from std_msgs.msg import Empty, String, Float32
 from geometry_msgs.msg import Twist, PoseStamped, PoseWithCovarianceStamped, Quaternion
@@ -64,6 +63,17 @@ class SELQIE(Node):
     def __init__(self, name="selqie"):
         super().__init__(name)
         self._stop_event = Event()
+        
+    def init(self):
+        """Initialize all SELQIE components"""
+        self.init_motors()
+        self.init_legs()
+        self.init_sensors()
+        self.init_localization()
+        self.init_mapping()
+        self.init_control()
+        self.init_vision()
+        self.init_recording()
 
     def init_motors(self):
         """Initialize the motor publishers and subscribers."""
@@ -72,30 +82,29 @@ class SELQIE(Node):
 
         self._motor_command_publishers = []
         for i in range(self.NUM_MOTORS):
-            self._motor_command_publishers.append(self.create_publisher(MotorCommand, f'odrive{i}/command', QOS_RELIABLE()))
+            self._motor_command_publishers.append(self.create_publisher(MotorCommand, f'motor{i}/command', QOS_RELIABLE()))
 
         self._motor_config_publishers = []
         for i in range(self.NUM_MOTORS):
-            self._motor_config_publishers.append(self.create_publisher(MotorConfig, f'odrive{i}/config', QOS_RELIABLE()))
+            self._motor_config_publishers.append(self.create_publisher(MotorConfig, f'motor{i}/config', QOS_RELIABLE()))
 
         self._motor_estimates = [MotorEstimate() for _ in range(self.NUM_MOTORS)]
         self._motor_estimate_subscribers = []
         for i in range(self.NUM_MOTORS):
             motor_estimate_callback = lambda msg, i=i: self._motor_estimates.__setitem__(i, msg)
-            self._motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'odrive{i}/estimate', motor_estimate_callback, QOS_FAST()))
+            self._motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'motor{i}/estimate', motor_estimate_callback, QOS_FAST()))
 
         self._motor_infos = [MotorInfo() for _ in range(self.NUM_MOTORS)]
         self._motor_info_subscribers = []
         for i in range(self.NUM_MOTORS):
             motor_info_callback = lambda msg, i=i: self._motor_infos.__setitem__(i, msg)
-            self._motor_info_subscribers.append(self.create_subscription(MotorInfo, f'odrive{i}/info', motor_info_callback, QOS_FAST()))
+            self._motor_info_subscribers.append(self.create_subscription(MotorInfo, f'motor{i}/info', motor_info_callback, QOS_FAST()))
 
     def init_legs(self):
         """Initialize the leg publishers and subscribers."""
         self.LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
         self.NUM_LEGS = len(self.LEG_NAMES)
         self.DEFAULT_LEG_POSITION = [0.0, 0.0, -0.18914]
-        self.TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('selqie_ros2'), 'trajectories')
 
         self._leg_command_publishers = []
         for i in range(self.NUM_LEGS):
@@ -113,9 +122,9 @@ class SELQIE(Node):
         imu_callback = lambda msg: setattr(self, '_imu', msg)
         self._imu_sub = self.create_subscription(Imu, 'imu', imu_callback, QOS_RELIABLE())
 
-        self._depth = Float32()
-        depth_callback = lambda msg: setattr(self, '_depth', msg)
-        self._depth_sub = self.create_subscription(Float32, 'bar100/depth', depth_callback, QOS_RELIABLE())
+        self._pressure = Float32()
+        pressure_callback = lambda msg: setattr(self, '_pressure', msg)
+        self._pressure_sub = self.create_subscription(Float32, 'bar100/pressure', pressure_callback, QOS_RELIABLE())
 
         self._water_temperature = Float32()
         temperature_callback = lambda msg: setattr(self, '_water_temperature', msg)
@@ -162,8 +171,8 @@ class SELQIE(Node):
         self._camera_right_sub = self.create_subscription(Image, 'stereo/right/image_raw', camera_right_callback, QOS_FAST())
 
     def init_recording(self):
-        self.ROSBAG_RECORD_TOPICS = ["odrive0/estimate","odrive1/estimate","odrive2/estimate","odrive3/estimate","odrive4/estimate", "odrive5/estimate", "odrive6/estimate", "odrive7/estimate",
-                                     "odrive0/info", "odrive1/info", "odrive2/info", "odrive3/info", "odrive4/info", "odrive5/info", "odrive6/info", "odrive7/info",
+        self.ROSBAG_RECORD_TOPICS = ["motor0/estimate","motor1/estimate","motor2/estimate","motor3/estimate","motor4/estimate", "motor5/estimate", "motor6/estimate", "motor7/estimate",
+                                     "motor0/info", "motor1/info", "motor2/info", "motor3/info", "motor4/info", "motor5/info", "motor6/info", "motor7/info",
                                      "legFL/command", "legRL/command", "legRR/command", "legFR/command",
                                      "stereo/left/image_raw", "stereo/right/image_raw", "lights/pwm",
                                      "imu/data", "bar100/depth", "bar100/temperature",
@@ -321,9 +330,9 @@ class SELQIE(Node):
         """Get the latest Imu message."""
         return self._imu
     
-    def get_depth(self) -> Float32:
+    def get_pressure(self) -> Float32:
         """Get the latest depth message."""
-        return self._depth
+        return self._pressure
     
     def get_water_temperature(self) -> Float32:
         """Get the latest water temperature message."""
