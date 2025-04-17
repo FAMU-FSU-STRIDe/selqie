@@ -44,9 +44,9 @@ struct MotorControlModel
     mjtNum pos_cmd = 0.f;       // Position command
     mjtNum vel_cmd = 0.f;       // Velocity command
     mjtNum torq_cmd = 0.f;      // Torque command
-    mjtNum kp = 100.0f;         // Position gain
-    mjtNum kd = 5.0f;           // Velocity gain
-    mjtNum ki = 0.0f;           // Integral gain
+    mjtNum kp = 50.0f;          // Position gain
+    mjtNum kd = 0.025f;         // Velocity gain
+    mjtNum ki = 0.05f;          // Integral gain
     mjtNum torq_integral = 0.f; // Torque integral
     mjtNum pos_est = 0.0;       // Estimated position
     mjtNum vel_est = 0.0;       // Estimated velocity

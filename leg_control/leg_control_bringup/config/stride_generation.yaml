@@ -13,10 +13,10 @@ walk_stride_node:
     max_stance_length: 0.175
     min_velocity: 0.025
     leg_offsets: [0.25, 0.75, 0.25, 0.75]
-    map_A: 0.6
-    map_B: -0.1
-    map_C: 0.1
-    map_D: -0.1
+    mapA: 0.6
+    mapB: -0.1
+    mapC: 0.1
+    mapD: -0.1
     variance_vx: 0.1
     variance_wz: 0.1
 
@@ -60,4 +60,4 @@ stand_stride_node:
     default_active: true
     leg_command_rate: 50.0
     stride_frequency: 1.0
-    standing_height: 0.175
+    standing_height: 0.18914

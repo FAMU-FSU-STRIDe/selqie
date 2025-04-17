@@ -133,7 +133,7 @@ public:
 
         // Calculate the duration of the trajectory based on the commanded velocity
         assert(v > 0); // Ensure that the velocity is positive and non-zero
-        _duration = _params.max_stance_length * _params.duty_factor / v;
+        _duration = _params.max_stance_length / _params.duty_factor / v;
 
         // Calculate the length of the stance phase for the left and right legs
         if (std::abs(v_left) > std::abs(v_right))
@@ -149,6 +149,13 @@ public:
 
         // Calculate the size of the trajectory based on the duration and leg command rate
         _trajectory_size = static_cast<int>(0.5 * _params.leg_command_rate * _duration) * 2;
+
+        RCLCPP_INFO(_node->get_logger(), "Walk velocity command: (%f, %f)", _linear_velocity, _angular_velocity);
+        RCLCPP_INFO(_node->get_logger(), "Walk velocity command (mapped): (%f, %f)", vel_x, vel_w);
+        RCLCPP_INFO(_node->get_logger(), "Walk velocity command (left, right): (%f, %f)", v_left, v_right);
+        RCLCPP_INFO(_node->get_logger(), "Walk stride duration: %f", _duration);
+        RCLCPP_INFO(_node->get_logger(), "Walk stride size: %d", _trajectory_size);
+        RCLCPP_INFO(_node->get_logger(), "Walk stride stance length (left, right): (%f, %f)", _stance_length_left, _stance_length_right);
     }
 
     /*
@@ -207,7 +214,7 @@ public:
 
             // Get the center of the leg in the swing phase
             const double x0 = 0.5 * stance_length * _params.center_shift;
-            const double z0 = _params.walking_height;
+            const double z0 = -_params.walking_height;
 
             // Get the position of the leg in the swing phase
             x = x0 - 0.5 * stance_length * std::cos(M_PI * f);

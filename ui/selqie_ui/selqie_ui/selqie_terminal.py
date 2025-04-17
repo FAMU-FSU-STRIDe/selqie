@@ -180,7 +180,7 @@ class SELQIETerminal(Cmd):
             print("Usage: cmd_vel <lin_x> <lin_z> <ang_z>")
             return
         try:
-            self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]), float(args[2]))
+            self._selqie.set_control_command_velocity(float(args[0]), float(args[1]), float(args[2]))
         except ValueError:
             print("Invalid values")
             return
@@ -194,7 +194,7 @@ class SELQIETerminal(Cmd):
         try:
             self._selqie.set_control_gait('walk')
             time.sleep(0.1)
-            self._selqie.set_control_command_velocity_raw(float(args[0]), 0.0, float(args[1]))
+            self._selqie.set_control_command_velocity(float(args[0]), 0.0, float(args[1]))
         except ValueError:
             print("Invalid values")
             return
@@ -208,7 +208,7 @@ class SELQIETerminal(Cmd):
         try:
             self._selqie.set_control_gait('swim')
             time.sleep(0.1)
-            self._selqie.set_control_command_velocity_raw(float(args[0]), float(args[1]), 0.0)
+            self._selqie.set_control_command_velocity(float(args[0]), float(args[1]), 0.0)
         except ValueError:
             print("Invalid values")
             return

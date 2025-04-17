@@ -7,8 +7,8 @@
 struct StandStrideParameters
 {
     double leg_command_rate = 50.0; // Rate at which leg commands are sent
-    double stride_frequency = 1.0;   // Frequency of the sink stride
-    double standing_height = 0.175;   // Default height of the robot
+    double stride_frequency = 1.0;  // Frequency of the sink stride
+    double standing_height = 0.175; // Default height of the robot
 };
 
 /*

@@ -119,11 +119,14 @@ private:
                 // Set active flag to false
                 _active = false;
 
-                // Cancel the timer
-                _timer->cancel();
+                if (_timer)
+                {
+                    // Cancel the timer
+                    _timer->cancel();
 
-                // Reset the shared pointer to the timer
-                _timer.reset();
+                    // Reset the shared pointer to the timer
+                    _timer.reset();
+                }
 
                 // Give feedback to the user
                 RCLCPP_INFO(_node->get_logger(), "Stride Generation node deactivated gait: %s", _model->get_model_name().c_str());
