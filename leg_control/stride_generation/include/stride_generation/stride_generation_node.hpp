@@ -69,7 +69,7 @@ public:
     /*
      * Get the odometry estimate at index i along the stride trajectory
      */
-    virtual geometry_msgs::msg::TwistWithCovarianceStamped get_odometry_estimate(const int i) const = 0;
+    virtual geometry_msgs::msg::TwistWithCovarianceStamped get_vel_estimate(const int i) const = 0;
 };
 
 /*
@@ -86,7 +86,7 @@ private:
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _gait_sub;                                        // Subscription to current gait
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr _velocity_sub;                                // Subscription to velocity command
     std::array<rclcpp::Publisher<leg_control_msgs::msg::LegCommand>::SharedPtr, NUM_LEGS> _leg_command_pubs; // Publishers for leg commands
-    rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr _odometry_pub;              // Publisher for odometry estimates
+    rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr _vel_estimate_pub;          // Publisher for odometry estimates
     rclcpp::TimerBase::SharedPtr _timer;                                                                     // Timer for publishing leg commands and odometry estimates
 
     bool _active;       // Flag to indicate if the node is active
@@ -108,7 +108,7 @@ private:
                 _active = true;
 
                 // Give feedback to the user
-                RCLCPP_INFO(_node->get_logger(), "Stride Generation node activated gait: %s", msg->data.c_str());
+                RCLCPP_INFO(_node->get_logger(), "Stride Generation node activated gait: %s", _model->get_model_name().c_str());
             }
         }
         else
@@ -126,7 +126,7 @@ private:
                 _timer.reset();
 
                 // Give feedback to the user
-                RCLCPP_INFO(_node->get_logger(), "Stride Generation node deactivated gait: %s", msg->data.c_str());
+                RCLCPP_INFO(_node->get_logger(), "Stride Generation node deactivated gait: %s", _model->get_model_name().c_str());
             }
         }
     }
@@ -208,10 +208,10 @@ private:
         }
 
         // Publish the odometry estimate
-        auto odometry_estimate = _model->get_odometry_estimate(_current_index);
+        auto odometry_estimate = _model->get_vel_estimate(_current_index);
         odometry_estimate.header.stamp = _node->now();
         odometry_estimate.header.frame_id = "base_link";
-        _odometry_pub->publish(odometry_estimate);
+        _vel_estimate_pub->publish(odometry_estimate);
 
         // Increment the current index
         ++_current_index;
@@ -249,7 +249,7 @@ public:
         }
 
         // Create the odometry publisher
-        _odometry_pub = _node->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
+        _vel_estimate_pub = _node->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
             "vel_estimate/" + model->get_model_name(), qos_reliable());
 
         if (_active)

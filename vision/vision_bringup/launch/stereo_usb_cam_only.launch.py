@@ -4,9 +4,7 @@ from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 from ament_index_python.packages import get_package_share_directory
 
-PACKAGE_NAME = 'vision_bringup'
-CONFIG_FOLDER = os.path.join(get_package_share_directory(PACKAGE_NAME), 'config')
-
+CONFIG_FOLDER = os.path.join(get_package_share_directory('vision_bringup'), 'config')
 STEREO_USB_CAM_CONFIG = os.path.join(CONFIG_FOLDER, 'stereo_usb_cam.yaml')
 LEFT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_left.yaml'
 RIGHT_CAMERA_INFO_URL = 'file://' + CONFIG_FOLDER + '/calibration_right.yaml'

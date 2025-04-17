@@ -19,8 +19,24 @@ include_directories(include)
 add_executable(walk_stride_node src/walk_stride_node.cpp)
 ament_target_dependencies(walk_stride_node rclcpp std_msgs geometry_msgs leg_control_msgs)
 
+add_executable(jump_stride_node src/jump_stride_node.cpp)
+ament_target_dependencies(jump_stride_node rclcpp std_msgs geometry_msgs leg_control_msgs)
+
+add_executable(swim_stride_node src/swim_stride_node.cpp)
+ament_target_dependencies(swim_stride_node rclcpp std_msgs geometry_msgs leg_control_msgs)
+
+add_executable(sink_stride_node src/sink_stride_node.cpp)
+ament_target_dependencies(sink_stride_node rclcpp std_msgs geometry_msgs leg_control_msgs)
+
+add_executable(stand_stride_node src/stand_stride_node.cpp)
+ament_target_dependencies(stand_stride_node rclcpp std_msgs geometry_msgs leg_control_msgs)
+
 install(TARGETS
   walk_stride_node
+  jump_stride_node
+  swim_stride_node
+  sink_stride_node
+  stand_stride_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

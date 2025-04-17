@@ -1,0 +1,63 @@
+/**:
+  ros__parameters:
+    leg_names: ['FL', 'RL', 'RR', 'FR']
+
+walk_stride_node:
+  ros__parameters:
+    leg_command_rate: 250.0
+    robot_width: 0.25
+    walking_height: 0.175
+    center_shift: -0.25
+    step_height: 0.025
+    duty_factor: 0.5
+    max_stance_length: 0.175
+    min_velocity: 0.025
+    leg_offsets: [0.25, 0.75, 0.25, 0.75]
+    map_A: 0.6
+    map_B: -0.1
+    map_C: 0.1
+    map_D: -0.1
+    variance_vx: 0.1
+    variance_wz: 0.1
+
+jump_stride_node:
+  ros__parameters:
+    leg_command_rate: 50.0
+    standing_height: 0.175
+    z_crouch: -0.095
+    d_jump: -0.210
+    time_crouch: 3.0
+    time_hold: 1.5
+    initial_jump_speed: 1.0
+    robot_mass: 10.0
+    gravity: 1.15
+    drag_coeff: 1.0
+    variance_vx: 0.1
+    variance_vz: 0.1
+
+swim_stride_node:
+  ros__parameters:
+    leg_command_rate: 250.0
+    body_com_hip_radius: 0.27
+    swim_frequency: 3.5
+    nominal_leg_length: 0.18
+    swim_amplitude_z: 0.005
+    vel_amplitude_gain: 5.0
+    variance_vx: 0.1
+    variance_vz: 0.1
+    variance_wy: 0.1
+
+sink_stride_node:
+  ros__parameters:
+    leg_command_rate: 50.0
+    stride_frequency: 1.0
+    standing_height: 0.175
+    sink_speed: 0.1
+    variance_vz: 0.1
+
+stand_stride_node:
+  ros__parameters:
+    default_active: true
+    leg_command_rate: 50.0
+    stride_frequency: 1.0
+    standing_height: 0.175

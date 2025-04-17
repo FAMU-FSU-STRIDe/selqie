@@ -6,17 +6,17 @@
  */
 struct JumpStrideParameters
 {
-    double leg_command_rate = 50.0;  // Rate at which leg commands are sent
-    double default_height = 0.175;   // Default height of the robot
-    double z_crouch = -0.105;        // Crouch z position
-    double z_jump = -0.195;          // Jump z position
-    double time_crouch = 3.0;        // Time to crouch
-    double time_hold = 0.5;          // Time to hold the jump position
-    double initial_jump_speed = 1.0; // Estimate of the initial jump speed
-    double robot_mass = 10.0;        // Estimate of the robot body mass
-    double gravity = 9.81;           // Gravity
-    double drag_coeff = 1.0;         // Estimate of the body drag coefficient
-    double variance_vx, variance_vz; // Variance of the velocity in x and z directions
+    double leg_command_rate = 50.0;              // Rate at which leg commands are sent
+    double standing_height = 0.175;               // Default height of the robot
+    double z_crouch = -0.095;                    // Crouch z position
+    double d_jump = -0.210;                      // Jump extension distance from origin
+    double time_crouch = 3.0;                    // Time to crouch
+    double time_hold = 1.5;                      // Time to hold the jump position
+    double initial_jump_speed = 1.0;             // Estimate of the initial jump speed
+    double robot_mass = 10.0;                    // Estimate of the robot body mass
+    double gravity = 1.15;                       // Gravity
+    double drag_coeff = 1.0;                     // Estimate of the body drag coefficient
+    double variance_vx = 0.1, variance_vz = 0.1; // Variance of the velocity in x and z directions
 };
 
 /*
@@ -29,8 +29,8 @@ private:
     const rclcpp::Node *_node;          // Pointer to the ROS node
     const JumpStrideParameters _params; // Parameters for the jump stride model
 
-    int _trajectory_size;
-    double _nx, _nz;
+    int _trajectory_size;                // Size of the trajectory
+    double _vx_direction, _vz_direction; // Direction of the velocity in x and z directions
 
 public:
     JumpStrideModel(const rclcpp::Node *node, const JumpStrideParameters &params)
@@ -71,8 +71,8 @@ public:
             _trajectory_size = _params.leg_command_rate * (_params.time_crouch + _params.time_hold);
         }
 
-        _nx = vx / v;
-        _nz = vz / v;
+        _vx_direction = vx / v;
+        _vz_direction = vz / v;
     }
 
     /*
@@ -88,13 +88,13 @@ public:
      */
     double get_execution_time(const int i) const override
     {
-        return i * _params.leg_command_rate;
+        return i / _params.leg_command_rate;
     }
 
     /*
      * Get the leg command at index i along the stride trajectory
      */
-    leg_control_msgs::msg::LegCommand get_leg_command(const int leg, const int i) const override
+    leg_control_msgs::msg::LegCommand get_leg_command(const int, const int i) const override
     {
         // Get the current execution time
         const double t = get_execution_time(i);
@@ -105,13 +105,13 @@ public:
         {
             // Crouch phase
             x = 0.0;
-            z = -_params.default_height + (_params.z_crouch + _params.default_height) * (t / _params.time_crouch);
+            z = -_params.standing_height + (_params.z_crouch + _params.standing_height) * (t / _params.time_crouch);
         }
         else
         {
             // Jump & hold phase
-            x = _params.z_jump * _nx;
-            z = _params.z_jump * _nz;
+            x = _params.d_jump * _vx_direction;
+            z = _params.d_jump * _vz_direction;
         }
 
         // Create and return the leg command message
@@ -125,8 +125,46 @@ public:
     /*
      * Get the odometry estimate at index i along the stride trajectory
      */
-    geometry_msgs::msg::TwistWithCovarianceStamped get_odometry_estimate(const int) const override
+    geometry_msgs::msg::TwistWithCovarianceStamped get_vel_estimate(const int i) const override
     {
+        // Get the current execution time
+        const double t = get_execution_time(i);
+
+        double vx, vz;
+        // Get the current phase of the stride trajectory
+        if (t < _params.time_crouch)
+        {
+            // Crouch phase
+            vx = 0.0;
+            vz = (_params.z_crouch + _params.standing_height) / _params.time_crouch;
+        }
+        else
+        {
+            // Jump & hold phase
+
+            // Jump model: (drag and gravity)
+            // dvx/dt = -b/m * vx       --> vx(t) = vx0 * exp(-b/m * t)
+            // dvz/dt = -b/m * vy - g   --> vz(t) = -mg/b + (vz0 + mg/b) * exp(-b/m * t)
+
+            // Calculate the velocity components based on the jump model
+            const double vx0 = _params.initial_jump_speed * _vx_direction;
+            const double vz0 = _params.initial_jump_speed * _vz_direction;
+            const double beta = -_params.drag_coeff / _params.robot_mass; // -b/m
+            const double gamma = _params.gravity / beta;                  // -mg/b
+
+            // Calculate the velocity components at time t after the jump
+            const double t_jump = t - _params.time_crouch;
+            vx = vx0 * std::exp(beta * t_jump);
+            vz = gamma + (vz0 - gamma) * std::exp(beta * t_jump);
+        }
+
+        // Create and return the odometry estimate message
+        geometry_msgs::msg::TwistWithCovarianceStamped vel_estimate;
+        vel_estimate.twist.twist.linear.x = vx;
+        vel_estimate.twist.twist.angular.z = vz;
+        vel_estimate.twist.covariance[0] = _params.variance_vx;
+        vel_estimate.twist.covariance[14] = _params.variance_vz;
+        return vel_estimate;
     }
 };
 
@@ -150,14 +188,14 @@ public:
         this->declare_parameter("leg_command_rate", params.leg_command_rate);
         this->get_parameter("leg_command_rate", params.leg_command_rate);
 
-        this->declare_parameter("default_height", params.default_height);
-        this->get_parameter("default_height", params.default_height);
+        this->declare_parameter("standing_height", params.standing_height);
+        this->get_parameter("standing_height", params.standing_height);
 
         this->declare_parameter("z_crouch", params.z_crouch);
         this->get_parameter("z_crouch", params.z_crouch);
 
-        this->declare_parameter("z_jump", params.z_jump);
-        this->get_parameter("z_jump", params.z_jump);
+        this->declare_parameter("d_jump", params.d_jump);
+        this->get_parameter("d_jump", params.d_jump);
 
         this->declare_parameter("time_crouch", params.time_crouch);
         this->get_parameter("time_crouch", params.time_crouch);
@@ -176,6 +214,12 @@ public:
 
         this->declare_parameter("drag_coeff", params.drag_coeff);
         this->get_parameter("drag_coeff", params.drag_coeff);
+
+        this->declare_parameter("variance_vx", params.variance_vx);
+        this->get_parameter("variance_vx", params.variance_vx);
+
+        this->declare_parameter("variance_vz", params.variance_vz);
+        this->get_parameter("variance_vz", params.variance_vz);
 
         // Create the jump stride model
         _model = std::make_unique<JumpStrideModel>(this, params);

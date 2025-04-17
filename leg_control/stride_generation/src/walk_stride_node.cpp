@@ -6,17 +6,17 @@
  */
 struct WalkStrideParameters
 {
-    double leg_command_rate = 250.0;                          // Rate at which leg commands are sent
-    double robot_width = 0.25;                                // Width of the robot
-    double default_height = 0.175;                            // Default height of the robot
-    double center_shift = 0.0;                                // Center shift of the stride [-1,1]
-    double step_height = 0.05;                                // Height of the step
-    double duty_factor = 0.5;                                 // Duty factor of the stride
-    double max_stance_length = 0.15;                          // Maximum length of the stance phase
-    double min_velocity = 0.05;                               // Minimum velocity for the stride
-    std::array<double, 4> leg_offsets = {0.0, 0.0, 0.0, 0.0}; // Offsets for each leg (FL, RL, RR, FR) [0, 1)
-    double mapA = 0.0, mapB = 0.0, mapC = 0.0, mapD = 0.0;    // Parameters for the mapping function
-    double variance_v = 0.1, variance_w = 0.1;                // Covariance for the velocity and angular velocity
+    double leg_command_rate = 250.0;                              // Rate at which leg commands are sent
+    double robot_width = 0.25;                                    // Width of the robot
+    double walking_height = 0.175;                                // Default height of the robot
+    double center_shift = -0.25;                                  // Center shift of the stride [-1,1]
+    double step_height = 0.025;                                   // Height of the step
+    double duty_factor = 0.5;                                     // Duty factor of the stride
+    double max_stance_length = 0.175;                             // Maximum length of the stance phase
+    double min_velocity = 0.025;                                  // Minimum velocity for the stride
+    std::array<double, 4> leg_offsets = {0.25, 0.75, 0.25, 0.75}; // Offsets for each leg (FL, RL, RR, FR) [0, 1)
+    double mapA = 0.0, mapB = 0.0, mapC = 0.0, mapD = 0.0;        // Parameters for the mapping function
+    double variance_vx = 0.1, variance_wz = 0.1;                  // Covariance for the velocity and angular velocity
 };
 
 /*
@@ -196,7 +196,7 @@ public:
 
             // Get the position of the leg in the stance phase
             x = touchdown - stance_length * f;
-            z = -_params.default_height;
+            z = -_params.walking_height;
         }
         else
         {
@@ -207,7 +207,7 @@ public:
 
             // Get the center of the leg in the swing phase
             const double x0 = 0.5 * stance_length * _params.center_shift;
-            const double z0 = _params.default_height;
+            const double z0 = _params.walking_height;
 
             // Get the position of the leg in the swing phase
             x = x0 - 0.5 * stance_length * std::cos(M_PI * f);
@@ -225,15 +225,15 @@ public:
     /*
      * Get the odometry estimate at index i along the stride trajectory
      */
-    geometry_msgs::msg::TwistWithCovarianceStamped get_odometry_estimate(const int) const override
+    geometry_msgs::msg::TwistWithCovarianceStamped get_vel_estimate(const int) const override
     {
         // Create and return the odometry estimate message
-        geometry_msgs::msg::TwistWithCovarianceStamped odometry_estimate;
-        odometry_estimate.twist.twist.linear.x = _linear_velocity;
-        odometry_estimate.twist.twist.angular.z = _angular_velocity;
-        odometry_estimate.twist.covariance[0] = _params.variance_v;
-        odometry_estimate.twist.covariance[35] = _params.variance_w;
-        return odometry_estimate;
+        geometry_msgs::msg::TwistWithCovarianceStamped vel_estimate;
+        vel_estimate.twist.twist.linear.x = _linear_velocity;
+        vel_estimate.twist.twist.angular.z = _angular_velocity;
+        vel_estimate.twist.covariance[0] = _params.variance_vx;
+        vel_estimate.twist.covariance[35] = _params.variance_wz;
+        return vel_estimate;
     }
 };
 
@@ -260,8 +260,8 @@ public:
         this->declare_parameter("robot_width", params.robot_width);
         this->get_parameter("robot_width", params.robot_width);
 
-        this->declare_parameter("default_height", params.default_height);
-        this->get_parameter("default_height", params.default_height);
+        this->declare_parameter("walking_height", params.walking_height);
+        this->get_parameter("walking_height", params.walking_height);
 
         this->declare_parameter("center_shift", params.center_shift);
         this->get_parameter("center_shift", params.center_shift);
@@ -296,11 +296,11 @@ public:
         this->declare_parameter("mapD", params.mapD);
         this->get_parameter("mapD", params.mapD);
 
-        this->declare_parameter("variance_v", params.variance_v);
-        this->get_parameter("variance_v", params.variance_v);
+        this->declare_parameter("variance_vx", params.variance_vx);
+        this->get_parameter("variance_vx", params.variance_vx);
 
-        this->declare_parameter("variance_w", params.variance_w);
-        this->get_parameter("variance_w", params.variance_w);
+        this->declare_parameter("variance_wz", params.variance_wz);
+        this->get_parameter("variance_wz", params.variance_wz);
 
         // Create the walk stride model
         _model = std::make_unique<WalkStrideModel>(this, params);
