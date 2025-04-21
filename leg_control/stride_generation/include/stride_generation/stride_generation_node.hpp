@@ -171,6 +171,14 @@ private:
     {
         static double last_time = 0.0; // Last time the timer was called
 
+        const double current_time = _node->now().seconds();
+        if (current_time < last_time)
+        {
+            // Check for jumps back in time
+            // Happens when simulation is reset
+            last_time = current_time;
+        }
+
         const int traj_size = _model->get_trajectory_size();
         if (traj_size == 0)
         {
@@ -190,7 +198,7 @@ private:
                                  : _model->get_execution_time(_current_index) - _model->get_execution_time(_current_index - 1);
 
         // Get the timing difference between the current and last leg command execution times
-        const double diff = _node->now().seconds() - last_time;
+        const double diff = current_time - last_time;
 
         // Check if the timing difference is greater than the execution difference
         if (delta > diff)

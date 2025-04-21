@@ -1,6 +1,8 @@
 import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 
@@ -21,16 +23,27 @@ def FivebarLaunch(leg_name : str, motor0 : str, motor1 : str, flip_y : str):
         }.items()
     )
 
-def StrideGenerationLaunch():
+def StrideGenerationLaunch(use_sim_time):
     return IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(STRIDE_GENERATION_LAUNCH_FILE)
+        PythonLaunchDescriptionSource(STRIDE_GENERATION_LAUNCH_FILE),
+        launch_arguments={'use_sim_time': use_sim_time}.items()
     )
 
 def generate_launch_description():
+    # Use sim time argument for the stride generation node
+    sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Use simulation time if true'
+    )
+    # Get the use sim time from the launch configuration
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    
     return LaunchDescription([
+        sim_time_arg,
         FivebarLaunch('FL', '0', '1', 'true'),
         FivebarLaunch('RL', '2', '3', 'true'),
         FivebarLaunch('RR', '4', '5', 'false'),
         FivebarLaunch('FR', '6', '7', 'false'),
-        StrideGenerationLaunch()
+        StrideGenerationLaunch(use_sim_time)
     ])

@@ -43,29 +43,32 @@ private:
      */
     void _map_des2cmd(const double des_v, const double des_w, double &cmd_v, double &cmd_w)
     {
-        const double abs_v = std::abs(des_v);
-        const double abs_w = std::abs(des_w);
-        const double sign_v = des_v > 0 ? 1.0 : -1.0;
-        const double sign_w = des_w > 0 ? 1.0 : -1.0;
-        const double A = _params.mapA, B = _params.mapB, C = _params.mapC, D = _params.mapD;
+        cmd_v = des_v;
+        cmd_w = des_w;
 
-        const double b = A * C + B * abs_w + D * abs_v;
-        const double a_v = A * D * sign_v;
-        const double a_w = B * C * sign_w;
-        const double c_v = B * des_v * abs_w / A;
-        // const double c_w = D * des_w * abs_v / C;
+        // const double abs_v = std::abs(des_v);
+        // const double abs_w = std::abs(des_w);
+        // const double sign_v = des_v > 0 ? 1.0 : -1.0;
+        // const double sign_w = des_w > 0 ? 1.0 : -1.0;
+        // const double A = _params.mapA, B = _params.mapB, C = _params.mapC, D = _params.mapD;
 
-        const double root = b * b - 4 * a_v * c_v; // same as b * b - 4 * a_w * c_w (can be proved)
-        if (root < 0)
-        {
-            // Return NaN if the root is negative (out of domain)
-            cmd_v = std::numeric_limits<double>::quiet_NaN();
-            cmd_w = std::numeric_limits<double>::quiet_NaN();
-            return;
-        }
+        // const double b = A * C + B * abs_w + D * abs_v;
+        // const double a_v = A * D * sign_v;
+        // const double a_w = B * C * sign_w;
+        // const double c_v = B * des_v * abs_w / A;
+        // // const double c_w = D * des_w * abs_v / C;
 
-        cmd_v = (-b - std::sqrt(root)) / (2 * a_v);
-        cmd_w = (-b - std::sqrt(root)) / (2 * a_w);
+        // const double root = b * b - 4 * a_v * c_v; // same as b * b - 4 * a_w * c_w (can be proved)
+        // if (root < 0)
+        // {
+        //     // Return NaN if the root is negative (out of domain)
+        //     cmd_v = std::numeric_limits<double>::quiet_NaN();
+        //     cmd_w = std::numeric_limits<double>::quiet_NaN();
+        //     return;
+        // }
+
+        // cmd_v = (-b - std::sqrt(root)) / (2 * a_v);
+        // cmd_w = (-b - std::sqrt(root)) / (2 * a_w);
     }
 
 public:
@@ -148,14 +151,8 @@ public:
         }
 
         // Calculate the size of the trajectory based on the duration and leg command rate
+        // Casting and multiplying by 2 to ensure the trajectory size is even
         _trajectory_size = static_cast<int>(0.5 * _params.leg_command_rate * _duration) * 2;
-
-        RCLCPP_INFO(_node->get_logger(), "Walk velocity command: (%f, %f)", _linear_velocity, _angular_velocity);
-        RCLCPP_INFO(_node->get_logger(), "Walk velocity command (mapped): (%f, %f)", vel_x, vel_w);
-        RCLCPP_INFO(_node->get_logger(), "Walk velocity command (left, right): (%f, %f)", v_left, v_right);
-        RCLCPP_INFO(_node->get_logger(), "Walk stride duration: %f", _duration);
-        RCLCPP_INFO(_node->get_logger(), "Walk stride size: %d", _trajectory_size);
-        RCLCPP_INFO(_node->get_logger(), "Walk stride stance length (left, right): (%f, %f)", _stance_length_left, _stance_length_right);
     }
 
     /*
@@ -184,7 +181,7 @@ public:
         const double stance_length = leg < 2 ? _stance_length_left : _stance_length_right;
 
         // Get the index along the stride trajectory for the leg
-        const int index = i + _params.leg_offsets[leg] * _trajectory_size;
+        const int index = static_cast<int>(i + _params.leg_offsets[leg] * _trajectory_size) % _trajectory_size;
 
         // Calculate the size of a single phase of the stride trajectory
         const int phase_size = _trajectory_size / 2;
