@@ -42,14 +42,14 @@ public:
      * Solve the local planning problem
      * Given a start pose and a goal pose, return the velocity command to reach the goal
      */
-    virtual geometry_msgs::msg::Twist solve(const geometry_msgs::msg::Pose &start_pose,
+    virtual geometry_msgs::msg::Twist solve(const nav_msgs::msg::Odometry &current_odom,
                                             const geometry_msgs::msg::Pose &goal_pose) = 0;
 
     /*
      * Check if the goal is reached
      * Given a start pose and a goal pose, return true if the goal is reached
      */
-    virtual bool is_goal_reached(const geometry_msgs::msg::Pose &start_pose,
+    virtual bool is_goal_reached(const nav_msgs::msg::Odometry &current_odom,
                                  const geometry_msgs::msg::Pose &goal_pose) = 0;
 };
 
@@ -176,7 +176,7 @@ private:
         }
 
         // Check if the goal is reached
-        if (_model->is_goal_reached(_odom_msg->pose.pose, _goal_msg->pose))
+        if (_model->is_goal_reached(*_odom_msg, _goal_msg->pose))
         {
             // If so, publish the transition gait message as the current gait
             _gait_pub->publish(*_gait_transition_msg);
@@ -185,7 +185,7 @@ private:
         else
         {
             // Otherwise, solve the local planning problem
-            const auto cmd_vel = _model->solve(_odom_msg->pose.pose, _goal_msg->pose);
+            const auto cmd_vel = _model->solve(*_odom_msg, _goal_msg->pose);
 
             // Publish the velocity command
             _cmd_vel_pub->publish(cmd_vel);
@@ -194,7 +194,7 @@ private:
 
 public:
     LocalPlanningNode(rclcpp::Node *node, LocalPlanningModel *model)
-    : _node(node), _model(model)
+        : _node(node), _model(model)
     {
         // Get ROS parameters
         _node->declare_parameter("solve_frequency", 10.0);

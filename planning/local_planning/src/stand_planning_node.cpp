@@ -10,15 +10,15 @@ public:
         return "stand";
     }
 
-    geometry_msgs::msg::Twist solve(const geometry_msgs::msg::Pose &start_pose,
-                                    const geometry_msgs::msg::Pose &goal_pose) override
+    geometry_msgs::msg::Twist solve(const nav_msgs::msg::Odometry &,
+                                    const geometry_msgs::msg::Pose &) override
     {
         // Should never be called since the goal is always reached
         return geometry_msgs::msg::Twist();
     }
 
-    bool is_goal_reached(const geometry_msgs::msg::Pose &start_pose,
-                         const geometry_msgs::msg::Pose &goal_pose) override
+    bool is_goal_reached(const nav_msgs::msg::Odometry &,
+                         const geometry_msgs::msg::Pose &) override
     {
         // Always return true for the stand model
         // Will forward the gait transition message to the gait publisher
