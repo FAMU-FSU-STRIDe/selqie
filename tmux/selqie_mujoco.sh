@@ -4,7 +4,7 @@
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 # Get the ROS workspace
-ROS2_WS=${SCRIPT_DIR}/../../..
+ROS2_WS=${SCRIPT_DIR}/../..
 
 # Start a new tmux session
 tmux new-session -d -s selqie
