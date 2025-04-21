@@ -7,9 +7,38 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+
+# include directories
+include_directories(include)
+
+# add executables
+add_executable(walk_planning_node src/walk_planning_node.cpp)
+ament_target_dependencies(walk_planning_node rclcpp std_msgs geometry_msgs nav_msgs)
+
+add_executable(jump_planning_node src/jump_planning_node.cpp)
+ament_target_dependencies(jump_planning_node rclcpp std_msgs geometry_msgs nav_msgs)
+
+add_executable(swim_planning_node src/swim_planning_node.cpp)
+ament_target_dependencies(swim_planning_node rclcpp std_msgs geometry_msgs nav_msgs)
+
+add_executable(sink_planning_node src/sink_planning_node.cpp)
+ament_target_dependencies(sink_planning_node rclcpp std_msgs geometry_msgs nav_msgs)
+
+add_executable(stand_planning_node src/stand_planning_node.cpp)
+ament_target_dependencies(stand_planning_node rclcpp std_msgs geometry_msgs nav_msgs)
+
+install(TARGETS
+  walk_planning_node
+  jump_planning_node
+  swim_planning_node
+  sink_planning_node
+  stand_planning_node
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

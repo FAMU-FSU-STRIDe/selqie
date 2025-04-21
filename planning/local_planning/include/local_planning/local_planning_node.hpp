@@ -191,4 +191,38 @@ private:
             _cmd_vel_pub->publish(cmd_vel);
         }
     }
+
+public:
+    LocalPlanningNode(rclcpp::Node *node, LocalPlanningModel *model)
+    : _node(node), _model(model)
+    {
+        // Get ROS parameters
+        _node->declare_parameter("solve_frequency", 10.0);
+        _node->get_parameter("solve_frequency", _solve_frequency);
+
+        _node->declare_parameter("default_active", false);
+        _node->get_parameter("default_active", _active);
+
+        // Create the gait subscription
+        _gait_sub = _node->create_subscription<std_msgs::msg::String>(
+            "gait", qos_reliable(), std::bind(&LocalPlanningNode::_gait_callback, this, std::placeholders::_1));
+
+        // Create the gait transition subscription
+        _gait_transition_sub = _node->create_subscription<std_msgs::msg::String>(
+            "gait/transition", qos_reliable(), std::bind(&LocalPlanningNode::_gait_transition_callback, this, std::placeholders::_1));
+
+        // Create the goal subscription
+        _goal_sub = _node->create_subscription<geometry_msgs::msg::PoseStamped>(
+            "goal_pose/local", qos_reliable(), std::bind(&LocalPlanningNode::_goal_callback, this, std::placeholders::_1));
+
+        // Create the odometry subscription
+        _odom_sub = _node->create_subscription<nav_msgs::msg::Odometry>(
+            "odom", qos_reliable(), std::bind(&LocalPlanningNode::_odom_callback, this, std::placeholders::_1));
+
+        // Create the gait publisher
+        _gait_pub = _node->create_publisher<std_msgs::msg::String>("gait", qos_reliable());
+
+        // Create the velocity command publisher
+        _cmd_vel_pub = _node->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", qos_reliable());
+    }
 };
