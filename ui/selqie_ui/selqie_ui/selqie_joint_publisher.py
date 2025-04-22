@@ -24,7 +24,7 @@ class SELQIEJointPublisher(Node):
         self._motor_estimate_subscribers = []
         for i in range(self.NUM_MOTORS):
             motor_estimate_callback = lambda msg, i=i: self._motor_estimates.__setitem__(i, msg)
-            self._motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'odrive{i}/estimate', motor_estimate_callback, QOS_FAST()))
+            self._motor_estimate_subscribers.append(self.create_subscription(MotorEstimate, f'motor{i}/estimate', motor_estimate_callback, QOS_FAST()))
             
         # Five bar linkage parameters
         self.LEG_LINK_1_LENGTH = 0.066
