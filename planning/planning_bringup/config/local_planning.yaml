@@ -1,0 +1,19 @@
+stand_planning_node:
+  ros__parameters:
+    solve_frequency: 10.0
+    default_active: true
+
+walk_planning_node:
+  ros__parameters:
+    solve_frequency: 3.0
+    publish_all: true
+    horizon_time: 0.5
+    integration_steps: 5
+    goal_threshold: 0.25
+    heuristic_vel_factor: 2.0
+    heuristic_omega_factor: 1.0
+    reverse_cost_factor: 2.0
+    max_iterations: 500000
+    max_generations: 1000
+    time_limit_us: 1000000
+    grid_resolution: [0.05, 0.05, 0.15]
