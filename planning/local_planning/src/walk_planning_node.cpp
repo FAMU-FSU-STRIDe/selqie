@@ -1,5 +1,6 @@
 #include "local_planning/local_planning_node.hpp"
 
+#include <algorithm>
 #include <geometry_msgs/msg/pose_array.hpp>
 #include <nav_msgs/msg/path.hpp>
 
@@ -35,18 +36,6 @@ geometry_msgs::msg::Quaternion yaw_to_quaternion(float yaw)
     q.w = std::cos(yaw / 2.0);
     q.z = std::sin(yaw / 2.0);
     return q;
-}
-
-/*
- * Convert walking planner model state to ROS pose
- */
-geometry_msgs::msg::Pose state_to_pose(const sbmpo::State &state)
-{
-    geometry_msgs::msg::Pose pose;
-    pose.position.x = state[WalkingPlannerModel::X];
-    pose.position.y = state[WalkingPlannerModel::Y];
-    pose.orientation = yaw_to_quaternion(state[WalkingPlannerModel::THETA]);
-    return pose;
 }
 
 /*
@@ -209,6 +198,18 @@ public:
 };
 
 /*
+ * Convert walking planner model state to ROS pose
+ */
+geometry_msgs::msg::Pose state_to_pose(const sbmpo::State &state)
+{
+    geometry_msgs::msg::Pose pose;
+    pose.position.x = state[WalkingPlannerModel::X];
+    pose.position.y = state[WalkingPlannerModel::Y];
+    pose.orientation = yaw_to_quaternion(state[WalkingPlannerModel::THETA]);
+    return pose;
+}
+
+/*
  * Walking planning model
  * This model wraps the walking planner model and provides an interface for local planning
  */
@@ -285,22 +286,22 @@ public:
         _node->declare_parameter("publish_all", false);
         _node->get_parameter("publish_all", _publish_all);
 
-        _node->declare_parameter("horizon_time", 0.5);
+        _node->declare_parameter("horizon_time", _model_params.horizon_time);
         _node->get_parameter("horizon_time", _model_params.horizon_time);
 
-        _node->declare_parameter("integration_steps", 5);
+        _node->declare_parameter("integration_steps", _model_params.integration_steps);
         _node->get_parameter("integration_steps", _model_params.integration_steps);
 
-        _node->declare_parameter("goal_threshold", 0.25);
+        _node->declare_parameter("goal_threshold", _model_params.goal_threshold);
         _node->get_parameter("goal_threshold", _model_params.goal_threshold);
 
-        _node->declare_parameter("heuristic_vel_factor", 2.0);
+        _node->declare_parameter("heuristic_vel_factor", _model_params.heuristic_vel_factor);
         _node->get_parameter("heuristic_vel_factor", _model_params.heuristic_vel_factor);
 
-        _node->declare_parameter("heuristic_omega_factor", 1.0);
+        _node->declare_parameter("heuristic_omega_factor", _model_params.heuristic_omega_factor);
         _node->get_parameter("heuristic_omega_factor", _model_params.heuristic_omega_factor);
 
-        _node->declare_parameter("reverse_cost_factor", 2.0);
+        _node->declare_parameter("reverse_cost_factor", _model_params.reverse_cost_factor);
         _node->get_parameter("reverse_cost_factor", _model_params.reverse_cost_factor);
 
         _node->declare_parameter("max_iterations", 500000);
@@ -388,7 +389,6 @@ public:
         // Get the current state of the robot
         const float state_x = current_odom.pose.pose.position.x;
         const float state_y = current_odom.pose.pose.position.y;
-        const float state_z = current_odom.pose.pose.position.z;
         const float state_theta = quaternion_to_yaw(current_odom.pose.pose.orientation);
 
         // Get the goal state
@@ -415,7 +415,7 @@ public:
         : Node("walk_planning_node")
     {
         // Create the planning model
-        _model = std::make_unique<WalkPlanningModel>();
+        _model = std::make_unique<WalkPlanningModel>(this);
 
         // Initialize the local planning node
         _local_planning_node = std::make_unique<LocalPlanningNode>(this, _model.get());

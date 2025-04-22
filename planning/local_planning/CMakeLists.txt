@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(sbmpo REQUIRED)
 
 # include directories
 include_directories(include)
@@ -18,6 +19,7 @@ include_directories(include)
 # add executables
 add_executable(walk_planning_node src/walk_planning_node.cpp)
 ament_target_dependencies(walk_planning_node rclcpp std_msgs geometry_msgs nav_msgs)
+target_link_libraries(walk_planning_node sbmpo::sbmpo)
 
 add_executable(jump_planning_node src/jump_planning_node.cpp)
 ament_target_dependencies(jump_planning_node rclcpp std_msgs geometry_msgs nav_msgs)

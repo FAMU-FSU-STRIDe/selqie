@@ -17,3 +17,22 @@ walk_planning_node:
     max_generations: 1000
     time_limit_us: 1000000
     grid_resolution: [0.05, 0.05, 0.15]
+
+jump_planning_node:
+  ros__parameters:
+    solve_frequency: 20.0
+    goal_threshold: 0.15
+
+swim_planning_node:
+  ros__parameters:
+    solve_frequency: 20.0
+    max_linear_velocity: 0.25
+    max_angular_velocity: 0.1
+    approach_distance: 0.25
+    approach_angle: 0.1
+    goal_threshold: 0.15
+
+sink_planning_node:
+  ros__parameters:
+    solve_frequency: 10.0
+    goal_threshold: 0.01
