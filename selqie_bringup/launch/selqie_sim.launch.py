@@ -18,4 +18,6 @@ def generate_launch_description():
     return LaunchDescription([
         LaunchFile('simulation.launch.py'),
         LaunchFile('leg_control.launch.py'),
+        LaunchFile('tf.launch.py'),
+        LaunchFile('visualization.launch.py')
     ])

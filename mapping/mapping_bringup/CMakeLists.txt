@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(terrain_mapping)
+project(mapping_bringup)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,22 +7,15 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(grid_map_ros REQUIRED)
-find_package(pcl_ros REQUIRED)
 
-# add executables
-add_executable(terrain_mapping_node src/terrain_mapping_node.cpp)
-ament_target_dependencies(terrain_mapping_node rclcpp std_msgs sensor_msgs tf2_ros grid_map_ros pcl_ros)
+# install launch files
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+)
 
-# install targets
-install(TARGETS
-  terrain_mapping_node
-  DESTINATION lib/${PROJECT_NAME}
+# install config files
+install(DIRECTORY config/
+  DESTINATION share/${PROJECT_NAME}/config
 )
 
 if(BUILD_TESTING)

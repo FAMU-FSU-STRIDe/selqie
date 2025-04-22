@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'selqie_terminal = selqie_ui.selqie_terminal:main',
+            'selqie_joint_publisher = selqie_ui.selqie_joint_publisher:main',
         ],
     },
 )
