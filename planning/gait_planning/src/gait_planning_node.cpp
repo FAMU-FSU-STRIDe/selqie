@@ -388,10 +388,16 @@ public:
             return;
         }
 
-        // If the current gait is stand, use the walking gait as the initial gait
-        _sbmpo_params.start_state[GAIT] = state_gait == GaitType::STAND
-                                              ? static_cast<float>(GaitType::WALK)
-                                              : static_cast<float>(state_gait);
+        // If the gait is set to stand, transition to walk
+        if (state_gait == GaitType::STAND)
+        {
+            _publish_transition_gait(GaitType::WALK);
+            _publish_local_goal(_sbmpo_params.start_state);
+            return;
+        }
+
+        // Set the gait in the start state
+        _sbmpo_params.start_state[GAIT] = static_cast<float>(state_gait);
 
         // Convert goal pose to state
         _sbmpo_params.goal_state = pose_to_state(_goal_msg->pose);

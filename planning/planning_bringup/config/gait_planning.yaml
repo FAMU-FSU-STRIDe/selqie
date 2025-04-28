@@ -1,0 +1,22 @@
+gait_planning_node:
+  ros__parameters:
+    solve_frequency: 0.2
+    publish_all: true
+    horizon_time: 4.0
+    integration_steps: 10
+    robot_height: 0.25
+    walk_cost_of_transport: 1.0
+    walk_cost_of_reverse: 2.0
+    swim_cost_of_transport: 5.0
+    swim_cost_of_reverse: 3.0
+    jump_cost_of_transport: 1.5
+    jumping_loadup_time: 0.5
+    jump_height: 0.5
+    sink_cost_of_transport: 0.1
+    sinking_speed: 0.25
+    goal_threshold: 0.75
+    max_iterations: 1000000
+    max_generations: 1000
+    time_limit_us: 5000000
+    grid_resolution: [0.0, 0.15, 0.15, 0.30, 0.15, 1.0]
+    local_lookahead: 2

@@ -19,6 +19,7 @@ def generate_launch_description():
         LaunchFile('simulation.launch.py'),
         LaunchFile('leg_control.launch.py'),
         LaunchFile('mapping.launch.py'),
+        LaunchFile('planning.launch.py'),
         LaunchFile('tf.launch.py'),
         LaunchFile('visualization.launch.py')
     ])
