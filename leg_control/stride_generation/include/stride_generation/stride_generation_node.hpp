@@ -11,7 +11,7 @@
 
 // Leg command poll rate in nanoseconds
 // This is the maximum rate at which leg commands can be generated and sent to the legs
-#define LEG_COMMAND_POLL_RATE_NS 1000
+#define LEG_COMMAND_POLL_RATE_NS 1000000
 
 /*
  * Fast Quality of Service Protocol
