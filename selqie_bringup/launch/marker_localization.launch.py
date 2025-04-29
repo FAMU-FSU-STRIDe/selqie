@@ -4,12 +4,15 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 
+POINTCLOUD_RGB_FILTER_LAUNCH_FILE = os.path.join(
+        get_package_share_directory('vision_bringup'), 'launch', 'pointcloud_rgb_filter.launch.py')
+
 MARKER_LOCALIZATION_LAUNCH_FILE = os.path.join(
         get_package_share_directory('localization_bringup'), 'launch', 'marker_localization.launch.py')
 
 def PointCloudRGBFilterLaunch(id, rgb, rgb_deviation):
     return IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(MARKER_LOCALIZATION_LAUNCH_FILE),
+        PythonLaunchDescriptionSource(POINTCLOUD_RGB_FILTER_LAUNCH_FILE),
         launch_arguments={
             'id': str(id),
             'rgb': str(rgb),
@@ -30,6 +33,6 @@ def MarkerLocalizationLaunch(id, x, y, z):
 
 def generate_launch_description():
     return LaunchDescription([
-        PointCloudRGBFilterLaunch('markerA', [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]),
-        MarkerLocalizationLaunch('markerA', 0, 0, 0),
+        PointCloudRGBFilterLaunch('markerA', [0, 0, 0], [0, 0, 0]),
+        MarkerLocalizationLaunch('markerA', 0.0, 0.0, 0.0),
     ])
