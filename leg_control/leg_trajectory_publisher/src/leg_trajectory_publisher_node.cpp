@@ -42,7 +42,7 @@ private:
 
     std::size_t _idx = 0;           // Current index in the trajectory
     LegTrajectory::SharedPtr _traj; // Pointer to the current leg trajectory
-    rclcpp::Time _start_time;       // Start time of the trajectory
+    double _start_time;       // Start time of the trajectory
 
     /*
      * Trajectory callback function
@@ -72,7 +72,7 @@ private:
             // Reset the trajectory index and start time
             _idx = 0;
             _traj = msg;
-            _start_time = this->now();
+            _start_time = this->now().seconds();
 
             // Activate the node if not already active
             if (!_timer)
@@ -97,19 +97,45 @@ private:
         }
     }
 
+    /*
+     * Publish leg command function
+     * This function is called at a fixed rate to publish leg commands
+     */
     void _publish_leg_command()
     {
-        using namespace std::chrono;
-        const auto delay = milliseconds(time_t(_traj->timing[_idx] * 1E3));
-        const auto cdiff = (this->now() - _start_time).to_chrono<milliseconds>();
-        if (delay <= cdiff)
+        const auto current_time = this->now().seconds();
+        if (current_time < _start_time)
         {
-            _leg_command_pub->publish(_traj->commands[_idx++]);
+            // If the current time is before the start time, return
+            // Happens if the simulation is reset
+            return;
+        }
 
-            if (_idx >= _traj->timing.size())
-            {
-                _traj = nullptr;
-            }
+        // Get the delay for the current leg command in seconds
+        const auto delay = _traj->timing[_idx] / 1E3;
+
+        // Check if the delay greater than the current time
+        const auto diff = current_time - _start_time;
+        if (delay > diff)
+        {
+            // If so, return without executing the leg command
+            // Essentially waits until the next leg command is ready to be executed
+            return;
+        }
+
+        // Publish the leg command for the current index and increment the index
+        _leg_command_pub->publish(_traj->commands[_idx++]);
+
+        // Check if the index is now greater than the trajectory size
+        if (_idx >= _traj->timing.size())
+        {
+            // If so, deactivate the trajectory publisher
+
+            // Cancel the timer
+            _timer->cancel();
+
+            // Reset the shared pointer to the timer
+            _timer.reset();
         }
     }
 
@@ -125,6 +151,7 @@ public:
     }
 };
 
+// Entry point for the node
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);

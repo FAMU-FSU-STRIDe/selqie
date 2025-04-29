@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import os
 import time
 import rclpy
 from cmd import Cmd
 
+import rclpy.clock
 from selqie_python.selqie import SELQIE
 
 class SELQIETerminal(Cmd):
@@ -108,6 +110,36 @@ class SELQIETerminal(Cmd):
                 print("Invalid leg name")
         except ValueError:
             print("Invalid force values")
+
+    def do_run_trajectory(self, line : str):
+        """ Run a trajectory file or sequence of files """
+        args = line.split()
+        if len(args) % 3 != 0:
+            print("Usage: run_trajectory <file1> <num_loops1> <frequency1> <file2> <num_loops2> <frequency2> ...")
+            return
+        try:
+            for i in range(0, len(args), 3):
+                file = args[0]
+                num_loops = int(args[i+1])
+                frequency = float(args[i+2])
+                rate = self._selqie.create_rate(frequency)
+                trajectories = self._selqie.get_leg_trajectories_from_file(file, frequency)
+                print(f"Running trajectory for {num_loops} loops at {frequency} Hz")
+                for i in range(num_loops):
+                    print(f"  Loop {i+1}/{num_loops}")
+                    self._selqie.run_leg_trajectories(trajectories)
+                    rate.sleep()
+                print("Finished trajectory")
+        except ValueError:
+            print("Invalid number of loops or frequency")
+        except FileNotFoundError:
+            print("File not found")
+            
+    def complete_run_trajectory(self, text, line, begidx, endidx):
+        """ Autocomplete for run_trajectory """
+        if len(line.split()) % 3 == 1 or len(line.split()) % 3 == 2:
+            files = os.listdir(self._selqie.TRAJECTORIES_FOLDER)
+            return [f for f in files if f.startswith(text)]
 
     def do_print_motor_info(self, line : str):
         """ Print motor info """

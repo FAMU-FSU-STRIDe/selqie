@@ -7,6 +7,7 @@ from datetime import datetime
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
+from ament_index_python.packages import get_package_share_directory
 
 from std_msgs.msg import Empty, String, Float32
 from geometry_msgs.msg import Twist, PoseStamped, PoseWithCovarianceStamped, Quaternion
@@ -105,6 +106,7 @@ class SELQIE(Node):
         self.LEG_NAMES = ['FL', 'RL', 'RR', 'FR']
         self.NUM_LEGS = len(self.LEG_NAMES)
         self.DEFAULT_LEG_POSITION = [0.0, 0.0, -0.18914]
+        self.TRAJECTORIES_FOLDER = os.path.join(get_package_share_directory('leg_trajectory_publisher'), 'trajectories')
 
         self._leg_command_publishers = []
         for i in range(self.NUM_LEGS):
@@ -115,6 +117,10 @@ class SELQIE(Node):
         for i in range(self.NUM_LEGS):
             leg_estimate_callback = lambda msg, i=i: self._leg_estimates.__setitem__(i, msg)
             self._leg_estimate_subscribers.append(self.create_subscription(LegEstimate, f'leg{self.LEG_NAMES[i]}/estimate', leg_estimate_callback, QOS_FAST()))
+
+        self._leg_trajectory_publishers = []
+        for i in range(self.NUM_LEGS):
+            self._leg_trajectory_publishers.append(self.create_publisher(LegTrajectory, f'leg{self.LEG_NAMES[i]}/trajectory', QOS_RELIABLE()))
 
     def init_sensors(self):
         """Initialize the sensor publishers and subscribers."""
@@ -319,6 +325,48 @@ class SELQIE(Node):
         if leg_idx < 0 or leg_idx >= self.NUM_LEGS:
             raise ValueError(f"Leg index {leg_idx} out of range")
         return self._leg_estimates[leg_idx]
+    
+    def send_leg_trajectory(self, leg_idx : int, trajectory : LegTrajectory):
+        """Send a LegTrajectory message to the leg."""
+        if leg_idx < 0 or leg_idx >= self.NUM_LEGS:
+            raise ValueError(f"Leg index {leg_idx} out of range")
+        self._leg_trajectory_publishers[leg_idx].publish(trajectory)
+    
+    def get_leg_trajectories_from_file(self, rel_file : str, frequency : float) -> list[LegTrajectory]:
+        """Get a list of LegTrajectory messages from a file."""
+        file = os.path.join(self.TRAJECTORIES_FOLDER, rel_file)
+        if not os.path.exists(file):
+            raise FileNotFoundError(f'File {file} does not exist')
+        leg_trajectories = [LegTrajectory() for _ in range(self.NUM_LEGS)]
+        with open(file) as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) != 13:
+                    raise ValueError(f'Invalid file line: {line}')
+                time = float(parts[0]) / 1000.0 / frequency
+                leg_id = int(parts[1])
+                msg = LegCommand()
+                msg.control_mode = int(parts[2])
+                msg.pos_setpoint.x = float(parts[4])
+                msg.pos_setpoint.y = float(parts[5])
+                msg.pos_setpoint.z = float(parts[6])
+                msg.vel_setpoint.x = float(parts[7])
+                msg.vel_setpoint.y = float(parts[8])
+                msg.vel_setpoint.z = float(parts[9])
+                msg.force_setpoint.x = float(parts[10])
+                msg.force_setpoint.y = float(parts[11])
+                msg.force_setpoint.z = float(parts[12])
+                if (leg_id > self.NUM_LEGS) or (leg_id < 0):
+                    raise ValueError(f'Expected leg ids between 0 and {self.NUM_LEGS - 1}')
+                leg_trajectories[leg_id].timing.append(time)
+                leg_trajectories[leg_id].commands.append(msg)
+        return leg_trajectories
+    
+    def run_leg_trajectories(self, trajectories : list[LegTrajectory]):
+        """Run a list of LegTrajectory messages."""
+        for i in range(len(trajectories)):
+            if trajectories[i] is not None:
+                self.send_leg_trajectory(i, trajectories[i])
 
     ############################
     ### Sensor Data Functions ##

@@ -5,7 +5,8 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
 
-FIVEBAR_CONFIG_FILE = os.path.join(get_package_share_directory('sensing_bringup'), 'config', 'bar100.yaml')
+FIVEBAR_CONFIG_FILE = os.path.join(get_package_share_directory('leg_control_bringup'), 
+                                   'config', 'fivebar.yaml')
 
 def launch_setup(context, *args, **kwargs):
     # Get the leg name from the launch configuration
@@ -24,7 +25,7 @@ def launch_setup(context, *args, **kwargs):
         Node(
             package='leg_kinematics',
             executable='fivebar2d_node',
-            name=f'fivebar2d_node',
+            name=f'fivebar{leg_name}_node',
             output='screen',
             parameters=[FIVEBAR_CONFIG_FILE,
                         {'flip_y': flip_y}],

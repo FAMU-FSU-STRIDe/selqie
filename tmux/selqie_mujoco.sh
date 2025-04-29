@@ -26,7 +26,7 @@ tmux send-keys "source ${ROS2_WS}/install/setup.bash" C-m
 
 # SELQIE Terminal in top-right
 tmux select-pane -t 2
-tmux send-keys "source ${ROS2_WS}/install/setup.bash; ros2 run selqie_ui selqie_terminal" C-m
+tmux send-keys "source ${ROS2_WS}/install/setup.bash; ros2 run selqie_ui selqie_terminal --ros-args -p use_sim_time:=True" C-m
 
 # Sourced environment in bottom-right
 tmux select-pane -t 3
