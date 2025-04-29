@@ -1,0 +1,8 @@
+marker_localization_node:
+  ros__parameters:
+    robot_frame_id: "base_link"
+    map_frame_id: "map"
+    minimum_point_count: 10
+    variance_x: 0.1
+    variance_y: 0.1
+    variance_z: 0.1

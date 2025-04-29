@@ -64,6 +64,12 @@ public:
             }
         }
 
+        // Check if the filtered cloud is empty
+        if (pcl_cloud_filtered.empty())
+        {
+            return;
+        }
+
         // Convert the filtered PCL cloud back to PointCloud2 message
         sensor_msgs::msg::PointCloud2 msg_out;
         pcl::toROSMsg(pcl_cloud_filtered, msg_out);

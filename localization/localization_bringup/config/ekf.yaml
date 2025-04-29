@@ -43,4 +43,14 @@ ekf_node:
                     true, true, true,
                     false, false, false]
     twist0_queue_size: 10
+
+    pose1: 'pose/markerA'
+    pose1_config: [true, true, true,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
+    pose0_queue_size: 10
+    pose0_differential: false
+    pose0_relative: false
     
