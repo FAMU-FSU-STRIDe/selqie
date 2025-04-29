@@ -3,6 +3,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+
 #include <tf2/LinearMath/Quaternion.hpp>
 #include <tf2/LinearMath/Matrix3x3.hpp>
 #include <tf2_ros/transform_listener.h>
@@ -12,26 +13,30 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+/*
+ * Marker Localization Node class
+ */
 class MarkerLocalizationNode : public rclcpp::Node
 {
 private:
-    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _point_cloud_subscriber;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_subscriber;
-    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr _pose_publisher;
+    double _marker_x, _marker_y, _marker_z;      // Marker position in the map frame
+    std::string _robot_frame_id = "base_link";   // Frame ID of the robot
+    std::string _map_frame_id = "map";           // Frame ID of the map
+    int _minumum_point_count = 10;               // Minimum number of points in the point cloud to process
+    double _variance_x, _variance_y, _variance_z; // Variance for the covariance matrix
+
+    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _point_cloud_subscriber;      // Subscriber for point cloud data
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_subscriber;               // Subscriber for odometry data
+    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr _pose_publisher; // Publisher for pose with covariance
 
     std::unique_ptr<tf2_ros::TransformListener> _tf_listener; // Transform listener for TF2
     std::unique_ptr<tf2_ros::Buffer> _tf_buffer;              // Buffer for TF2 transforms
 
-    nav_msgs::msg::Odometry::SharedPtr _odom_data;
+    nav_msgs::msg::Odometry::SharedPtr _odom_data; // Shared pointer to the latest odometry data
 
-    int _minumum_point_count = 10;             // Minimum number of points in the point cloud to process
-    std::string _robot_frame_id = "base_link"; // Frame ID of the robot
-    std::string _map_frame_id = "map";         // Frame ID of the map
-    double _marker_x, _marker_y, _marker_z;    // Marker position in the map frame
-    double _variance_x = 0.1; // Variance in the x direction
-    double _variance_y = 0.1; // Variance in the y direction
-    double _variance_z = 0.1; // Variance in the z direction
-
+    /*
+     * Callback function for processing point cloud data
+     */
     void _point_cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
     {
         // Make sure we have valid odometry data before processing the point cloud
@@ -50,13 +55,17 @@ private:
         pcl::PointCloud<pcl::PointXYZ> cloud;
         pcl::fromROSMsg(*msg, cloud);
 
-        // Cluster cloud points
-        tf2::Vector3 centroid(0, 0, 0);
+        // Find point cloud centroid
+        float center_x = 0.0, center_y = 0.0, center_z = 0.0;
         for (const auto &point : cloud.points)
         {
-            centroid += tf2::Vector3(point.x, point.y, point.z);
+            center_x += point.x;
+            center_y += point.y;
+            center_z += point.z;
         }
-        centroid /= cloud.points.size();
+        center_x /= cloud.points.size();
+        center_y /= cloud.points.size();
+        center_z /= cloud.points.size();
 
         // Get the transform from the point cloud frame to the robot frame at the time of the message
         geometry_msgs::msg::TransformStamped transform;
@@ -72,13 +81,13 @@ private:
             return;
         }
 
-        // Transform the centroid to the robot frame
+        // Convert to a geometry_msgs::msg::Point
         geometry_msgs::msg::Point point_cam;
-        point_cam.x = centroid.x();
-        point_cam.y = centroid.y();
-        point_cam.z = centroid.z();
+        point_cam.x = center_x;
+        point_cam.y = center_y;
+        point_cam.z = center_z;
 
-        // Perform the transformation
+        // Transform the centroid to the robot frame
         geometry_msgs::msg::Point point_marker;
         tf2::doTransform(point_cam, point_marker, transform);
 
@@ -93,7 +102,7 @@ private:
         tf2::Vector3 m_p_map_marker(_marker_x, _marker_y, _marker_z);
 
         // Calculate the robot position in the map frame
-        auto m_p_map_robot = m_p_map_marker - m_R_r * r_p_robot_marker;
+        tf2::Vector3 m_p_map_robot = m_p_map_marker - m_R_r * r_p_robot_marker;
 
         // Convert to pose with covariance
         geometry_msgs::msg::PoseWithCovarianceStamped pose;
@@ -108,9 +117,12 @@ private:
 
         // Publish to the ROS network
         _pose_publisher->publish(pose);
-        RCLCPP_INFO(this->get_logger(), "Marker position: (%f, %f, %f)", m_p_map_robot.x(), m_p_map_robot.y(), m_p_map_robot.z());
+        RCLCPP_INFO(this->get_logger(), "Robot position: (%f, %f, %f)", m_p_map_robot.x(), m_p_map_robot.y(), m_p_map_robot.z());
     }
 
+    /*
+     * Callback function for processing odometry data
+     */
     void _odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
         _odom_data = msg;
@@ -163,7 +175,8 @@ public:
         _tf_listener = std::make_unique<tf2_ros::TransformListener>(*_tf_buffer, this);
 
         // Initialize the node and set up subscriptions, publishers, etc.
-        RCLCPP_INFO(this->get_logger(), "Marker Localization Node Initialized");
+        RCLCPP_INFO(this->get_logger(), "Marker Localization Node Initialized at location (%f, %f, %f)",
+                    _marker_x, _marker_y, _marker_z);
     }
 };
 
