@@ -33,6 +33,6 @@ def MarkerLocalizationLaunch(id, x, y, z):
 
 def generate_launch_description():
     return LaunchDescription([
-        PointCloudRGBFilterLaunch('markerA', [0, 0, 0], [0, 0, 0]),
-        MarkerLocalizationLaunch('markerA', 0.0, 0.0, 0.0),
+        PointCloudRGBFilterLaunch('marker_red', [250, 60, 40], [10, 10, 10]),
+        MarkerLocalizationLaunch('marker_red', 0.0, 0.0, 0.0),
     ])

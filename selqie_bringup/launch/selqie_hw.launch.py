@@ -23,4 +23,5 @@ def generate_launch_description():
         # LaunchFile('mapping.launch.py'),
         # LaunchFile('planning.launch.py'),
         # LaunchFile('tf.launch.py'),
+        LaunchFile('marker_localization.launch.py'),
     ])
