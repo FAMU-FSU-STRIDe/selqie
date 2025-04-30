@@ -44,7 +44,7 @@ ekf_node:
                     false, false, false]
     twist0_queue_size: 10
 
-    pose1: 'pose/markerA'
+    pose1: 'pose/marker_red'
     pose1_config: [true, true, true,
                    false, false, false,
                    false, false, false,

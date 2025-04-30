@@ -59,6 +59,11 @@ private:
         float center_x = 0.0, center_y = 0.0, center_z = 0.0;
         for (const auto &point : cloud.points)
         {
+            if (std::isnan(point.x) || std::isnan(point.y) || std::isnan(point.z))
+            {
+                continue;
+            }
+
             center_x += point.x;
             center_y += point.y;
             center_z += point.z;
@@ -173,6 +178,10 @@ public:
         // Create TF buffer and listener
         _tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
         _tf_listener = std::make_unique<tf2_ros::TransformListener>(*_tf_buffer, this);
+
+        auto odom = std::make_shared<nav_msgs::msg::Odometry>();
+        odom->pose.pose.orientation.w = 1.0;
+        _odom_callback(odom);
 
         // Initialize the node and set up subscriptions, publishers, etc.
         RCLCPP_INFO(this->get_logger(), "Marker Localization Node Initialized at location (%f, %f, %f)",

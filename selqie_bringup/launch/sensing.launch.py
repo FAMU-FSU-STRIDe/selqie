@@ -12,9 +12,9 @@ IMU_LAUNCH_FILE = os.path.join(
 
 def generate_launch_description():
     return LaunchDescription([
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(BAR100_LAUNCH_FILE)
-        ),
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource(BAR100_LAUNCH_FILE)
+        # ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(IMU_LAUNCH_FILE)
         ),
