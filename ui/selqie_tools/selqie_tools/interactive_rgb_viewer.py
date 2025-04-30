@@ -5,7 +5,6 @@ from cv_bridge import CvBridge
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
 
 class RGBViewer(Node):
     def __init__(self):

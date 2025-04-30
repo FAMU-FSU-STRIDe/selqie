@@ -7,6 +7,7 @@
 #include <net/if.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
 
 // Maximum polling rate of the CAN bus
 // Each CAN frame is 144 bits, and the bus supports a maximum of 1 Mbps
@@ -67,6 +68,10 @@ public:
         {
             throw std::runtime_error("Failed to create CAN socket");
         }
+
+        // Make the socket non-blocking
+        int flags = fcntl(_socket, F_GETFL, 0);
+        fcntl(_socket, F_SETFL, flags | O_NONBLOCK);
 
         // Set the interface for the CAN socket
         struct ifreq ifr;
@@ -133,11 +138,26 @@ public:
     void receive()
     {
         // Read a CAN frame from the socket
-        // This is a blocking call, it will wait until a frame is available
         struct can_frame frame;
-        if (read(_socket, &frame, sizeof(frame)) < 0)
+        ssize_t nbytes = read(_socket, &frame, sizeof(frame));
+
+        // Check for errors in reading the CAN frame
+        if (nbytes < 0)
         {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                // No data available, continue polling
+                return;
+            }
+
             RCLCPP_ERROR(this->get_logger(), "Failed to receive CAN frame");
+            return;
+        }
+
+        // Check if the received frame is valid
+        if (nbytes < ssize_t(sizeof(struct can_frame)))
+        {
+            RCLCPP_WARN(this->get_logger(), "Incomplete CAN frame received");
             return;
         }
 
