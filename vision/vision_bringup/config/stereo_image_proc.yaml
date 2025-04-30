@@ -1,4 +1,4 @@
-disparity_node:
+stereo/disparity_node:
   ros__parameters:
     correlation_window_size: 15 # 35
     speckle_size: 250
@@ -7,7 +7,7 @@ disparity_node:
     min_disparity: 25
     approximate_sync: True
     approximate_sync_tolerance_period: 0.05
-point_cloud_node:
+stereo/point_cloud_node:
   ros__parameters:
     use_color: True
     approximate_sync: True

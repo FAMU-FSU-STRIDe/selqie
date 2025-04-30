@@ -26,7 +26,7 @@ def generate_launch_description():
             }.items()
         ),
         Node(
-            package='selqie_localization',
+            package='imu_calibration',
             executable='imu_calibration_node',
             name='imu_calibration_node',
             output='screen',

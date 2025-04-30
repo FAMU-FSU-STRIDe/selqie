@@ -185,11 +185,13 @@ namespace stereo_usb_cam
                 {
                     RCLCPP_ERROR(get_logger(), "Failed to open left camera");
                     rclcpp::shutdown();
+                    return;
                 }
                 if (!_right_capture.isOpened())
                 {
                     RCLCPP_ERROR(get_logger(), "Failed to open right camera");
                     rclcpp::shutdown();
+                    return;
                 }
 
                 // Create a timer to call the timer_callback function at the specified framerate

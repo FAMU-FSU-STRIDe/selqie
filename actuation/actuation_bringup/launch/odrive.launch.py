@@ -20,8 +20,8 @@ def launch_setup(context, *args, **kwargs):
             name=f'odrive{odrive_id}_node',
             output='screen',
             parameters=[{
-                'id': odrive_id,
-                'gear_ratio': gear_ratio
+                'id': int(odrive_id),
+                'gear_ratio': float(gear_ratio)
             }],
             remappings=[
                 ('can/tx', f'{interface}/tx'),

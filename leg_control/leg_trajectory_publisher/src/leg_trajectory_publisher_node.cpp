@@ -112,7 +112,7 @@ private:
         }
 
         // Get the delay for the current leg command in seconds
-        const auto delay = _traj->timing[_idx] / 1E3;
+        const auto delay = _traj->timing[_idx];
 
         // Check if the delay greater than the current time
         const auto diff = current_time - _start_time;
