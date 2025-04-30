@@ -1,0 +1,11 @@
+stereo/stereo_usb_cam_node:
+  ros__parameters:
+    width: 640
+    height: 480
+    framerate: 30.0
+    left_video_device: "/dev/video4"
+    right_video_device: "/dev/video0"
+    left_frame_id: "camera_left"
+    right_frame_id: "camera_right"
+    left_camera_name: "narrow_stereo/left"
+    right_camera_name: "narrow_stereo/right"

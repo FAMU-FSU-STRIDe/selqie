@@ -1,1 +1,0 @@
-# Bar100 ROS2 Notes

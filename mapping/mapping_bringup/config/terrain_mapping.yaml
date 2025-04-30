@@ -1,0 +1,9 @@
+terrain_mapping_node:
+  ros__parameters:
+    map_frame_id: "map"
+    map_resolution: 0.1 # m
+    map_length: 10.0    # m
+    frequency: 3.0      # Hz
+    robot_height: 0.18  # m
+    point_thickness: 2
+    pointcloud_layers: ["rock"]
