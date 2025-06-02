@@ -29,7 +29,7 @@ import time
 
 
 # Pin Definitions
-sensor_pin_front = 15  # Adjust this to the GPIO pin you're using for the front
+sensor_pin_front = 22  # Adjust this to the GPIO pin you're using for the front
 sensor_pin_back = 13  # Adjust this to the GPIO pin you're using for the back
 
 # Setup GPIO
@@ -47,7 +47,7 @@ try:
         if GPIO.input(sensor_pin_front) == GPIO.HIGH:
             print("Leak in FRONT HIPS Detected!")
             shutdown()
-        if GPIO.input(sensor_pin_back) == GPIO.HIGH:
+        elif GPIO.input(sensor_pin_back) == GPIO.HIGH:
             print("Leak in BACK HIPS Detected!")
             shutdown()
         time.sleep(1)  # Check every second
